@@ -1,6 +1,8 @@
-package model
+package task
 
 import (
+	"github.com/QuantumNous/new-api/model"
+
 	"testing"
 
 	"github.com/QuantumNous/new-api/common"
@@ -21,16 +23,16 @@ type testSystemTaskState struct {
 	Remaining int64 `json:"remaining"`
 }
 
-func createLegacyPendingSystemTask(t *testing.T, taskType string) *SystemTask {
+func createLegacyPendingSystemTask(t *testing.T, taskType string) *model.SystemTask {
 	t.Helper()
 	taskID, err := GenerateSystemTaskID()
 	require.NoError(t, err)
-	task := &SystemTask{
+	task := &model.SystemTask{
 		TaskID: taskID,
 		Type:   taskType,
-		Status: SystemTaskStatusPending,
+		Status: model.SystemTaskStatusPending,
 	}
-	require.NoError(t, DB.Create(task).Error)
+	require.NoError(t, model.DB.Create(task).Error)
 	return task
 }
 
@@ -39,26 +41,26 @@ func TestSystemTaskCreateAndActiveLifecycle(t *testing.T) {
 
 	payload := testSystemTaskPayload{TargetTimestamp: 1000, BatchSize: 100}
 	state := testSystemTaskState{}
-	task, err := CreateSystemTask(SystemTaskTypeLogCleanup, payload, state)
+	task, err := CreateSystemTask(model.SystemTaskTypeLogCleanup, payload, state)
 	require.NoError(t, err)
 	require.NotNil(t, task.ActiveKey)
-	assert.Equal(t, SystemTaskTypeLogCleanup, *task.ActiveKey)
+	assert.Equal(t, model.SystemTaskTypeLogCleanup, *task.ActiveKey)
 
 	var decodedPayload testSystemTaskPayload
 	require.NoError(t, task.DecodePayload(&decodedPayload))
 	assert.Equal(t, payload, decodedPayload)
 
-	activeTask, err := GetActiveSystemTask(SystemTaskTypeLogCleanup)
+	activeTask, err := GetActiveSystemTask(model.SystemTaskTypeLogCleanup)
 	require.NoError(t, err)
 	require.NotNil(t, activeTask)
 	assert.Equal(t, task.TaskID, activeTask.TaskID)
 
 	runnerID := "runner-a"
-	claimedTask, claimed, err := ClaimSystemTask(task.ID, SystemTaskTypeLogCleanup, runnerID, common.GetTimestamp()+60)
+	claimedTask, claimed, err := ClaimSystemTask(task.ID, model.SystemTaskTypeLogCleanup, runnerID, common.GetTimestamp()+60)
 	require.NoError(t, err)
 	require.True(t, claimed)
 
-	err = FinishSystemTask(claimedTask.TaskID, runnerID, SystemTaskStatusSucceeded, map[string]int64{"deleted_count": 0}, "")
+	err = FinishSystemTask(claimedTask.TaskID, runnerID, model.SystemTaskStatusSucceeded, map[string]int64{"deleted_count": 0}, "")
 	require.NoError(t, err)
 
 	finishedTask, err := GetSystemTaskByTaskID(task.TaskID)
@@ -66,11 +68,11 @@ func TestSystemTaskCreateAndActiveLifecycle(t *testing.T) {
 	require.NotNil(t, finishedTask)
 	assert.Nil(t, finishedTask.ActiveKey)
 
-	activeTask, err = GetActiveSystemTask(SystemTaskTypeLogCleanup)
+	activeTask, err = GetActiveSystemTask(model.SystemTaskTypeLogCleanup)
 	require.NoError(t, err)
 	require.Nil(t, activeTask)
 
-	_, err = CreateSystemTask(SystemTaskTypeLogCleanup, payload, state)
+	_, err = CreateSystemTask(model.SystemTaskTypeLogCleanup, payload, state)
 	require.NoError(t, err)
 }
 
@@ -78,12 +80,12 @@ func TestSystemTaskActiveKeyPreventsDuplicateActiveRun(t *testing.T) {
 	truncateTables(t)
 
 	payload := testSystemTaskPayload{TargetTimestamp: 1000, BatchSize: 100}
-	task, err := CreateSystemTask(SystemTaskTypeLogCleanup, payload, testSystemTaskState{})
+	task, err := CreateSystemTask(model.SystemTaskTypeLogCleanup, payload, testSystemTaskState{})
 	require.NoError(t, err)
-	_, err = CreateSystemTask(SystemTaskTypeLogCleanup, payload, testSystemTaskState{})
+	_, err = CreateSystemTask(model.SystemTaskTypeLogCleanup, payload, testSystemTaskState{})
 	require.Error(t, err)
 
-	activeTask, err := GetActiveSystemTask(SystemTaskTypeLogCleanup)
+	activeTask, err := GetActiveSystemTask(model.SystemTaskTypeLogCleanup)
 	require.NoError(t, err)
 	require.NotNil(t, activeTask)
 	assert.Equal(t, task.TaskID, activeTask.TaskID)
@@ -93,15 +95,15 @@ func TestSystemTaskLockPreventsConcurrentClaim(t *testing.T) {
 	truncateTables(t)
 
 	payload := testSystemTaskPayload{TargetTimestamp: 1000, BatchSize: 100}
-	task, err := CreateSystemTask(SystemTaskTypeLogCleanup, payload, testSystemTaskState{})
+	task, err := CreateSystemTask(model.SystemTaskTypeLogCleanup, payload, testSystemTaskState{})
 	require.NoError(t, err)
-	secondTask := createLegacyPendingSystemTask(t, SystemTaskTypeLogCleanup)
+	secondTask := createLegacyPendingSystemTask(t, model.SystemTaskTypeLogCleanup)
 
-	claimedTask, claimed, err := ClaimSystemTask(task.ID, SystemTaskTypeLogCleanup, "runner-a", common.GetTimestamp()+60)
+	claimedTask, claimed, err := ClaimSystemTask(task.ID, model.SystemTaskTypeLogCleanup, "runner-a", common.GetTimestamp()+60)
 	require.NoError(t, err)
 	require.True(t, claimed)
 
-	_, claimed, err = ClaimSystemTask(secondTask.ID, SystemTaskTypeLogCleanup, "runner-b", common.GetTimestamp()+60)
+	_, claimed, err = ClaimSystemTask(secondTask.ID, model.SystemTaskTypeLogCleanup, "runner-b", common.GetTimestamp()+60)
 	require.NoError(t, err)
 	require.False(t, claimed)
 
@@ -110,24 +112,24 @@ func TestSystemTaskLockPreventsConcurrentClaim(t *testing.T) {
 	reloadedSecond, err := GetSystemTaskByTaskID(secondTask.TaskID)
 	require.NoError(t, err)
 	require.NotNil(t, reloadedSecond)
-	assert.Equal(t, SystemTaskStatusPending, reloadedSecond.Status)
+	assert.Equal(t, model.SystemTaskStatusPending, reloadedSecond.Status)
 }
 
 func TestExpiredSystemTaskLockFailsOldRunAndClaimsLegacyPendingRun(t *testing.T) {
 	truncateTables(t)
 
-	first, err := CreateSystemTask(SystemTaskTypeLogCleanup, nil, nil)
+	first, err := CreateSystemTask(model.SystemTaskTypeLogCleanup, nil, nil)
 	require.NoError(t, err)
-	_, claimed, err := ClaimSystemTask(first.ID, SystemTaskTypeLogCleanup, "runner-a", common.GetTimestamp()+60)
+	_, claimed, err := ClaimSystemTask(first.ID, model.SystemTaskTypeLogCleanup, "runner-a", common.GetTimestamp()+60)
 	require.NoError(t, err)
 	require.True(t, claimed)
 
-	require.NoError(t, DB.Model(&SystemTaskLock{}).
+	require.NoError(t, model.DB.Model(&model.SystemTaskLock{}).
 		Where("task_id = ?", first.TaskID).
 		Update("locked_until", common.GetTimestamp()-1).Error)
 
-	second := createLegacyPendingSystemTask(t, SystemTaskTypeLogCleanup)
-	claimedTask, claimed, err := ClaimSystemTask(second.ID, SystemTaskTypeLogCleanup, "runner-b", common.GetTimestamp()+60)
+	second := createLegacyPendingSystemTask(t, model.SystemTaskTypeLogCleanup)
+	claimedTask, claimed, err := ClaimSystemTask(second.ID, model.SystemTaskTypeLogCleanup, "runner-b", common.GetTimestamp()+60)
 	require.NoError(t, err)
 	require.True(t, claimed)
 	assert.Equal(t, second.TaskID, claimedTask.TaskID)
@@ -136,7 +138,7 @@ func TestExpiredSystemTaskLockFailsOldRunAndClaimsLegacyPendingRun(t *testing.T)
 	reloadedFirst, err := GetSystemTaskByTaskID(first.TaskID)
 	require.NoError(t, err)
 	require.NotNil(t, reloadedFirst)
-	assert.Equal(t, SystemTaskStatusFailed, reloadedFirst.Status)
+	assert.Equal(t, model.SystemTaskStatusFailed, reloadedFirst.Status)
 	assert.Equal(t, "task lease expired", reloadedFirst.Error)
 	assert.Nil(t, reloadedFirst.ActiveKey)
 }
@@ -144,13 +146,13 @@ func TestExpiredSystemTaskLockFailsOldRunAndClaimsLegacyPendingRun(t *testing.T)
 func TestExpireStaleSystemTaskLockFailsOldRunAndAllowsNewRun(t *testing.T) {
 	truncateTables(t)
 
-	first, err := CreateSystemTask(SystemTaskTypeLogCleanup, nil, nil)
+	first, err := CreateSystemTask(model.SystemTaskTypeLogCleanup, nil, nil)
 	require.NoError(t, err)
-	_, claimed, err := ClaimSystemTask(first.ID, SystemTaskTypeLogCleanup, "runner-a", common.GetTimestamp()+60)
+	_, claimed, err := ClaimSystemTask(first.ID, model.SystemTaskTypeLogCleanup, "runner-a", common.GetTimestamp()+60)
 	require.NoError(t, err)
 	require.True(t, claimed)
 
-	require.NoError(t, DB.Model(&SystemTaskLock{}).
+	require.NoError(t, model.DB.Model(&model.SystemTaskLock{}).
 		Where("task_id = ?", first.TaskID).
 		Update("locked_until", common.GetTimestamp()-1).Error)
 
@@ -159,15 +161,15 @@ func TestExpireStaleSystemTaskLockFailsOldRunAndAllowsNewRun(t *testing.T) {
 	reloadedFirst, err := GetSystemTaskByTaskID(first.TaskID)
 	require.NoError(t, err)
 	require.NotNil(t, reloadedFirst)
-	assert.Equal(t, SystemTaskStatusFailed, reloadedFirst.Status)
+	assert.Equal(t, model.SystemTaskStatusFailed, reloadedFirst.Status)
 	assert.Equal(t, "task lease expired", reloadedFirst.Error)
 	assert.Nil(t, reloadedFirst.ActiveKey)
 
 	var lockCount int64
-	require.NoError(t, DB.Model(&SystemTaskLock{}).Where("task_id = ?", first.TaskID).Count(&lockCount).Error)
+	require.NoError(t, model.DB.Model(&model.SystemTaskLock{}).Where("task_id = ?", first.TaskID).Count(&lockCount).Error)
 	assert.Equal(t, int64(0), lockCount)
 
-	second, err := CreateSystemTask(SystemTaskTypeLogCleanup, nil, nil)
+	second, err := CreateSystemTask(model.SystemTaskTypeLogCleanup, nil, nil)
 	require.NoError(t, err)
 	require.NotEqual(t, first.TaskID, second.TaskID)
 }
@@ -186,7 +188,7 @@ func TestFindEarliestPendingSystemTasks(t *testing.T) {
 	_, claimed, err := ClaimSystemTask(ignoredB.ID, "type_b", "runner-b", common.GetTimestamp()+60)
 	require.NoError(t, err)
 	require.True(t, claimed)
-	require.NoError(t, FinishSystemTask(ignoredB.TaskID, "runner-b", SystemTaskStatusFailed, nil, "failed"))
+	require.NoError(t, FinishSystemTask(ignoredB.TaskID, "runner-b", model.SystemTaskStatusFailed, nil, "failed"))
 	firstB, err := CreateSystemTask("type_b", nil, nil)
 	require.NoError(t, err)
 	ignoredC, err := CreateSystemTask("type_c", nil, nil)
@@ -194,7 +196,7 @@ func TestFindEarliestPendingSystemTasks(t *testing.T) {
 	_, claimed, err = ClaimSystemTask(ignoredC.ID, "type_c", "runner-c", common.GetTimestamp()+60)
 	require.NoError(t, err)
 	require.True(t, claimed)
-	require.NoError(t, FinishSystemTask(ignoredC.TaskID, "runner-c", SystemTaskStatusFailed, nil, "failed"))
+	require.NoError(t, FinishSystemTask(ignoredC.TaskID, "runner-c", model.SystemTaskStatusFailed, nil, "failed"))
 
 	tasks, err := FindEarliestPendingSystemTasks([]string{"type_a", "type_b", "type_c", "missing"})
 	require.NoError(t, err)
@@ -208,23 +210,23 @@ func TestFindEarliestPendingSystemTasks(t *testing.T) {
 func TestGetLatestSystemTask(t *testing.T) {
 	truncateTables(t)
 
-	latest, err := GetLatestSystemTask(SystemTaskTypeChannelTest)
+	latest, err := GetLatestSystemTask(model.SystemTaskTypeChannelTest)
 	require.NoError(t, err)
 	require.Nil(t, latest)
 
-	first, err := CreateSystemTask(SystemTaskTypeChannelTest, nil, nil)
+	first, err := CreateSystemTask(model.SystemTaskTypeChannelTest, nil, nil)
 	require.NoError(t, err)
 
 	runnerID := "runner-a"
-	_, claimed, err := ClaimSystemTask(first.ID, SystemTaskTypeChannelTest, runnerID, common.GetTimestamp()+60)
+	_, claimed, err := ClaimSystemTask(first.ID, model.SystemTaskTypeChannelTest, runnerID, common.GetTimestamp()+60)
 	require.NoError(t, err)
 	require.True(t, claimed)
-	require.NoError(t, FinishSystemTask(first.TaskID, runnerID, SystemTaskStatusSucceeded, nil, ""))
+	require.NoError(t, FinishSystemTask(first.TaskID, runnerID, model.SystemTaskStatusSucceeded, nil, ""))
 
-	second, err := CreateSystemTask(SystemTaskTypeChannelTest, nil, nil)
+	second, err := CreateSystemTask(model.SystemTaskTypeChannelTest, nil, nil)
 	require.NoError(t, err)
 
-	latest, err = GetLatestSystemTask(SystemTaskTypeChannelTest)
+	latest, err = GetLatestSystemTask(model.SystemTaskTypeChannelTest)
 	require.NoError(t, err)
 	require.NotNil(t, latest)
 	assert.Equal(t, second.TaskID, latest.TaskID)
@@ -244,7 +246,7 @@ func TestGetLatestSystemTasks(t *testing.T) {
 	_, claimed, err := ClaimSystemTask(firstA.ID, "type_a", "runner-a", common.GetTimestamp()+60)
 	require.NoError(t, err)
 	require.True(t, claimed)
-	require.NoError(t, FinishSystemTask(firstA.TaskID, "runner-a", SystemTaskStatusSucceeded, nil, ""))
+	require.NoError(t, FinishSystemTask(firstA.TaskID, "runner-a", model.SystemTaskStatusSucceeded, nil, ""))
 	secondA, err := CreateSystemTask("type_a", nil, nil)
 	require.NoError(t, err)
 
@@ -260,93 +262,93 @@ func TestGetLatestSystemTasks(t *testing.T) {
 func TestRenewSystemTaskLock(t *testing.T) {
 	truncateTables(t)
 
-	task, err := CreateSystemTask(SystemTaskTypeLogCleanup, nil, nil)
+	task, err := CreateSystemTask(model.SystemTaskTypeLogCleanup, nil, nil)
 	require.NoError(t, err)
 
 	runnerID := "runner-a"
-	_, claimed, err := ClaimSystemTask(task.ID, SystemTaskTypeLogCleanup, runnerID, common.GetTimestamp()+60)
+	_, claimed, err := ClaimSystemTask(task.ID, model.SystemTaskTypeLogCleanup, runnerID, common.GetTimestamp()+60)
 	require.NoError(t, err)
 	require.True(t, claimed)
 
 	newLockUntil := common.GetTimestamp() + 600
 	require.NoError(t, RenewSystemTaskLock(task.TaskID, runnerID, newLockUntil))
 
-	var lock SystemTaskLock
-	require.NoError(t, DB.Where("task_id = ?", task.TaskID).First(&lock).Error)
+	var lock model.SystemTaskLock
+	require.NoError(t, model.DB.Where("task_id = ?", task.TaskID).First(&lock).Error)
 	assert.Equal(t, newLockUntil, lock.LockedUntil)
 
 	// A different runner cannot renew a lease it does not hold.
 	assert.ErrorIs(t, RenewSystemTaskLock(task.TaskID, "runner-b", common.GetTimestamp()+600), ErrSystemTaskLockLost)
 
 	// After the task finishes it is no longer running, so renew fails.
-	require.NoError(t, FinishSystemTask(task.TaskID, runnerID, SystemTaskStatusSucceeded, nil, ""))
+	require.NoError(t, FinishSystemTask(task.TaskID, runnerID, model.SystemTaskStatusSucceeded, nil, ""))
 	assert.ErrorIs(t, RenewSystemTaskLock(task.TaskID, runnerID, common.GetTimestamp()+600), ErrSystemTaskLockLost)
 }
 
 func TestFinishSystemTaskRetainsExecutor(t *testing.T) {
 	truncateTables(t)
 
-	task, err := CreateSystemTask(SystemTaskTypeLogCleanup, nil, nil)
+	task, err := CreateSystemTask(model.SystemTaskTypeLogCleanup, nil, nil)
 	require.NoError(t, err)
 
 	runnerID := "node-1-abc123"
-	_, claimed, err := ClaimSystemTask(task.ID, SystemTaskTypeLogCleanup, runnerID, common.GetTimestamp()+60)
+	_, claimed, err := ClaimSystemTask(task.ID, model.SystemTaskTypeLogCleanup, runnerID, common.GetTimestamp()+60)
 	require.NoError(t, err)
 	require.True(t, claimed)
 
-	require.NoError(t, FinishSystemTask(task.TaskID, runnerID, SystemTaskStatusSucceeded, nil, ""))
+	require.NoError(t, FinishSystemTask(task.TaskID, runnerID, model.SystemTaskStatusSucceeded, nil, ""))
 
 	reloaded, err := GetSystemTaskByTaskID(task.TaskID)
 	require.NoError(t, err)
 	require.NotNil(t, reloaded)
-	assert.Equal(t, SystemTaskStatusSucceeded, reloaded.Status)
+	assert.Equal(t, model.SystemTaskStatusSucceeded, reloaded.Status)
 	assert.Equal(t, runnerID, reloaded.LockedBy, "executor-of-record must be retained for history")
 
 	var lockCount int64
-	require.NoError(t, DB.Model(&SystemTaskLock{}).Where("task_id = ?", task.TaskID).Count(&lockCount).Error)
+	require.NoError(t, model.DB.Model(&model.SystemTaskLock{}).Where("task_id = ?", task.TaskID).Count(&lockCount).Error)
 	assert.Equal(t, int64(0), lockCount)
 }
 
 func TestSystemTaskUpdatesRequireCurrentLock(t *testing.T) {
 	truncateTables(t)
 
-	task, err := CreateSystemTask(SystemTaskTypeLogCleanup, nil, nil)
+	task, err := CreateSystemTask(model.SystemTaskTypeLogCleanup, nil, nil)
 	require.NoError(t, err)
 
 	runnerID := "runner-a"
-	_, claimed, err := ClaimSystemTask(task.ID, SystemTaskTypeLogCleanup, runnerID, common.GetTimestamp()+60)
+	_, claimed, err := ClaimSystemTask(task.ID, model.SystemTaskTypeLogCleanup, runnerID, common.GetTimestamp()+60)
 	require.NoError(t, err)
 	require.True(t, claimed)
 
-	require.NoError(t, DB.Model(&SystemTaskLock{}).
+	require.NoError(t, model.DB.Model(&model.SystemTaskLock{}).
 		Where("task_id = ?", task.TaskID).
 		Updates(map[string]any{"locked_by": "runner-b"}).Error)
 
 	assert.ErrorIs(t, UpdateSystemTaskState(task.TaskID, runnerID, testSystemTaskState{Progress: 10}), ErrSystemTaskLockLost)
-	assert.ErrorIs(t, FinishSystemTask(task.TaskID, runnerID, SystemTaskStatusSucceeded, nil, ""), ErrSystemTaskLockLost)
+	assert.ErrorIs(t, FinishSystemTask(task.TaskID, runnerID, model.SystemTaskStatusSucceeded, nil, ""), ErrSystemTaskLockLost)
 }
 
 func TestSystemTaskUpdatesRequireUnexpiredLock(t *testing.T) {
 	truncateTables(t)
 
-	task, err := CreateSystemTask(SystemTaskTypeLogCleanup, nil, nil)
+	task, err := CreateSystemTask(model.SystemTaskTypeLogCleanup, nil, nil)
 	require.NoError(t, err)
 
 	runnerID := "runner-a"
-	_, claimed, err := ClaimSystemTask(task.ID, SystemTaskTypeLogCleanup, runnerID, common.GetTimestamp()+60)
+	_, claimed, err := ClaimSystemTask(task.ID, model.SystemTaskTypeLogCleanup, runnerID, common.GetTimestamp()+60)
 	require.NoError(t, err)
 	require.True(t, claimed)
 
-	require.NoError(t, DB.Model(&SystemTaskLock{}).
+	require.NoError(t, model.DB.Model(&model.SystemTaskLock{}).
 		Where("task_id = ?", task.TaskID).
 		Update("locked_until", common.GetTimestamp()-1).Error)
 
 	assert.ErrorIs(t, UpdateSystemTaskState(task.TaskID, runnerID, testSystemTaskState{Progress: 10}), ErrSystemTaskLockLost)
-	assert.ErrorIs(t, FinishSystemTask(task.TaskID, runnerID, SystemTaskStatusSucceeded, nil, ""), ErrSystemTaskLockLost)
+	assert.ErrorIs(t, FinishSystemTask(task.TaskID, runnerID, model.SystemTaskStatusSucceeded, nil, ""), ErrSystemTaskLockLost)
 
 	reloaded, err := GetSystemTaskByTaskID(task.TaskID)
 	require.NoError(t, err)
 	require.NotNil(t, reloaded)
-	assert.Equal(t, SystemTaskStatusRunning, reloaded.Status)
+	assert.Equal(t, model.SystemTaskStatusRunning, reloaded.Status)
 	assert.Empty(t, reloaded.State)
 }
