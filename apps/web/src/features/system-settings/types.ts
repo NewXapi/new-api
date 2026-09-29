@@ -435,6 +435,17 @@ export type BillingSettings = {
   'qq_bot_setting.steal_max_amount': number
   'qq_bot_setting.steal_daily_limit': number
   'qq_bot_setting.steal_recipient_grace_seconds': number
+  'qq_bot_setting.bait_keyword': string
+  'qq_bot_setting.bait_strict_match': boolean
+  'qq_bot_setting.bait_window_minutes': number
+  'qq_bot_setting.bait_victim_extra_rate': number
+  'qq_bot_setting.bait_global_extra_multiplier': number
+  'qq_bot_setting.bait_drop_max_deny_rate': number
+  'qq_bot_setting.bait_spam_threshold': number
+  'qq_bot_setting.bait_spam_penalty_minutes': number
+  'qq_bot_setting.bait_spam_stack_step': number
+  'qq_bot_setting.bait_spam_deny_rate': number
+  'qq_bot_setting.bait_spam_steal_rate': number
   'qq_bot_setting.command_cooldown_seconds': number
   'qq_bot_setting.rebind_cooldown_seconds': number
   'qq_bot_setting.recall_failed_messages': boolean
