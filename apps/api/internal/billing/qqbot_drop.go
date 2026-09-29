@@ -409,6 +409,18 @@ func HandleGroupChatForDrop(event *GroupAtMessageEvent) {
 		return
 	}
 
+	// 关键词诱饵惩罚：触发者窗口内念叨关键词占比越高，越可能接不住这次
+	// 掉落。不发放也不重置计数，顺延给下一位说话的人（与未绑定顺延同款）。
+	kwDeny := baitDropDenyRate(baitVictimRatio(event.GroupOpenID, openID), s.BaitDropMaxDenyRate)
+	// 刷屏惩罚叠加：刷屏者在惩罚期内直接加固定点数，不看关键词占比
+	_, spamDeny := baitSpamPointsFor(event.GroupOpenID, openID)
+	totalDeny := kwDeny + spamDeny
+	if totalDeny > 0 && rand.Intn(100) < totalDeny {
+		common.SysLog(fmt.Sprintf("诱饵惩罚：掉落顺延 group=%s user=%s deny=%d%%(关键词%d%%+刷屏%d%%)",
+			event.GroupOpenID, openID, totalDeny, kwDeny, spamDeny))
+		return
+	}
+
 	quota := randomDropQuota(s.DropMinQuota, s.DropMaxQuota)
 	drop, err := AwardQQDrop(userId, openID, event.GroupOpenID, quota, s.DropDailyLimit)
 	if err != nil {

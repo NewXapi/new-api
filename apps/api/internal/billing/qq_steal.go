@@ -335,6 +335,24 @@ func HandleStealCommand(event *GroupAtMessageEvent, senderOpenID string) string 
 	}
 
 	amount := randomDropQuota(minQuota, maxQuota)
+	successRate := s.StealSuccessRate
+
+	// 关键词诱饵：受害者念叨得越多越容易被偷得手，全群氛围越热单次偷得越多。
+	// 占比在事务外读取，作为掷骰参数而非结算依据，读到旧值只是本轮手感偏差。
+	var victimBait, globalBait float64
+	if s.BaitVictimExtraRate > 0 || s.BaitGlobalExtraMultiplier > 0 {
+		victimBait = baitVictimRatio(event.GroupOpenID, victimOpenID)
+		globalBait = baitGlobalRatio(event.GroupOpenID)
+		successRate = baitStealSuccessRate(successRate, victimBait, s.BaitVictimExtraRate)
+		amount = baitScaledAmount(amount, globalBait, s.BaitGlobalExtraMultiplier, minQuota, maxQuota)
+	}
+
+	// 刷屏惩罚：受害者近期刷屏时额外叠加被偷成功率（与关键词加成独立累加）。
+	if s.BaitSpamStealRate > 0 || s.BaitSpamStackStep > 0 {
+		if _, spamSteal := baitSpamPointsFor(event.GroupOpenID, victimOpenID); spamSteal > 0 {
+			successRate = clampPercent(float64(successRate + spamSteal))
+		}
+	}
 
 	steal, err := DoQQSteal(&QQStealParams{
 		ThiefUserId:  thiefUserId,
@@ -343,7 +361,7 @@ func HandleStealCommand(event *GroupAtMessageEvent, senderOpenID string) string 
 		VictimOpenID: victimOpenID,
 		GroupOpenID:  event.GroupOpenID,
 		Amount:       amount,
-		SuccessRate:  s.StealSuccessRate,
+		SuccessRate:  successRate,
 		DailyLimit:   s.StealDailyLimit,
 		GraceSeconds: s.StealRecipientGraceSeconds,
 	})
@@ -374,6 +392,13 @@ func HandleStealCommand(event *GroupAtMessageEvent, senderOpenID string) string 
 		atUser(victimOpenID), trimFloat(quotaToUnits(steal.Amount)), symbol))
 	sb.WriteString(fmt.Sprintf("%s 的奶酪被偷走了 %s%s，注意防守！\n\n",
 		atUser(victimOpenID), trimFloat(quotaToUnits(steal.Amount)), symbol))
+	// 诱饵生效提示：让群成员能感知机制存在，念叨关键词有代价
+	if victimBait > 0 && s.BaitVictimExtraRate > 0 {
+		sb.WriteString(fmt.Sprintf("他最近满口「%s」，被盯上了\n\n", strings.TrimSpace(s.BaitKeyword)))
+	}
+	if globalBait > 0 && s.BaitGlobalExtraMultiplier > 0 {
+		sb.WriteString("整群都在念叨，这次偷得很肥\n\n")
+	}
 	sb.WriteString(fmt.Sprintf("你的余额 %s%s",
 		trimFloat(quotaToUnits(thiefBalance)), symbol))
 	return sb.String()

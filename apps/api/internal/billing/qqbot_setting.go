@@ -136,6 +136,42 @@ type QQBotSetting struct {
 	// StealRecipientGraceSeconds 得手后受害者不能再被偷的冷却窗口（秒），0 = 关闭。
 	StealRecipientGraceSeconds int `json:"steal_recipient_grace_seconds"`
 
+	// 关键词诱饵：窗口内消息命中关键词的比例影响偷盗与掉落。
+	// 三个效果共用 BaitKeyword 与 BaitStrictMatch，强度参数为 0 表示关闭该效果，
+	// 全部为 0 时不做任何消息采样。
+	//
+	// BaitStrictMatch 为严格标签模式：开启后消息（剥 @ 标签与空白）必须一字不差
+	// 等于关键词才算命中；关闭为包含匹配。统计为进程内滑动窗口，重启清零。
+	BaitKeyword string `json:"bait_keyword"`
+
+	BaitStrictMatch  bool `json:"bait_strict_match"`
+	BaitWindowMinutes int `json:"bait_window_minutes"`
+
+	// BaitVictimExtraRate 受害者关键词占比 100% 时额外增加的被偷成功率（百分点），
+	// 占比越低按比例减弱，0 = 关闭。
+	BaitVictimExtraRate int `json:"bait_victim_extra_rate"`
+
+	// BaitGlobalExtraMultiplier 全群关键词占比 100% 时单次偷取金额的额外放大倍数，
+	// 占比越低按比例减弱，0 = 关闭。
+	BaitGlobalExtraMultiplier float64 `json:"bait_global_extra_multiplier"`
+
+	// BaitDropMaxDenyRate 掉落触发者关键词占比 100% 时被跳过的概率上限（百分点），
+	// 被跳过的掉落顺延给下一位说话的人，占比越低按比例减弱，0 = 关闭。
+	BaitDropMaxDenyRate int `json:"bait_drop_max_deny_rate"`
+
+	// 刷屏惩罚：窗口内消息数超过 BaitSpamThreshold 视为刷屏，惩罚持续
+	// BaitSpamPenaltyMinutes 分钟（0 = 只在持续超阈值时生效）。惩罚点数 =
+	// 基础点 + 超阈值条数 × BaitSpamStackStep（0 = 不叠加，固定惩罚），
+	// 与关键词占比效果相互独立、在最终概率上叠加，0 = 关闭该维度。
+	BaitSpamThreshold      int `json:"bait_spam_threshold"`
+	BaitSpamPenaltyMinutes int `json:"bait_spam_penalty_minutes"`
+	BaitSpamStackStep      int `json:"bait_spam_stack_step"`
+
+	// BaitSpamDenyRate 刷屏惩罚加到掉落拒发概率的基础百分点（0-100），
+	// BaitSpamStealRate 加到被偷成功率的基础百分点（0-100）。
+	BaitSpamDenyRate  int `json:"bait_spam_deny_rate"`
+	BaitSpamStealRate int `json:"bait_spam_steal_rate"`
+
 	// RecallPolicies 按内容类型配置自动撤回秒数的 JSON 映射，形如
 	// {"drop_award":30,"checkin_fail":10}。0 或缺失的类型不撤回；
 	// 留空（或 {}）时回落到旧行为：仅失败提示受 recall_failed_messages 开关控制。
@@ -199,6 +235,21 @@ var qqBotSetting = QQBotSetting{
 	StealMaxAmount:             0.5,
 	StealDailyLimit:            3,
 	StealRecipientGraceSeconds: 0,
+
+	// 关键词诱饵默认关闭（三个强度参数为 0 不采样）；关键词预填"杰瑞"
+	BaitKeyword:               "杰瑞",
+	BaitStrictMatch:           false,
+	BaitWindowMinutes:         30,
+	BaitVictimExtraRate:       0,
+	BaitGlobalExtraMultiplier: 0,
+	BaitDropMaxDenyRate:       0,
+
+	// 刷屏惩罚默认关闭
+	BaitSpamThreshold:      0,
+	BaitSpamPenaltyMinutes: 10,
+	BaitSpamStackStep:      0,
+	BaitSpamDenyRate:       0,
+	BaitSpamStealRate:      0,
 
 	TransferEnabled:        false,
 	TransferDisabledGroups: "",

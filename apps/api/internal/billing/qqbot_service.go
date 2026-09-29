@@ -612,7 +612,8 @@ func HandleGroupAtMessage(event *GroupAtMessageEvent) {
 		}
 
 	default:
-		// 普通水群消息：累计掉落进度，命中阈值时发放奖励
+		// 普通水群消息：关键词诱饵采样 + 累计掉落进度，命中阈值时发放奖励
+		HandleGroupChatForBait(event)
 		HandleGroupChatForDrop(event)
 	}
 }

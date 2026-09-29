@@ -103,6 +103,17 @@ const qqbotSchema = z.object({
     steal_max_amount: z.coerce.number().min(0),
     steal_daily_limit: z.coerce.number().int(),
     steal_recipient_grace_seconds: z.coerce.number().int().min(0),
+    bait_keyword: z.string(),
+    bait_strict_match: z.boolean(),
+    bait_window_minutes: z.coerce.number().int().min(1),
+    bait_victim_extra_rate: z.coerce.number().int().min(0).max(100),
+    bait_global_extra_multiplier: z.coerce.number().min(0),
+    bait_drop_max_deny_rate: z.coerce.number().int().min(0).max(100),
+    bait_spam_threshold: z.coerce.number().int().min(0),
+    bait_spam_penalty_minutes: z.coerce.number().int().min(0),
+    bait_spam_stack_step: z.coerce.number().int().min(0),
+    bait_spam_deny_rate: z.coerce.number().int().min(0).max(100),
+    bait_spam_steal_rate: z.coerce.number().int().min(0).max(100),
   }),
 })
 
@@ -813,6 +824,204 @@ export function QQBotSettingsSection({
                 <FormDescription>
                   {t(
                     'After a successful steal the same victim cannot be targeted again for this many seconds. 0 disables'
+                  )}
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='qq_bot_setting.bait_strict_match'
+            render={({ field }) => (
+              <SettingsSwitchItem>
+                <SettingsSwitchContent>
+                  <FormLabel>{t('Strict tag matching')}</FormLabel>
+                  <FormDescription>
+                    {t(
+                      'Message must exactly equal the keyword when enabled; substring match when disabled. Applies to all bait effects'
+                    )}
+                  </FormDescription>
+                </SettingsSwitchContent>
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+              </SettingsSwitchItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='qq_bot_setting.bait_keyword'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('Bait keyword')}</FormLabel>
+                <FormControl>
+                  <Input {...field} />
+                </FormControl>
+                <FormDescription>
+                  {t(
+                    'Messages mentioning this keyword raise the sender\'s chance of being stolen and lower their chance of receiving drops, tracked over a sliding window'
+                  )}
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='qq_bot_setting.bait_window_minutes'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('Bait statistics window (minutes)')}</FormLabel>
+                <FormControl>
+                  <Input type='number' min={1} {...field} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='qq_bot_setting.bait_victim_extra_rate'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('Victim bait bonus cap (percent points)')}</FormLabel>
+                <FormControl>
+                  <Input type='number' min={0} max={100} {...field} />
+                </FormControl>
+                <FormDescription>
+                  {t(
+                    'Extra steal success rate when the victim\'s keyword ratio is 100%, scaled proportionally below that. 0 disables'
+                  )}
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='qq_bot_setting.bait_global_extra_multiplier'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('Global steal-amount multiplier cap')}</FormLabel>
+                <FormControl>
+                  <Input type='number' min={0} step='0.1' {...field} />
+                </FormControl>
+                <FormDescription>
+                  {t(
+                    'Extra multiplier on the stolen amount when the whole group\'s keyword ratio is 100%, scaled proportionally. 0 disables'
+                  )}
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='qq_bot_setting.bait_drop_max_deny_rate'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('Drop denial cap (percent)')}</FormLabel>
+                <FormControl>
+                  <Input type='number' min={0} max={100} {...field} />
+                </FormControl>
+                <FormDescription>
+                  {t(
+                    'Chance to skip this user when a drop triggers, at 100% keyword ratio, scaled proportionally. The drop rolls over to the next speaker. 0 disables'
+                  )}
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='qq_bot_setting.bait_spam_threshold'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('Spam threshold (messages in window)')}</FormLabel>
+                <FormControl>
+                  <Input type='number' min={0} {...field} />
+                </FormControl>
+                <FormDescription>
+                  {t(
+                    'More than this many messages inside the statistics window marks the sender as spamming. 0 disables'
+                  )}
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='qq_bot_setting.bait_spam_penalty_minutes'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('Spam penalty duration (minutes)')}</FormLabel>
+                <FormControl>
+                  <Input type='number' min={0} {...field} />
+                </FormControl>
+                <FormDescription>
+                  {t(
+                    'How long the penalty lasts after triggering. Refreshes each time the sender exceeds the threshold again. 0 keeps it active only while over the threshold'
+                  )}
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='qq_bot_setting.bait_spam_stack_step'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('Spam stack step (percent points per excess)')}</FormLabel>
+                <FormControl>
+                  <Input type='number' min={0} {...field} />
+                </FormControl>
+                <FormDescription>
+                  {t(
+                    'Each message beyond the threshold adds this many percent points to the spam penalty. 0 means a fixed penalty without stacking'
+                  )}
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='qq_bot_setting.bait_spam_deny_rate'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('Spam drop denial (percent)')}</FormLabel>
+                <FormControl>
+                  <Input type='number' min={0} max={100} {...field} />
+                </FormControl>
+                <FormDescription>
+                  {t(
+                    'Base percent added to the drop-denial chance while the sender is spam-penalized, stacks with stack step. 0 disables'
+                  )}
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='qq_bot_setting.bait_spam_steal_rate'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>{t('Spam steal-rate bonus (percent)')}</FormLabel>
+                <FormControl>
+                  <Input type='number' min={0} max={100} {...field} />
+                </FormControl>
+                <FormDescription>
+                  {t(
+                    'Base percent added to the victim\'s steal success chance while they are spam-penalized, stacks with stack step. 0 disables'
                   )}
                 </FormDescription>
               </FormItem>

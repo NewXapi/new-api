@@ -6003,6 +6003,27 @@
     "Zero retention": "データ保持なし",
     "Zhipu": "Zhipu",
     "Zhipu V4": "Zhipu V 4",
-    "Zoom": "ズーム"
+    "Zoom": "ズーム",
+    "Bait keyword": "Bait keyword",
+    "Bait statistics window (minutes)": "Bait statistics window (minutes)",
+    "Chance to skip this user when a drop triggers, at 100% keyword ratio, scaled proportionally. The drop rolls over to the next speaker. 0 disables": "Chance to skip this user when a drop triggers, at 100% keyword ratio, scaled proportionally. The drop rolls over to the next speaker. 0 disables",
+    "Drop denial cap (percent)": "Drop denial cap (percent)",
+    "Extra multiplier on the stolen amount when the whole group's keyword ratio is 100%, scaled proportionally. 0 disables": "Extra multiplier on the stolen amount when the whole group's keyword ratio is 100%, scaled proportionally. 0 disables",
+    "Extra steal success rate when the victim's keyword ratio is 100%, scaled proportionally below that. 0 disables": "Extra steal success rate when the victim's keyword ratio is 100%, scaled proportionally below that. 0 disables",
+    "Global steal-amount multiplier cap": "Global steal-amount multiplier cap",
+    "Message must exactly equal the keyword when enabled; substring match when disabled. Applies to all bait effects": "Message must exactly equal the keyword when enabled; substring match when disabled. Applies to all bait effects",
+    "Messages mentioning this keyword raise the sender's chance of being stolen and lower their chance of receiving drops, tracked over a sliding window": "Messages mentioning this keyword raise the sender's chance of being stolen and lower their chance of receiving drops, tracked over a sliding window",
+    "Strict tag matching": "Strict tag matching",
+    "Victim bait bonus cap (percent points)": "Victim bait bonus cap (percent points)",
+    "Spam threshold (messages in window)": "Spam threshold (messages in window)",
+    "More than this many messages inside the statistics window marks the sender as spamming. 0 disables": "More than this many messages inside the statistics window marks the sender as spamming. 0 disables",
+    "Spam penalty duration (minutes)": "Spam penalty duration (minutes)",
+    "How long the penalty lasts after triggering. Refreshes each time the sender exceeds the threshold again. 0 keeps it active only while over the threshold": "How long the penalty lasts after triggering. Refreshes each time the sender exceeds the threshold again. 0 keeps it active only while over the threshold",
+    "Spam stack step (percent points per excess)": "Spam stack step (percent points per excess)",
+    "Each message beyond the threshold adds this many percent points to the spam penalty. 0 means a fixed penalty without stacking": "Each message beyond the threshold adds this many percent points to the spam penalty. 0 means a fixed penalty without stacking",
+    "Spam drop denial (percent)": "Spam drop denial (percent)",
+    "Base percent added to the drop-denial chance while the sender is spam-penalized, stacks with stack step. 0 disables": "Base percent added to the drop-denial chance while the sender is spam-penalized, stacks with stack step. 0 disables",
+    "Spam steal-rate bonus (percent)": "Spam steal-rate bonus (percent)",
+    "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables": "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables"
   }
 }

@@ -311,6 +311,28 @@ const BILLING_SECTIONS = [
             settings['qq_bot_setting.steal_daily_limit'] ?? 3,
           'qq_bot_setting.steal_recipient_grace_seconds':
             settings['qq_bot_setting.steal_recipient_grace_seconds'] ?? 0,
+          'qq_bot_setting.bait_keyword':
+            settings['qq_bot_setting.bait_keyword'] ?? '杰瑞',
+          'qq_bot_setting.bait_strict_match':
+            settings['qq_bot_setting.bait_strict_match'] ?? false,
+          'qq_bot_setting.bait_window_minutes':
+            settings['qq_bot_setting.bait_window_minutes'] ?? 30,
+          'qq_bot_setting.bait_victim_extra_rate':
+            settings['qq_bot_setting.bait_victim_extra_rate'] ?? 0,
+          'qq_bot_setting.bait_global_extra_multiplier':
+            settings['qq_bot_setting.bait_global_extra_multiplier'] ?? 0,
+          'qq_bot_setting.bait_drop_max_deny_rate':
+            settings['qq_bot_setting.bait_drop_max_deny_rate'] ?? 0,
+          'qq_bot_setting.bait_spam_threshold':
+            settings['qq_bot_setting.bait_spam_threshold'] ?? 0,
+          'qq_bot_setting.bait_spam_penalty_minutes':
+            settings['qq_bot_setting.bait_spam_penalty_minutes'] ?? 10,
+          'qq_bot_setting.bait_spam_stack_step':
+            settings['qq_bot_setting.bait_spam_stack_step'] ?? 0,
+          'qq_bot_setting.bait_spam_deny_rate':
+            settings['qq_bot_setting.bait_spam_deny_rate'] ?? 0,
+          'qq_bot_setting.bait_spam_steal_rate':
+            settings['qq_bot_setting.bait_spam_steal_rate'] ?? 0,
           'qq_bot_setting.command_cooldown_seconds':
             settings['qq_bot_setting.command_cooldown_seconds'] ?? 0,
           'qq_bot_setting.rebind_cooldown_seconds':
