@@ -104,3 +104,34 @@ func TestInsightAutoBanReasonPrecedence(t *testing.T) {
 	off := &UserInsightSetting{}
 	assert.Equal(t, "", insightAutoBanReason(profile, off))
 }
+
+// 代码侧下限的边界：5939 案（9 次请求里 3 次贴码 + confirmed 破甲）
+// 必须放行——分类器按设计高召回，偶发贴码不构成"拿站点当编码 API"。
+// 绝对量（5 次）与占比（10%）两个下限缺一不可。
+func TestInsightAutoBanQualifiedCodeBoundaries(t *testing.T) {
+	confirmed := "confirmed"
+	cases := []struct {
+		name     string
+		total    int
+		code     int
+		expected bool
+	}{
+		{"5939 案：3/9 贴码不封", 9, 3, false},
+		{"差一次达到绝对量", 9, 4, false},
+		{"刚好达到绝对量", 9, 5, true},
+		{"绝对量够但占比不足", 100, 5, false},
+		{"双下限同时达标", 20, 10, true},
+		{"零代码请求", 50, 0, false},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			profile := &UserInsightProfile{
+				TotalRequests:      tc.total,
+				CodeRequests:       tc.code,
+				JailbreakConfirmed: 1,
+				JailbreakMaxScore:  87,
+			}
+			assert.Equal(t, tc.expected, insightAutoBanQualified(profile, confirmed))
+		})
+	}
+}

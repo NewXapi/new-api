@@ -53,6 +53,13 @@ type UserInsightSetting struct {
 	// （与画像客户端识别规则的 ID 一致，如 claude_code / opencode / cursor）。
 	// ClientBanEnabled 开启时，请求被请求头识别为其中任一客户端即被拒绝。
 	BlockedClients []string `json:"blocked_clients"`
+	// SkipJailbreakClients 是跳过破甲检测的客户端 ID 列表，与
+	// BlockedClients 同一信任模型：识别命中即豁免（含仅提示词命中的）。
+	// 用途是放过运营方已知无害的酒馆类客户端，使其请求不给"破甲 + 写代码"
+	// 自动封禁供破甲弹药；用途分类与看板照常记录，观察面不丢失。
+	// 信任边界与封禁一致：伪造 UA 可绕过豁免，硬兜底是封禁门槛自身的
+	// 最小请求数与占比要求。
+	SkipJailbreakClients []string `json:"skip_jailbreak_clients"`
 }
 
 var userInsightSetting = UserInsightSetting{
