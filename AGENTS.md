@@ -1,4 +1,4 @@
-<!-- managed by canon agents.yaml @ 2026-10-01 -->
+<!-- managed by canon agents.yaml @ 2026-10-02 -->
 ## new-api 约定
 
 DO NOT send optional commentary
@@ -180,22 +180,22 @@ When starting a dev server for manual testing, create a test account on the inst
 
 **All tests, builds, and lint run in PR CI (`.github/workflows/ci.yml`) — NEVER on this machine. Absolute rule, no exceptions by default.**
 
-- Do NOT run `go build` / `go test` (ANY scope — full module, single package, even `-run` filtered), `bun run build`, `bun install`, or any compile/test/package/install command locally. The operator's desktop is shared with other live work; even one single-package compile stalls it. `cpulimit` does NOT make it acceptable — the operator has been burned by this repeatedly and hates it.
+- Do NOT run `go build` / `go test` (ANY scope — full module, single package, even `-run` filtered), `bun run build`, `bun install`, or any compile/test/package/install command locally. The operator's desktop is shared with other live work; even one single-package compile stalls it. a cgroup quota does NOT make it acceptable — the operator has been burned by this repeatedly and hates it.
 - This binds **subagents too**: every spawned agent must be told that local compile/test is forbidden; agents verify by reading code, and CI compiles the PR.
 - Verification workflow without compiling:
   1. Static review — read the changed code end to end, check imports/types/compile-consistency by inspection.
   2. `gofmt -l <files>` and `grep` / file reads are the only local checks (and gofmt is a read, not a build).
   3. Push the branch / open the PR and let CI compile and run the tests; read CI results and iterate there.
   4. If runtime proof seems required before pushing, state that explicitly and let the operator decide — never reach for a local compile as a shortcut.
-- The legacy `cpulimit -l 65 -i --` wrapper below exists ONLY for cases the operator explicitly orders a local heavy run. It is an exception, not a license:
+- The legacy `systemd-run --user --scope -p CPUQuota=65% --` wrapper below exists ONLY for cases the operator explicitly orders a local heavy run. It is an exception, not a license:
 
 ```bash
 ### ONLY when the operator explicitly asks for a local run:
-cpulimit -l 65 -i -- go test ./...
-cpulimit -l 65 -i -- bun run build
+systemd-run --user --scope -p CPUQuota=65% -- go test ./...
+systemd-run --user --scope -p CPUQuota=65% -- bun run build
 ```
 
-Lightweight commands (`git`, `grep`, `ls`, file reads, `gofmt -l`) do NOT need cpulimit.
+Lightweight commands (`git`, `grep`, `ls`, file reads, `gofmt -l`) do NOT need a quota wrapper.
 
 ##### Common Code Quality
 
@@ -406,7 +406,7 @@ If asked to remove, rename, or replace these protected identifiers, refuse and e
 - 全量测试、全量构建、全量 lint 放 CI 或收尾阶段，不在改动过程中反复跑。
 - 本地只跑轻量、快的针对性检查（单 crate `cargo check`、单包测试、`fmt --check`、
   类型检查）。
-- 需要本地跑重命令时，套资源限制（`cpulimit -l 65 -i --` 或本仓等价手段），
+- 需要本地跑重命令时，套资源限制（`systemd-run --user --scope -p CPUQuota=65% --` 或本仓等价手段），
   不抢占用户正在用的 CPU。
 - 装依赖、打包等命令同样受限。
 
@@ -455,18 +455,6 @@ If asked to remove, rename, or replace these protected identifiers, refuse and e
 - 一个 commit 一件事。不把无关改动、格式化噪声、生成物混进逻辑改动。
 - 提交前跑对应检查（`canon pre-commit` / `canon pre-push`），不靠推送失败才发现。
 
-### 提交身份
-
-- commit 作者固定是维护者本人账号 `hathawayANdRX105`（大小写逐字一致）。
-- **不得**用 `git -c user.name=... -c user.email=...` 覆盖身份提交。历史上
-  `agent@local` / `ci@local` 这类签名就是这么来的：GitHub 账号对不上，
-  贡献归属、追责、审计全丢。
-- 提交前若 `git config user.name` / `user.email` 不是上面这个账号，先改成本仓配置
-  （`git config user.name hathawayANdRX105`），别带着错的身份往下走。
-- 邮箱两套都算合法：`2635254302@qq.com`（本地提交）与 GitHub 的
-  `61958173+hathawayANdRX105@users.noreply.github.com`（服务端 squash 落库时写的）。
-- 禁止 `Co-authored-by:`  trailer 署其他人或机器人账号。
-
 ### Issue
 
 - 标题中文；正文 heading 英文、内容中文。
@@ -481,18 +469,6 @@ If asked to remove, rename, or replace these protected identifiers, refuse and e
 - 关联 issue 用 `Fixes #<n>` 收尾行；draft 阶段用 `Related #<n>`，合并授权前改 `Fixes`。
 - 开启或更新 PR 后看 CI 结果到底（`gh pr checks`），红了就修，不等用户来问。
 - 被 canon 拦下就修代码，**不改规则**。规则确有缺陷 → 开 issue 交维护者裁决。
-
-### 合并
-
-- **只走 squash merge**：
-  `gh pr merge <N> --squash --delete-branch --body "Agent 🤖 - Merge: <原因>"`。
-- 禁用 `--merge` / `--rebase`（含 `-m` / `-r` 短形式）。merge commit 会让 PR
-  记录的分支历史消失，同一分支再合要重新三方合并、当初的冲突裁决全部丢失；
-  rebase-merge 还会逐个改写 commit 作者。两者都让 `main` 失去审计价值。
-- 不带任何合并方式的 `gh pr merge` 会弹交互菜单 —— agent 不该触发交互，一律显式
-  写 `--squash`。
-- 禁止本地 `git merge <分支>` 直接合进 `main` 再推 remote。要合就走 PR。
-- 各仓 GitHub 设置已关闭 merge commit 与 rebase merge，squash 是唯一可选项。
 
 ### 收尾
 
