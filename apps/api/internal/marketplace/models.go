@@ -38,11 +38,12 @@ const (
 )
 
 // MarketplaceSetting stores singleton marketplace controls. Ratios use basis
-// points (10000 means 100%).
+// points (10000 means 100%); income freeze is configured in minutes.
 type MarketplaceSetting struct {
-	ID             int64 `gorm:"primaryKey" json:"id"`
-	MaxUploadBytes int64 `gorm:"not null" json:"max_upload_bytes"`
-	BaseShareRatio int64 `gorm:"not null" json:"base_share_ratio"`
+	ID                  int64 `gorm:"primaryKey" json:"id"`
+	MaxUploadBytes      int64 `gorm:"not null" json:"max_upload_bytes"`
+	BaseShareRatio      int64 `gorm:"not null" json:"base_share_ratio"`
+	IncomeFreezeMinutes int64 `gorm:"not null;default:60" json:"income_freeze_minutes"`
 }
 
 // Resource is the stable identity and access policy of a marketplace item.
@@ -129,15 +130,18 @@ type ResourceOrder struct {
 	CompletedAt      *time.Time `json:"completed_at,omitempty"`
 }
 
-// ResourceSettlement snapshots the split produced by an order.
+// ResourceSettlement snapshots the split produced by an order. Author income
+// stays frozen until ThawAt and only reaches the balance via manual exchange.
 type ResourceSettlement struct {
-	ID             int64     `gorm:"primaryKey" json:"id"`
-	OrderID        int64     `gorm:"not null;uniqueIndex" json:"order_id"`
-	AuthorID       int       `gorm:"not null;index" json:"author_id"`
-	AuthorAmount   int64     `gorm:"not null" json:"author_amount"`
-	PlatformAmount int64     `gorm:"not null" json:"platform_amount"`
-	Currency       string    `gorm:"size:16;not null" json:"currency"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID             int64      `gorm:"primaryKey" json:"id"`
+	OrderID        int64      `gorm:"not null;uniqueIndex" json:"order_id"`
+	AuthorID       int        `gorm:"not null;index" json:"author_id"`
+	AuthorAmount   int64      `gorm:"not null" json:"author_amount"`
+	PlatformAmount int64      `gorm:"not null" json:"platform_amount"`
+	Currency       string     `gorm:"size:16;not null" json:"currency"`
+	CreatedAt      time.Time  `json:"created_at"`
+	ThawAt         time.Time  `gorm:"not null;index" json:"thaw_at"`
+	ExchangedAt    *time.Time `json:"exchanged_at,omitempty"`
 }
 
 // RevenueAgreement is a versioned author agreement that determines a split

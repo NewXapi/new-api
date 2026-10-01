@@ -9,6 +9,7 @@ import (
 	"github.com/QuantumNous/new-api/internal/identity/policy"
 	"github.com/QuantumNous/new-api/internal/security"
 	"github.com/QuantumNous/new-api/internal/transport/contract"
+	"github.com/QuantumNous/new-api/internal/transport/middleware"
 	"gorm.io/gorm"
 )
 
@@ -48,6 +49,8 @@ func SetApiRouter(apiRouter contract.Routes) {
 	{
 		user.GET("/resources", GetMyResourcesHandler)
 		user.GET("/orders", GetMyOrdersHandler)
+		user.GET("/settlements", GetMySettlementsHandler)
+		user.POST("/settlements/exchange", middleware.CriticalRateLimit(), ExchangeSettlementsHandler)
 		user.GET("/agreements", ListActiveAgreementsHandler)
 		user.POST("/agreements/:id/accept", AcceptAgreementHandler)
 		user.POST("/resources", CreateResourceHandler)

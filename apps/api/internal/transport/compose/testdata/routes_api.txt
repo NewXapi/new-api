@@ -80,6 +80,7 @@ GET /api/marketplace/resources/:id/download
 GET /api/marketplace/user/agreements
 GET /api/marketplace/user/orders
 GET /api/marketplace/user/resources
+GET /api/marketplace/user/settlements
 GET /api/mj/
 GET /api/mj/self
 GET /api/models
@@ -206,6 +207,7 @@ POST /api/marketplace/user/resources/:id/claim
 POST /api/marketplace/user/resources/:id/purchase
 POST /api/marketplace/user/resources/:id/share
 POST /api/marketplace/user/resources/:id/versions
+POST /api/marketplace/user/settlements/exchange
 POST /api/models/
 POST /api/models/sync_upstream
 POST /api/oauth/email/bind

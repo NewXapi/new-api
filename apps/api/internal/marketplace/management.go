@@ -8,23 +8,24 @@ import (
 	"gorm.io/gorm"
 )
 
-func UpdateMarketplaceSetting(tx *gorm.DB, maxUploadBytes, baseShareRatio int64) (*MarketplaceSetting, error) {
-	if maxUploadBytes <= 0 || baseShareRatio < 0 || baseShareRatio > ShareRatioScale {
+func UpdateMarketplaceSetting(tx *gorm.DB, maxUploadBytes, baseShareRatio, incomeFreezeMinutes int64) (*MarketplaceSetting, error) {
+	if maxUploadBytes <= 0 || baseShareRatio < 0 || baseShareRatio > ShareRatioScale || incomeFreezeMinutes < 0 {
 		return nil, errors.New("invalid marketplace setting")
 	}
 	var setting MarketplaceSetting
 	if err := tx.First(&setting).Error; errors.Is(err, gorm.ErrRecordNotFound) {
-		setting = MarketplaceSetting{MaxUploadBytes: maxUploadBytes, BaseShareRatio: baseShareRatio}
+		setting = MarketplaceSetting{MaxUploadBytes: maxUploadBytes, BaseShareRatio: baseShareRatio, IncomeFreezeMinutes: incomeFreezeMinutes}
 		if err := tx.Create(&setting).Error; err != nil {
 			return nil, err
 		}
 	} else if err != nil {
 		return nil, err
-	} else if err := tx.Model(&setting).Updates(map[string]any{"max_upload_bytes": maxUploadBytes, "base_share_ratio": baseShareRatio}).Error; err != nil {
+	} else if err := tx.Model(&setting).Updates(map[string]any{"max_upload_bytes": maxUploadBytes, "base_share_ratio": baseShareRatio, "income_freeze_minutes": incomeFreezeMinutes}).Error; err != nil {
 		return nil, err
 	} else {
 		setting.MaxUploadBytes = maxUploadBytes
 		setting.BaseShareRatio = baseShareRatio
+		setting.IncomeFreezeMinutes = incomeFreezeMinutes
 	}
 	_ = SetMaxUploadBytes(maxUploadBytes)
 	return &setting, nil

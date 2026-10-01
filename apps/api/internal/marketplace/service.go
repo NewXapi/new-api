@@ -23,9 +23,10 @@ var (
 )
 
 const (
-	DefaultMarketplaceMaxUploadBytes int64 = 16 << 20
-	DefaultMarketplaceShareRatio     int64 = 0
-	ShareRatioScale                  int64 = 10000
+	DefaultMarketplaceMaxUploadBytes      int64 = 16 << 20
+	DefaultMarketplaceShareRatio          int64 = 0
+	DefaultMarketplaceIncomeFreezeMinutes int64 = 60
+	ShareRatioScale                       int64 = 10000
 )
 
 func CreateResource(tx *gorm.DB, authorID int, resourceType, title, summary, visibility, currency string, price int64) (*Resource, error) {
@@ -146,7 +147,7 @@ func EnsureMarketplaceSetting(tx *gorm.DB) (*MarketplaceSetting, error) {
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
-	setting = MarketplaceSetting{MaxUploadBytes: DefaultMarketplaceMaxUploadBytes, BaseShareRatio: DefaultMarketplaceShareRatio}
+	setting = MarketplaceSetting{MaxUploadBytes: DefaultMarketplaceMaxUploadBytes, BaseShareRatio: DefaultMarketplaceShareRatio, IncomeFreezeMinutes: DefaultMarketplaceIncomeFreezeMinutes}
 	if err := tx.Create(&setting).Error; err != nil {
 		return nil, err
 	}
@@ -339,7 +340,7 @@ func PurchaseResource(userID int, resourceID int64, idempotencyKey string) (*Res
 		return nil, ErrInvalidResource
 	}
 	var order ResourceOrder
-	var chargedQuota, creditedQuota int
+	var chargedQuota int
 	err := dbx.DB.Transaction(func(tx *gorm.DB) error {
 		var existing ResourceOrder
 		if err := tx.Where("idempotency_key = ?", idempotencyKey).First(&existing).Error; err == nil {
@@ -408,27 +409,17 @@ func PurchaseResource(userID int, resourceID int64, idempotencyKey string) (*Res
 			if result.RowsAffected != 1 {
 				return ErrInsufficientBalance
 			}
-			if authorAmount > 0 {
-				if err := identity.UserQuery(tx).Where("id = ?", resource.AuthorID).Update("quota", gorm.Expr("quota + ?", authorAmount)).Error; err != nil {
-					return err
-				}
-			}
 			chargedQuota = int(resource.Price)
-			creditedQuota = int(authorAmount)
 		} else {
-			if resource.Price > math.MaxInt64 {
-				return ErrInvalidResource
-			}
 			if err := identity.DecreaseUserSporeTx(tx, userID, resource.Price); err != nil {
 				return err
 			}
-			if authorAmount > 0 {
-				if err := identity.UserQuery(tx).Where("id = ?", resource.AuthorID).Update("spore", gorm.Expr("spore + ?", authorAmount)).Error; err != nil {
-					return err
-				}
-			}
 		}
 		now := time.Now()
+		freezeMinutes := setting.IncomeFreezeMinutes
+		if freezeMinutes < 0 {
+			freezeMinutes = 0
+		}
 		order = ResourceOrder{IdempotencyKey: idempotencyKey, ResourceID: resourceID, VersionID: version.ID, BuyerID: userID, AuthorID: resource.AuthorID, Amount: resource.Price, Currency: resource.Currency, Status: OrderStatusSuccess, ShareRatio: ratio, CreatedAt: now, CompletedAt: &now}
 		if agreement != nil {
 			order.AgreementID = &agreement.ID
@@ -437,7 +428,8 @@ func PurchaseResource(userID int, resourceID int64, idempotencyKey string) (*Res
 		if err := tx.Create(&order).Error; err != nil {
 			return err
 		}
-		if err := tx.Create(&ResourceSettlement{OrderID: order.ID, AuthorID: resource.AuthorID, AuthorAmount: authorAmount, PlatformAmount: platformAmount, Currency: resource.Currency, CreatedAt: now}).Error; err != nil {
+		settlement := ResourceSettlement{OrderID: order.ID, AuthorID: resource.AuthorID, AuthorAmount: authorAmount, PlatformAmount: platformAmount, Currency: resource.Currency, CreatedAt: now, ThawAt: now.Add(time.Duration(freezeMinutes) * time.Minute)}
+		if err := tx.Create(&settlement).Error; err != nil {
 			return err
 		}
 		return tx.Create(&ResourceGrant{ResourceID: resourceID, UserID: userID, Source: SourcePurchase, OrderID: &order.ID, GrantedAt: now}).Error
@@ -448,11 +440,6 @@ func PurchaseResource(userID int, resourceID int64, idempotencyKey string) (*Res
 	if chargedQuota > 0 {
 		if err := quotacache.DecrUser(userID, int64(chargedQuota)); err != nil {
 			common.SysLog("failed to sync marketplace buyer quota cache: " + err.Error())
-		}
-		if creditedQuota > 0 {
-			if err := quotacache.IncrUser(order.AuthorID, int64(creditedQuota)); err != nil {
-				common.SysLog("failed to sync marketplace author quota cache: " + err.Error())
-			}
 		}
 	}
 	return &order, nil

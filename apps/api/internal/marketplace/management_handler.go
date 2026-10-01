@@ -11,8 +11,9 @@ import (
 )
 
 type settingRequest struct {
-	MaxUploadBytes int64 `json:"max_upload_bytes"`
-	BaseShareRatio int64 `json:"base_share_ratio"`
+	MaxUploadBytes      int64 `json:"max_upload_bytes"`
+	BaseShareRatio      int64 `json:"base_share_ratio"`
+	IncomeFreezeMinutes int64 `json:"income_freeze_minutes"`
 }
 
 type agreementRequest struct {
@@ -125,6 +126,31 @@ func GetMyOrdersHandler(c contract.Context) {
 	common.CtxApiSuccess(c, page)
 }
 
+func GetMySettlementsHandler(c contract.Context) {
+	page := common.GetPageQuery(c)
+	items, total, err := ListUserSettlements(dbx.DB, c.GetInt("id"), page.GetStartIdx(), page.GetPageSize())
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	page.SetTotal(int(total))
+	page.SetItems(items)
+	common.CtxApiSuccess(c, page)
+}
+
+func ExchangeSettlementsHandler(c contract.Context) {
+	count, quotaAmount, sporeAmount, err := ExchangeMarketplaceIncome(c.GetInt("id"))
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	common.CtxApiSuccess(c, common.H{
+		"exchanged_count": count,
+		"quota_amount":    quotaAmount,
+		"spore_amount":    sporeAmount,
+	})
+}
+
 func ListReviewsHandler(c contract.Context) {
 	page := common.GetPageQuery(c)
 	items, total, err := ListReviewVersions(dbx.DB, page.GetStartIdx(), page.GetPageSize())
@@ -152,7 +178,7 @@ func UpdateMarketplaceSettingsHandler(c contract.Context) {
 		common.CtxApiError(c, err)
 		return
 	}
-	setting, err := UpdateMarketplaceSetting(dbx.DB, req.MaxUploadBytes, req.BaseShareRatio)
+	setting, err := UpdateMarketplaceSetting(dbx.DB, req.MaxUploadBytes, req.BaseShareRatio, req.IncomeFreezeMinutes)
 	if err != nil {
 		common.CtxApiError(c, err)
 		return
