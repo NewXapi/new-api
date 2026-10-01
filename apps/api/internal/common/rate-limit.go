@@ -51,6 +51,11 @@ func (l *InMemoryRateLimiter) clearExpiredItems() {
 
 // Request parameter duration's unit is seconds
 func (l *InMemoryRateLimiter) Request(key string, maxRequestNum int, duration int64) bool {
+	// Every request passes through here concurrently and store is a shared map:
+	// an unlocked write is "fatal error: concurrent map writes" that kills the
+	// whole process, not a recoverable panic.
+	l.mutex.Lock()
+	defer l.mutex.Unlock()
 	queue, ok := l.store[key]
 	now := time.Now().Unix()
 	if ok {

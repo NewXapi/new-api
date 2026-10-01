@@ -46,6 +46,16 @@ var geoGateShellExactPaths = map[string]struct{}{
 	"/api/status": {},
 }
 
+// geoGateAlwaysAllowedPrefixes are server-to-server callback endpoints that
+// stay reachable regardless of region blocking. The QQ open platform delivers
+// bot events from Tencent's own servers, which sit inside mainland China, so
+// a CN block would make the bot deaf to every event. The endpoint
+// authenticates each dispatch with an Ed25519 signature (billing.QQBotWebhook),
+// so the exemption opens no abuse surface.
+var geoGateAlwaysAllowedPrefixes = []string{
+	"/api/qqbot/webhook",
+}
+
 // geoGateAPIPrefixes are answered with a 404 JSON body when blocked; everything
 // else is a web page and is redirected to the SPA 404 route.
 var geoGateAPIPrefixes = []string{"/api", "/mj", "/pg", "/v1"}
@@ -77,6 +87,8 @@ var (
 //
 // geo_block_setting.allow_admin（默认开）让携带后台管理员凭证的请求通过，
 // 运营者即使身处被封禁地区也能登录并管理站点；普通用户与访问者不受影响。
+// 服务器间回调（QQ 开放平台 webhook，见 geoGateAlwaysAllowedPrefixes）同样
+// 始终放行：事件来自腾讯自己的服务器，按地区拦截会让 bot 聋掉。
 //
 // 判定依赖本机 MMDB 数据库（GEOIP_DB_PATH 环境变量指定文件路径），
 // 数据库不可用（路径未配置或文件损坏）时本中间件对每个请求都直接放行
@@ -103,6 +115,15 @@ func GeoBlock() contract.Middleware {
 		if geoGateShellAllowed(path) {
 			c.Next()
 			return
+		}
+
+		// 服务器间回调（QQ 开放平台 webhook）来自腾讯自己的服务器，
+		// 不能按地区拦截，否则被封禁地区的事件全部丢失。
+		for _, prefix := range geoGateAlwaysAllowedPrefixes {
+			if strings.HasPrefix(path, prefix) {
+				c.Next()
+				return
+			}
 		}
 
 		if setting.AllowAdmin && geoGateAdminCredential(c) {
