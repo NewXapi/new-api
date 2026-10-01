@@ -107,6 +107,19 @@ func TestSetUserPermissionsStoresOnlyOverrides(t *testing.T) {
 		ResourceSystem: {
 			ActionSettings: false,
 		},
+		ResourceMarketplace: {
+			ActionMarketplaceReview:        true,
+			ActionMarketplaceUnlist:        true,
+			ActionMarketplaceTrade:         false,
+			ActionMarketplaceAgreement:     false,
+			ActionMarketplaceConfiguration: false,
+		},
+		ResourceOAuthProvider: {
+			ActionOAuthClientsRead:   true,
+			ActionOAuthClientsManage: false,
+			ActionOAuthKeysRotate:    false,
+			ActionOAuthTokensRevoke:  true,
+		},
 	}, ExplicitUserPermissions(42))
 	assert.Equal(t, PermissionsMap{
 		ResourceChannel: {
@@ -137,6 +150,19 @@ func TestSetUserPermissionsStoresOnlyOverrides(t *testing.T) {
 		},
 		ResourceSystem: {
 			ActionSettings: false,
+		},
+		ResourceMarketplace: {
+			ActionMarketplaceReview:        true,
+			ActionMarketplaceUnlist:        true,
+			ActionMarketplaceTrade:         false,
+			ActionMarketplaceAgreement:     false,
+			ActionMarketplaceConfiguration: false,
+		},
+		ResourceOAuthProvider: {
+			ActionOAuthClientsRead:   true,
+			ActionOAuthClientsManage: false,
+			ActionOAuthKeysRotate:    false,
+			ActionOAuthTokensRevoke:  true,
 		},
 	}, ExplicitUserPermissions(42))
 	assert.Empty(t, ExplicitUserOverrides(42))
