@@ -37,6 +37,8 @@ func analyzeRequestInsight(c contract.Context) *insight.Result {
 	setting := usage.GetUserInsightSetting()
 	result := insight.Analyze(c.Headers(), body, c.Path(), insight.Options{
 		GenderInference: setting.GenderInferenceEnabled,
+		// 锁内拷贝：该列表与 options 保存链路并发替换，直读字段会撕裂。
+		SkipJailbreakClients: usage.GetSkipJailbreakClients(),
 	})
 	// Only keep a reference to the raw body when full retention is enabled, so
 	// the original text does not travel further than the operator allowed.

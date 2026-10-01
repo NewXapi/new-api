@@ -652,8 +652,9 @@ func handleConfigUpdate(key, value string) bool {
 	if cfg == nil {
 		return false // 未注册的配置
 	}
-	// user_insight_setting.blocked_clients 在 relay 热路径上被 CheckClientBan
-	// 在 usage.blockedClientsLock 下读取，通用反射写不持该锁会与之竞争
+	// user_insight_setting.blocked_clients / skip_jailbreak_clients 在请求
+	// 热路径上被 CheckClientBan / GetSkipJailbreakClients 在
+	// usage.blockedClientsLock 下读取，通用反射写不持该锁会与之竞争
 	// （slice header 撕裂）。交给 usage 域钩子加锁应用，命中后跳过反射写。
 	if configName == "user_insight_setting" && OnApplyUserInsightSetting != nil &&
 		OnApplyUserInsightSetting(configKey, value) {

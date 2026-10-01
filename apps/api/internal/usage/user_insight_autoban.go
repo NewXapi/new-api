@@ -109,6 +109,21 @@ func insightAutoBanReason(profile *UserInsightProfile, setting *UserInsightSetti
 	return ""
 }
 
+// 破甲侧要求 confirmed 档，代码侧也必须有对等门槛。分类器按设计高召回
+// （"纯粹贴一段函数让改的请求也要认"），角色扮演用户散落贴码很常见；
+// 线上实证（用户 5939）：9 次请求里 3 次贴码被判 code + 1 次破甲高分，
+// "出现过 1 次代码请求"就把画像送进了封禁。因此写代码这一面要求
+// "足量且成规模"——只有持续把站点当编码 API 用才构成滥用组合：
+//   - autoBanMinCodeRequests：绝对量下限，3/9 的偶发贴码放行；
+//   - autoBanMinCodePercent：占比下限，5/100 的低频贴码也放行。
+//
+// 两个下限同时满足才认定"在写代码"。这是启发式判断，封禁邮件会
+// 告知申诉渠道，管理员可解封。
+const (
+	autoBanMinCodeRequests = 5
+	autoBanMinCodePercent  = 10
+)
+
 // insightAutoBanQualified 判断画像是否同时满足"破甲"与"写代码"两个风险面。
 func insightAutoBanQualified(profile *UserInsightProfile, minLevel string) bool {
 	if profile == nil {
@@ -119,7 +134,8 @@ func insightAutoBanQualified(profile *UserInsightProfile, minLevel string) bool 
 	}
 	// 写代码这一面要求真的有 code 请求，而不是只看主类别：
 	// 破甲用户的角色扮演请求通常远多于代码请求，主类别会是 roleplay。
-	return profile.CodeRequests > 0
+	return profile.CodeRequests >= autoBanMinCodeRequests &&
+		profile.CodeRequests*100 >= profile.TotalRequests*autoBanMinCodePercent
 }
 
 // insightCodeRatioQualified 判断写代码请求占比是否超过阈值。

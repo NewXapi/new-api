@@ -247,7 +247,10 @@ const roleplayContestScore = 30
 // text 为小写化文本，用于关键词匹配；raw 为原文（保留大小写），
 // 用于代码结构与语法正则匹配——大小写信息能区分 Go 导出符号、System.out、
 // Console.WriteLine 等语言特征。
-func classifyUsage(text, raw string, hasTools bool, roleplayBoost int) (result usageResult) {
+// jailbreakContest 表示本次请求带破甲证据（likely/confirmed）：破甲预设
+// 与伪代码人设卡同源（都是酒馆生态），此时 code 判定同样要求开发上下文
+// 旁证，避免"破甲预设 + 伪代码卡"被计成写代码。
+func classifyUsage(text, raw string, hasTools bool, roleplayBoost int, jailbreakContest bool) (result usageResult) {
 	// —— 唯一证据：基础语法结构 ——
 	// "是否在写代码"只认语言无关的基础语法结构共现（code_structure.go），
 	// 且判定前先剥离 tool call 协议与数据围栏（toolcall.go）。
@@ -312,14 +315,18 @@ func classifyUsage(text, raw string, hasTools bool, roleplayBoost int) (result u
 	result.QA = clampScore(scoreSignals(text, qaSignals))
 	translate := clampScore(scoreSignals(text, translateSignals))
 
-	// 伪代码人设卡的裁决：结构成立但同时有明确角色扮演信号时，
+	// 伪代码人设卡的裁决：结构成立但同时有明确角色扮演信号或破甲证据时，
 	// 额外要求"开发上下文旁证"（import / 文件路径 / 构建命令 / 报错栈 /
 	// 语言围栏 / diff）。线上实证（用户 1251、1506，SillyTavern）：
 	// 预设正文是 `class Ariadne(MethodActor):` + `def __init__` + `# 注释`
 	// 这种伪 Python 写的人设卡，纯语法判定无从分辨，但它不会 import 任何东西，
 	// 也不会出现 main.go 或 go build。反之真实开发请求几乎必然带其中之一。
-	// 没有角色扮演竞争时不加这道门槛——纯粹贴一段函数让改的请求也要认。
-	if structure.IsCode && result.Roleplay >= roleplayContestScore &&
+	// 破甲证据与角色扮演同源——破甲预设本身是酒馆生态产物，一段同时
+	// 命中破甲手法的"代码"更可能是酒馆预设里的伪代码脚本，而不是真实
+	// 开发请求，因此破甲证据与角色扮演走同一道门槛。
+	// 没有竞争信号时不加这道门槛——纯粹贴一段函数让改的请求也要认。
+	if structure.IsCode &&
+		(result.Roleplay >= roleplayContestScore || jailbreakContest) &&
 		!hasDevContext(stripped, structure) {
 		structure.IsCode = false
 		structure.Modules = nil

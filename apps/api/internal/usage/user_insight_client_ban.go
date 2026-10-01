@@ -42,8 +42,9 @@ const maxBlockedClients = 200
 // maxClientIDLength 与数据库列宽一致：超长串既放不下也永远匹配不上。
 const maxClientIDLength = 64
 
-// blockedClientsLock 保护 userInsightSetting.BlockedClients 的读改写：
-// options 保存链路（管理后台）与本文件的 SetGlobalClientBan 会并发替换该切片。
+// blockedClientsLock 保护 userInsightSetting 里两个客户端列表切片
+// （BlockedClients / SkipJailbreakClients）的读改写：
+// options 保存链路（管理后台）与本文件的 SetGlobalClientBan 会并发替换切片。
 var blockedClientsLock sync.RWMutex
 
 // SanitizeClientID 归一化客户端标识：去首尾空白，拒绝空串与超长值。
@@ -65,6 +66,17 @@ func GetBlockedClientList() []string {
 	defer blockedClientsLock.RUnlock()
 	list := make([]string, len(userInsightSetting.BlockedClients))
 	copy(list, userInsightSetting.BlockedClients)
+	return list
+}
+
+// GetSkipJailbreakClients 返回破甲检测跳过名单的拷贝。
+// 调用方在请求热路径上（insight.Analyze）使用，必须走锁内拷贝，
+// 与 GetBlockedClientList 同一理由：反射写与切片替换并发时保护切片头。
+func GetSkipJailbreakClients() []string {
+	blockedClientsLock.RLock()
+	defer blockedClientsLock.RUnlock()
+	list := make([]string, len(userInsightSetting.SkipJailbreakClients))
+	copy(list, userInsightSetting.SkipJailbreakClients)
 	return list
 }
 
@@ -112,12 +124,20 @@ func SetGlobalClientBan(client string, ban bool) error {
 }
 
 // applyUserInsightSetting 处理 settings.ApplyOption 派发的
-// user_insight_setting.<key> 分层配置。只有 blocked_clients 需要拦截：
-// 它在 relay 热路径上被 CheckClientBan 在 blockedClientsLock 下读取，
-// 通用反射写（settings.updateConfigFromMap）不持该锁，会造成数据竞争。
+// user_insight_setting.<key> 分层配置。blocked_clients 与
+// skip_jailbreak_clients 需要拦截：两者都在请求热路径上被读
+// （CheckClientBan / GetSkipJailbreakClients → insight.Analyze），
+// 通用反射写（settings.updateConfigFromMap）不持 blockedClientsLock，
+// 会造成切片头撕裂的数据竞争。
 // 返回 true 表示已处理；其它键返回 false 走通用反射路径。
 func applyUserInsightSetting(configKey, value string) bool {
-	if configKey != "blocked_clients" {
+	var target *[]string
+	switch configKey {
+	case "blocked_clients":
+		target = &userInsightSetting.BlockedClients
+	case "skip_jailbreak_clients":
+		target = &userInsightSetting.SkipJailbreakClients
+	default:
 		return false
 	}
 	var list []string
@@ -125,7 +145,7 @@ func applyUserInsightSetting(configKey, value string) bool {
 		return false // 解析失败：交给通用路径（同样会失败/跳过）
 	}
 	blockedClientsLock.Lock()
-	userInsightSetting.BlockedClients = list
+	*target = list
 	blockedClientsLock.Unlock()
 	return true
 }

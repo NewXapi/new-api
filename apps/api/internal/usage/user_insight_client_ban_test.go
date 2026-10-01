@@ -114,3 +114,71 @@ func TestGlobalClientBanOptionPipelineNoRace(t *testing.T) {
 	assert.Equal(t, "global", CheckClientBan(1, "curl"))
 	assert.ElementsMatch(t, []string{"curl", "okhttp"}, GetBlockedClientList())
 }
+
+// 跳过名单（skip_jailbreak_clients）与封禁列表同一模型：热路径读
+// （GetSkipJailbreakClients → insight.Analyze）与 options 写链路并发时
+// 必须经 OnApplyUserInsightSetting 钩子在锁内应用，否则切片头撕裂
+// （-race 复现）。回归形态与 TestGlobalClientBanOptionPipelineNoRace 相同。
+func TestSkipJailbreakClientsOptionPipelineNoRace(t *testing.T) {
+	previousDB, previousRedis := dbx.DB, common.RedisEnabled
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	require.NoError(t, err)
+	require.NoError(t, db.AutoMigrate(&dbinfra.Option{}))
+	dbx.DB = db
+	common.RedisEnabled = false
+	common.OptionMapRWMutex.Lock()
+	if common.OptionMap == nil {
+		common.OptionMap = map[string]string{}
+	}
+	common.OptionMapRWMutex.Unlock()
+	t.Cleanup(func() {
+		dbx.DB = previousDB
+		common.RedisEnabled = previousRedis
+	})
+
+	require.NoError(t, dbinfra.UpdateOption("user_insight_setting.skip_jailbreak_clients", `["sillytavern"]`))
+
+	stop := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				_ = dbinfra.UpdateOption("user_insight_setting.skip_jailbreak_clients", `["sillytavern","kelivo"]`)
+			}
+		}
+	}()
+	wg.Add(2)
+	for range 2 {
+		go func() {
+			defer wg.Done()
+			for {
+				select {
+				case <-stop:
+					return
+				default:
+					// 热路径形态：锁内拷贝后遍历匹配（同 insight.Analyze）。
+					for _, skipped := range GetSkipJailbreakClients() {
+						if skipped == "sillytavern" {
+							break
+						}
+					}
+				}
+			}
+		}()
+	}
+	for range 100 {
+		_ = GetSkipJailbreakClients()
+	}
+	close(stop)
+	wg.Wait()
+	// 并发窗口已过：同步写一次收尾值，验证 option 管线 + 钩子路径落内存。
+	// （并发阶段 SQLite 写可能因锁竞争静默失败，收尾断言不能依赖它。）
+	require.NoError(t, dbinfra.UpdateOption("user_insight_setting.skip_jailbreak_clients", `["sillytavern","kelivo"]`))
+	list := GetSkipJailbreakClients()
+	assert.ElementsMatch(t, []string{"sillytavern", "kelivo"}, list)
+}
