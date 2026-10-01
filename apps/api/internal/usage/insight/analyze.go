@@ -83,6 +83,10 @@ func Analyze(header http.Header, body []byte, requestPath string, opts Options) 
 				result.JailbreakLevel = JailbreakLikely
 			}
 		}
+	} else {
+		// 跳过时归一到 none 而不是留零值空串：下游（样本 risk_level 落库、
+		// 看板分组）假定等级必属 none/suspect/likely/confirmed 四值枚举。
+		result.JailbreakLevel = JailbreakNone
 	}
 	result.Jailbreak = result.JailbreakLevel == JailbreakLikely || result.JailbreakLevel == JailbreakConfirmed
 
