@@ -108,6 +108,8 @@ func newGeoGateRouter(t *testing.T) (contract.Engine, *fiber.App) {
 		server.GET(path, ok)
 	}
 	server.POST("/api/user/login", ok)
+	server.POST("/api/qqbot/webhook", ok)
+	server.POST("/api/qqbot/webhook/*", ok)
 
 	return server, captureEngineApp(t, server)
 }
@@ -147,6 +149,24 @@ func TestGeoBlockRejectsBlockedRegionForAnonymous(t *testing.T) {
 	}
 	login := geoGateRequest(t, app, http.MethodPost, "/api/user/login", "")
 	assert.Equal(t, http.StatusOK, login.StatusCode, "the login flow must stay reachable")
+}
+
+// TestGeoBlockQQBotWebhookStaysReachable covers the server-to-server callback
+// contract: QQ open-platform events arrive from Tencent's own servers inside
+// mainland China, so the webhook must pass the gate even when CN is blocked.
+// Both the legacy path and the optional WebhookPathToken suffix must stay
+// reachable; without this exemption the bot goes deaf to every event.
+func TestGeoBlockQQBotWebhookStaysReachable(t *testing.T) {
+	withGeoGateEnv(t)
+	_, app := newGeoGateRouter(t)
+
+	webhook := geoGateRequest(t, app, http.MethodPost, "/api/qqbot/webhook", "")
+	assert.Equal(t, http.StatusOK, webhook.StatusCode,
+		"the signed webhook must stay reachable from blocked regions")
+
+	tokened := geoGateRequest(t, app, http.MethodPost, "/api/qqbot/webhook/token-suffix", "")
+	assert.Equal(t, http.StatusOK, tokened.StatusCode,
+		"the tokenized webhook path must stay reachable from blocked regions")
 }
 
 // TestGeoBlockAdminExemption covers the operator contract: an admin credential
