@@ -84,7 +84,9 @@ jobs:
           IMAGE_TAG: ${{ steps.resolve_tag.outputs.tag }}
           REPO: ${{ github.repository }}
         run: |
-          ssh -i ~/.ssh/deploy_key -p "$PORT" "$USER@$HOST" bash -s "$IMAGE_TAG" "$REPO" "$PATH_DIR" <<'REMOTE_SCRIPT'
+          # ghcr 镜像名必须全小写（组织名 NewXapi 带大写），拼错拉不到包。
+          REPO_LC="${REPO,,}"
+          ssh -i ~/.ssh/deploy_key -p "$PORT" "$USER@$HOST" bash -s "$IMAGE_TAG" "$REPO_LC" "$PATH_DIR" <<'REMOTE_SCRIPT'
             set -euo pipefail
             IMAGE_TAG="$1"
             REPO="$2"
