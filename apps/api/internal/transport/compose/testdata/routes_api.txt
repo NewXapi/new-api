@@ -198,6 +198,7 @@ POST /api/custom-oauth-provider/
 POST /api/custom-oauth-provider/discovery
 POST /api/geoip/database/update
 POST /api/marketplace/admin/agreements
+POST /api/marketplace/admin/resources/:id/unlist
 POST /api/marketplace/admin/versions/:id/review
 POST /api/marketplace/user/agreements/:id/accept
 POST /api/marketplace/user/resources
