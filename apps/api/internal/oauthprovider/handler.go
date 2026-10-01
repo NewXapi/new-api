@@ -148,7 +148,8 @@ func CompleteConsentHandler(c contract.Context) {
 		common.CtxApiErrorMsg(c, "consent request belongs to another session")
 		return
 	}
-	code, err := ""
+	var code string
+	var err error
 	if c.Query("approve") == "true" {
 		err = dbx.DB.Transaction(func(tx *gorm.DB) error {
 			locked := OAuthConsentRequest{}

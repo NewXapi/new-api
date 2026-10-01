@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/QuantumNous/new-api/internal/common"
-	"github.com/QuantumNous/new-api/internal/common/dbx"
 	"github.com/QuantumNous/new-api/internal/identity"
 	"github.com/golang-jwt/jwt/v5"
 	"gorm.io/gorm"

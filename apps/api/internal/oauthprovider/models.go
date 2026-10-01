@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/QuantumNous/new-api/internal/common/dbx"
-	"gorm.io/gorm"
 )
 
 const (

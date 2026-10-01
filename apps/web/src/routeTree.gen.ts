@@ -27,10 +27,12 @@ import { Route as errors404RouteImport } from './routes/(errors)/404'
 import { Route as errors500RouteImport } from './routes/(errors)/500'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as AuthenticatedChat2linkRouteImport } from './routes/_authenticated/chat2link'
+import { Route as AuthenticatedOauth2ClientsRouteImport } from './routes/_authenticated/oauth2-clients'
 import { Route as AuthenticatedProxyRouteImport } from './routes/_authenticated/proxy'
 import { Route as AuthenticatedSystemSettingsRouteRouteImport } from './routes/_authenticated/system-settings/route'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
 import { Route as OauthProviderRouteImport } from './routes/oauth/$provider'
+import { Route as Oauth2ConsentRouteImport } from './routes/oauth2/consent'
 import { Route as PricingIndexRouteImport } from './routes/pricing/index'
 import { Route as RankingsIndexRouteImport } from './routes/rankings/index'
 import { Route as SetupIndexRouteImport } from './routes/setup/index'
@@ -158,6 +160,17 @@ const AuthenticatedChat2linkRoute = AuthenticatedChat2linkRouteImport.update({
   path: '/chat2link',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedChat2linkRoute = AuthenticatedChat2linkRouteImport.update({
+  id: '/chat2link',
+  path: '/chat2link',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedOauth2ClientsRoute =
+  AuthenticatedOauth2ClientsRouteImport.update({
+    id: '/oauth2-clients',
+    path: '/oauth2-clients',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedProxyRoute = AuthenticatedProxyRouteImport.update({
   id: '/proxy',
   path: '/proxy',
@@ -177,6 +190,16 @@ const AboutIndexRoute = AboutIndexRouteImport.update({
 const OauthProviderRoute = OauthProviderRouteImport.update({
   id: '/oauth/$provider',
   path: '/oauth/$provider',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OauthProviderRoute = OauthProviderRouteImport.update({
+  id: '/oauth/$provider',
+  path: '/oauth/$provider',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Oauth2ConsentRoute = Oauth2ConsentRouteImport.update({
+  id: '/oauth2/consent',
+  path: '/oauth2/consent',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingIndexRoute = PricingIndexRouteImport.update({
@@ -420,6 +443,8 @@ export interface FileRoutesByFullPath {
   '/chat2link': typeof AuthenticatedChat2linkRoute
   '/proxy': typeof AuthenticatedProxyRoute
   '/oauth/$provider': typeof OauthProviderRoute
+  '/oauth2/consent': typeof Oauth2ConsentRoute
+  '/oauth2-clients': typeof AuthenticatedOauth2ClientsRoute
   '/about/': typeof AboutIndexRoute
   '/pricing/': typeof PricingIndexRoute
   '/rankings/': typeof RankingsIndexRoute
@@ -479,6 +504,8 @@ export interface FileRoutesByTo {
   '/chat2link': typeof AuthenticatedChat2linkRoute
   '/proxy': typeof AuthenticatedProxyRoute
   '/oauth/$provider': typeof OauthProviderRoute
+  '/oauth2/consent': typeof Oauth2ConsentRoute
+  '/oauth2-clients': typeof AuthenticatedOauth2ClientsRoute
   '/about': typeof AboutIndexRoute
   '/pricing': typeof PricingIndexRoute
   '/rankings': typeof RankingsIndexRoute
@@ -540,8 +567,10 @@ export interface FileRoutesById {
   '/(errors)/500': typeof errors500Route
   '/(errors)/503': typeof errors503Route
   '/_authenticated/chat2link': typeof AuthenticatedChat2linkRoute
+  '/_authenticated/oauth2-clients': typeof AuthenticatedOauth2ClientsRoute
   '/_authenticated/proxy': typeof AuthenticatedProxyRoute
   '/oauth/$provider': typeof OauthProviderRoute
+  '/oauth2/consent': typeof Oauth2ConsentRoute
   '/about/': typeof AboutIndexRoute
   '/pricing/': typeof PricingIndexRoute
   '/rankings/': typeof RankingsIndexRoute
@@ -604,6 +633,8 @@ export interface FileRouteTypes {
     | '/chat2link'
     | '/proxy'
     | '/oauth/$provider'
+    | '/oauth2/consent'
+    | '/oauth2-clients'
     | '/about/'
     | '/pricing/'
     | '/rankings/'
@@ -663,6 +694,8 @@ export interface FileRouteTypes {
     | '/chat2link'
     | '/proxy'
     | '/oauth/$provider'
+    | '/oauth2/consent'
+    | '/oauth2-clients'
     | '/about'
     | '/pricing'
     | '/rankings'
@@ -725,6 +758,8 @@ export interface FileRouteTypes {
     | '/_authenticated/chat2link'
     | '/_authenticated/proxy'
     | '/oauth/$provider'
+    | '/oauth2/consent'
+    | '/_authenticated/oauth2-clients'
     | '/about/'
     | '/pricing/'
     | '/rankings/'
@@ -778,6 +813,7 @@ export interface RootRouteChildren {
   errors500Route: typeof errors500Route
   errors503Route: typeof errors503Route
   OauthProviderRoute: typeof OauthProviderRoute
+  Oauth2ConsentRoute: typeof Oauth2ConsentRoute
   AboutIndexRoute: typeof AboutIndexRoute
   PricingIndexRoute: typeof PricingIndexRoute
   RankingsIndexRoute: typeof RankingsIndexRoute
@@ -920,6 +956,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProxyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/proxy': {
+      id: '/_authenticated/proxy'
+      path: '/proxy'
+      fullPath: '/proxy'
+      preLoaderRoute: typeof AuthenticatedProxyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/oauth2-clients': {
+      id: '/_authenticated/oauth2-clients'
+      path: '/oauth2-clients'
+      fullPath: '/oauth2-clients'
+      preLoaderRoute: typeof AuthenticatedOauth2ClientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/system-settings': {
       id: '/_authenticated/system-settings'
       path: '/system-settings'
@@ -939,6 +989,20 @@ declare module '@tanstack/react-router' {
       path: '/oauth/$provider'
       fullPath: '/oauth/$provider'
       preLoaderRoute: typeof OauthProviderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth/$provider': {
+      id: '/oauth/$provider'
+      path: '/oauth/$provider'
+      fullPath: '/oauth/$provider'
+      preLoaderRoute: typeof OauthProviderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/oauth2/consent': {
+      id: '/oauth2/consent'
+      path: '/oauth2/consent'
+      fullPath: '/oauth2/consent'
+      preLoaderRoute: typeof Oauth2ConsentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing/': {
@@ -1297,6 +1361,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSystemSettingsRouteRoute: typeof AuthenticatedSystemSettingsRouteRouteWithChildren
   AuthenticatedChat2linkRoute: typeof AuthenticatedChat2linkRoute
   AuthenticatedProxyRoute: typeof AuthenticatedProxyRoute
+  AuthenticatedChat2linkRoute: typeof AuthenticatedChat2linkRoute
+  AuthenticatedOauth2ClientsRoute: typeof AuthenticatedOauth2ClientsRoute
+  AuthenticatedProxyRoute: typeof AuthenticatedProxyRoute
   AuthenticatedChatChatIdRoute: typeof AuthenticatedChatChatIdRoute
   AuthenticatedDashboardSectionRoute: typeof AuthenticatedDashboardSectionRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
@@ -1321,6 +1388,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSystemSettingsRouteRoute:
     AuthenticatedSystemSettingsRouteRouteWithChildren,
   AuthenticatedChat2linkRoute: AuthenticatedChat2linkRoute,
+  AuthenticatedOauth2ClientsRoute: AuthenticatedOauth2ClientsRoute,
   AuthenticatedProxyRoute: AuthenticatedProxyRoute,
   AuthenticatedChatChatIdRoute: AuthenticatedChatChatIdRoute,
   AuthenticatedDashboardSectionRoute: AuthenticatedDashboardSectionRoute,
@@ -1358,6 +1426,7 @@ const rootRouteChildren: RootRouteChildren = {
   errors500Route: errors500Route,
   errors503Route: errors503Route,
   OauthProviderRoute: OauthProviderRoute,
+  Oauth2ConsentRoute: Oauth2ConsentRoute,
   AboutIndexRoute: AboutIndexRoute,
   PricingIndexRoute: PricingIndexRoute,
   RankingsIndexRoute: RankingsIndexRoute,
