@@ -269,6 +269,55 @@ func RevokeAccessToken(tx *gorm.DB, raw string) error {
 	return tx.Model(&OAuthAccessToken{}).Where("token_hash = ? AND status = ?", hashSecret(raw), AccessTokenStatusActive).Updates(map[string]any{"status": AccessTokenStatusRevoked, "revoked_at": now}).Error
 }
 
+// SetClientEnabled toggles a client. Disabling also revokes every active
+// access token issued to it, so a leaked secret can be contained end to end.
+func SetClientEnabled(tx *gorm.DB, clientID string, enabled bool) error {
+	if strings.TrimSpace(clientID) == "" {
+		return ErrInvalidClient
+	}
+	var client OAuthClient
+	if err := tx.Where("client_id = ?", clientID).First(&client).Error; err != nil {
+		return ErrInvalidClient
+	}
+	now := time.Now()
+	updates := map[string]any{"enabled": enabled, "updated_at": now}
+	if enabled {
+		updates["disabled_at"] = nil
+	} else {
+		updates["disabled_at"] = now
+	}
+	if err := tx.Model(&client).Updates(updates).Error; err != nil {
+		return err
+	}
+	if enabled {
+		return nil
+	}
+	return tx.Model(&OAuthAccessToken{}).
+		Where("client_id = ? AND status = ?", clientID, AccessTokenStatusActive).
+		Updates(map[string]any{"status": AccessTokenStatusRevoked, "revoked_at": now}).Error
+}
+
+// RotateClientSecret issues a new secret for a confidential client. The secret
+// is returned once and only its hash is stored.
+func RotateClientSecret(tx *gorm.DB, clientID string) (*OAuthClient, string, error) {
+	var client OAuthClient
+	if err := tx.Where("client_id = ?", clientID).First(&client).Error; err != nil {
+		return nil, "", ErrInvalidClient
+	}
+	if client.ClientType != ClientTypeConfidential {
+		return nil, "", errors.New("public clients do not use a client secret")
+	}
+	secret, err := randomURLValue(36)
+	if err != nil {
+		return nil, "", err
+	}
+	if err := tx.Model(&client).Updates(map[string]any{"client_secret_hash": hashSecret(secret), "updated_at": time.Now()}).Error; err != nil {
+		return nil, "", err
+	}
+	client.ClientSecretHash = ""
+	return &client, secret, nil
+}
+
 func SubjectForUser(issuer string, clientID string, userID int) string {
 	return hashSecret(fmt.Sprintf("%s|%s|%d", issuer, clientID, userID))
 }

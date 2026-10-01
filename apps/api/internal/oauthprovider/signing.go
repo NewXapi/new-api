@@ -67,18 +67,20 @@ func ensureSigningKey(tx *gorm.DB) (*OAuthSigningKey, *rsa.PrivateKey, error) {
 }
 
 func RotateSigningKey(tx *gorm.DB) (*OAuthSigningKey, error) {
-	if err := tx.Model(&OAuthSigningKey{}).Where("status = ?", SigningKeyStatusActive).Update("status", SigningKeyStatusRetired).Error; err != nil {
+	// Retired keys stay in JWKS only until ID tokens signed with them expire
+	// (ID tokens live 5 minutes; 10 minutes gives verification clock skew).
+	now := time.Now()
+	retireExpiry := now.Add(10 * time.Minute)
+	if err := tx.Model(&OAuthSigningKey{}).Where("status = ?", SigningKeyStatusActive).Updates(map[string]any{"status": SigningKeyStatusRetired, "expires_at": retireExpiry}).Error; err != nil {
 		return nil, err
 	}
-	_, privateKey, err := ensureSigningKey(tx)
-	if err != nil {
+	if _, _, err := ensureSigningKey(tx); err != nil {
 		return nil, err
 	}
 	var record OAuthSigningKey
 	if err := tx.Where("status = ?", SigningKeyStatusActive).Order("id desc").First(&record).Error; err != nil {
 		return nil, err
 	}
-	_ = privateKey
 	return &record, nil
 }
 

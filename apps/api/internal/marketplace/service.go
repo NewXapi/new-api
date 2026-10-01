@@ -32,6 +32,9 @@ func CreateResource(tx *gorm.DB, authorID int, resourceType, title, summary, vis
 	if authorID <= 0 || strings.TrimSpace(title) == "" || price < 0 {
 		return nil, ErrInvalidResource
 	}
+	if len(title) > 200 || len(summary) > 4000 {
+		return nil, ErrInvalidResource
+	}
 	if resourceType != ResourceTypeCharacterCard && resourceType != ResourceTypeTutorial {
 		return nil, ErrInvalidResource
 	}
@@ -253,9 +256,6 @@ func CanReadResource(tx *gorm.DB, resourceID int64, userID int, publicOnly bool)
 	if err != nil {
 		return nil, nil, err
 	}
-	if resource.Status == ResourceStatusUnlisted || resource.Status == ResourceStatusDraft {
-		return nil, nil, ErrResourceNotFound
-	}
 	if publicOnly && (resource.Visibility != VisibilityPublic || resource.Status != ResourceStatusPublished) {
 		return nil, nil, ErrResourceNotFound
 	}
@@ -267,11 +267,16 @@ func CanReadResource(tx *gorm.DB, resourceID int64, userID int, publicOnly bool)
 	if !allowed && userID > 0 {
 		allowed = grantExists(tx, resourceID, userID)
 	}
+	// Unlisting revokes the public/free channel only: authors, grantees
+	// (purchases, claims, shares) keep the access they already hold.
 	publicContent := resource.Visibility == VisibilityPublic && resource.Status == ResourceStatusPublished && resource.Price == 0
 	if !allowed && publicContent {
 		allowed = true
 	}
 	if !allowed {
+		if resource.Status == ResourceStatusUnlisted || resource.Status == ResourceStatusDraft {
+			return nil, nil, ErrResourceNotFound
+		}
 		return nil, nil, ErrResourceForbidden
 	}
 	version, err := currentApprovedVersion(tx, resource)

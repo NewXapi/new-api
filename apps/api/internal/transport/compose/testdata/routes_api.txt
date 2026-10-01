@@ -213,6 +213,9 @@ POST /api/oauth/state
 POST /api/oauth/telegram/bind/start
 POST /api/oauth/wechat/bind
 POST /api/oauth2/admin/clients
+POST /api/oauth2/admin/clients/:client_id/disable
+POST /api/oauth2/admin/clients/:client_id/enable
+POST /api/oauth2/admin/clients/:client_id/secret
 POST /api/oauth2/admin/keys/rotate
 POST /api/oauth2/consent/
 POST /api/option/payment_compliance

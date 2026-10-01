@@ -44,18 +44,28 @@ func ValidateTutorialMarkdown(content string) error {
 	if strings.TrimSpace(content) == "" {
 		return errInvalidTutorialMarkdown
 	}
-	for _, line := range strings.Split(content, "\n") {
-		trimmed := strings.TrimSpace(line)
-		lower := strings.ToLower(trimmed)
-		if strings.Contains(lower, "![") || strings.Contains(lower, "<img") || strings.Contains(lower, "<iframe") ||
-			strings.Contains(lower, "<object") || strings.Contains(lower, "<embed") {
-			return errInvalidTutorialMarkdown
+	// Only prose is validated; fenced code blocks (``` ... ```) may legitimately
+	// contain angle brackets. An unterminated fence runs to the end of the
+	// document, matching the CommonMark rendering behaviour.
+	segments := strings.Split(content, "```")
+	for i, segment := range segments {
+		if i%2 == 1 {
+			continue
 		}
-		if strings.HasPrefix(trimmed, "<") && strings.HasSuffix(trimmed, ">") {
-			return errInvalidTutorialMarkdown
-		}
-		if strings.Contains(lower, "](data:image/") || strings.Contains(lower, "<data:image/") {
-			return errInvalidTutorialMarkdown
+		for _, line := range strings.Split(segment, "\n") {
+			trimmed := strings.TrimSpace(line)
+			lower := strings.ToLower(trimmed)
+			if strings.Contains(lower, "![") || strings.Contains(lower, "<img") || strings.Contains(lower, "<iframe") ||
+				strings.Contains(lower, "<object") || strings.Contains(lower, "<embed") ||
+				strings.Contains(lower, "<script") || strings.Contains(lower, "</") {
+				return errInvalidTutorialMarkdown
+			}
+			if strings.HasPrefix(trimmed, "<") && strings.Contains(trimmed, ">") {
+				return errInvalidTutorialMarkdown
+			}
+			if strings.Contains(lower, "](data:image/") || strings.Contains(lower, "<data:image/") {
+				return errInvalidTutorialMarkdown
+			}
 		}
 	}
 	return nil

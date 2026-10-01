@@ -41,6 +41,9 @@ func RegisterAPIRoutes(apiRouter contract.Routes) {
 	{
 		admin.GET("/clients", middleware.DisableCache(), security.RequirePermission(policy.OAuthClientsRead), ListClientsHandler)
 		admin.POST("/clients", middleware.CriticalRateLimit(), middleware.DisableCache(), security.RequirePermission(policy.OAuthClientsManage), CreateClientHandler)
+		admin.POST("/clients/:client_id/disable", middleware.CriticalRateLimit(), middleware.DisableCache(), security.RequirePermission(policy.OAuthClientsManage), DisableClientHandler)
+		admin.POST("/clients/:client_id/enable", middleware.CriticalRateLimit(), middleware.DisableCache(), security.RequirePermission(policy.OAuthClientsManage), EnableClientHandler)
+		admin.POST("/clients/:client_id/secret", middleware.CriticalRateLimit(), middleware.DisableCache(), security.RequirePermission(policy.OAuthClientsManage), RotateClientSecretHandler)
 		admin.POST("/keys/rotate", middleware.CriticalRateLimit(), middleware.DisableCache(), security.RequirePermission(policy.OAuthKeysRotate), RotateKeyHandler)
 	}
 
@@ -94,6 +97,11 @@ func AuthorizeHandler(c contract.Context) {
 	if err != nil {
 		common.CtxApiError(c, err)
 		return
+	}
+	// Opportunistic housekeeping: this endpoint is rate limited, so piggyback
+	// the purge of long-expired consent rows to keep the table bounded.
+	if err := dbx.DB.Where("expires_at < ?", time.Now().Add(-24*time.Hour)).Delete(&OAuthConsentRequest{}).Error; err != nil {
+		common.SysLog("failed to purge expired oauth consent requests: " + err.Error())
 	}
 	request := &OAuthConsentRequest{ID: consentID, ClientID: clientID, RedirectURI: redirectURI, Scope: normalized, State: c.Query("state"), CodeChallenge: challenge, CodeChallengeMethod: method, Nonce: nonce, CreatedAt: time.Now(), ExpiresAt: time.Now().Add(10 * time.Minute)}
 	if err := dbx.DB.Create(request).Error; err != nil {
@@ -220,6 +228,13 @@ func TokenHandler(c contract.Context) {
 		oauthJSONError(c, http.StatusInternalServerError, "server_error", "unable to issue token")
 		return
 	}
+	cutoff := time.Now().Add(-7 * 24 * time.Hour)
+	if err := dbx.DB.Where("expires_at < ?", cutoff).Delete(&OAuthAccessToken{}).Error; err != nil {
+		common.SysLog("failed to purge expired oauth access tokens: " + err.Error())
+	}
+	if err := dbx.DB.Where("status = ? AND expires_at < ?", AuthorizationCodeStatusUsed, cutoff).Delete(&OAuthAuthorizationCode{}).Error; err != nil {
+		common.SysLog("failed to purge consumed oauth authorization codes: " + err.Error())
+	}
 	response := common.H{"access_token": rawToken, "token_type": "Bearer", "expires_in": int(time.Until(token.ExpiresAt).Seconds()), "scope": token.Scope}
 	if contains(strings.Fields(code.Scope), ScopeOpenID) {
 		user, userErr := identity.GetUserById(code.UserID, false)
@@ -307,6 +322,40 @@ func RotateKeyHandler(c contract.Context) {
 		return
 	}
 	common.CtxApiSuccess(c, key)
+}
+
+func DisableClientHandler(c contract.Context) {
+	clientLifecycle(c, false)
+}
+
+func EnableClientHandler(c contract.Context) {
+	clientLifecycle(c, true)
+}
+
+func clientLifecycle(c contract.Context, enabled bool) {
+	clientID := c.Param("client_id")
+	err := dbx.DB.Transaction(func(tx *gorm.DB) error { return SetClientEnabled(tx, clientID, enabled) })
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	common.CtxApiSuccess(c, nil)
+}
+
+func RotateClientSecretHandler(c contract.Context) {
+	clientID := c.Param("client_id")
+	var client *OAuthClient
+	var secret string
+	err := dbx.DB.Transaction(func(tx *gorm.DB) error {
+		var err error
+		client, secret, err = RotateClientSecret(tx, clientID)
+		return err
+	})
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	common.CtxApiSuccess(c, common.H{"client": client, "client_secret": secret})
 }
 
 func bearerToken(header string) string {

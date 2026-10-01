@@ -37,8 +37,12 @@ func GetResourceMetadataHandler(c contract.Context) {
 	}
 	if resource.Visibility != VisibilityPublic || resource.Status != ResourceStatusPublished {
 		if c.GetInt("id") <= 0 || c.GetInt("id") != resource.AuthorID {
-			common.CtxApiError(c, ErrResourceNotFound)
-			return
+			// Grant holders (share/claim/purchase) keep metadata access, e.g.
+			// when a resource they own has been unlisted.
+			if _, _, err := CanReadResource(dbx.DB, id, c.GetInt("id"), false); err != nil {
+				common.CtxApiError(c, ErrResourceNotFound)
+				return
+			}
 		}
 	}
 	common.CtxApiSuccess(c, resource)
