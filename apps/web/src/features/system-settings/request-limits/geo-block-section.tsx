@@ -344,7 +344,7 @@ export function GeoBlockSection({ defaultValues }: GeoBlockSectionProps) {
                 </FormControl>
                 <FormDescription>
                   {t(
-                    'Requests whose IP resolves to one of these countries see a 404 page instead of the site. Case-insensitive.'
+                    'Requests whose IP resolves to one of these countries are rejected with a 403 page. Case-insensitive.'
                   )}
                 </FormDescription>
                 <FormMessage />

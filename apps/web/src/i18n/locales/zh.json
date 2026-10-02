@@ -4398,7 +4398,7 @@
     "Requests at or above this score are logged as warnings.": "达到或超过该分值的请求会记为告警日志。",
     "Requests per minute": "每分钟请求数",
     "requests served": "服务请求数",
-    "Requests whose IP resolves to one of these countries see a 404 page instead of the site. Case-insensitive.": "IP 归属国命中以上列表的请求将看到 404 页面（而不是站点内容）。国家代码不区分大小写。",
+    "Requests whose IP resolves to one of these countries are rejected with a 403 page. Case-insensitive.": "IP 归属国命中以上列表的请求将返回 403 无访问权限页面。国家代码不区分大小写。",
     "Requests will be forwarded to this worker. Trailing slashes are removed automatically.": "请求将被转发到此 Worker。末尾的斜杠会自动移除。",
     "Requests:": "请求：",
     "Require email verification for new accounts": "要求新账户验证邮箱",

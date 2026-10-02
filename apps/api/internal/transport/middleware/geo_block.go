@@ -22,7 +22,7 @@ import (
 var geoCountryLookup = geoip.LookupCountry
 
 // geoGateShellPrefixes are served to everyone, including blocked regions,
-// because sign-in and the 404 page cannot work without them:
+// because sign-in and the block landing page cannot work without them:
 //   - /assets/* and /favicon* are the SPA bundle and icon (inert static files),
 //   - /api/status is the public configuration the SPA boots with,
 //   - /api/user/login* and /api/oauth* are the sign-in flows themselves.
@@ -40,7 +40,10 @@ var geoGateShellPrefixes = []string{
 // geoGateShellExactPaths are the SPA shell routes for logging in and for the
 // block landing page, plus the public bootstrap endpoint the SPA boots with
 // (exact match: /api/status/test is an admin endpoint and stays blocked).
+// The block landing page must be here: a blocked visitor is redirected to it,
+// and the gate runs before routing, so a missing exemption would loop.
 var geoGateShellExactPaths = map[string]struct{}{
+	"/403":        {},
 	"/404":        {},
 	"/sign-in":    {},
 	"/api/status": {},
@@ -56,8 +59,8 @@ var geoGateAlwaysAllowedPrefixes = []string{
 	"/api/qqbot/webhook",
 }
 
-// geoGateAPIPrefixes are answered with a 404 JSON body when blocked; everything
-// else is a web page and is redirected to the SPA 404 route.
+// geoGateAPIPrefixes are answered with a 403 JSON body when blocked;
+// everything else is a web page and is redirected to the SPA 403 route.
 var geoGateAPIPrefixes = []string{"/api", "/mj", "/pg", "/v1"}
 
 // geoGateVerdictTTL bounds how long an administrator-credential verdict is
@@ -81,9 +84,10 @@ var (
 // geo_block_setting.enabled 打开且 IP 归属国在 blocked_countries 列表里时拒绝。
 // 挂在引擎层（所有路由之前），对 Web、API、静态资源全部生效。
 //
-// 拒绝是"隐形"的：不告诉访问者"你被地区封禁了"，而是让请求看起来就像访问了
-// 一个不存在的页面 —— Web 请求 302 到前端 /404 路由，API 请求 404 JSON。
-// （302 而非 404+Location：客户端只在 3xx 上跟随 Location，404 上的 Location 会被忽略。）
+// 拒绝是"显式"的：访问者被明确告知没有访问权限，而不是让请求看起来像访问了
+// 一个不存在的页面 —— Web 请求 302 到前端 /403 路由，API 请求 403 JSON。
+// （302 而非 403+Location：客户端只在 3xx 上跟随 Location，403 上的 Location 会被忽略。）
+// 403 只说明结果，不说明判据：日志照实记录命中，响应体不泄露封禁名单。
 //
 // geo_block_setting.allow_admin（默认开）让携带后台管理员凭证的请求通过，
 // 运营者即使身处被封禁地区也能登录并管理站点；普通用户与访问者不受影响。
@@ -92,7 +96,7 @@ var (
 //
 // 判定依赖本机 MMDB 数据库（GEOIP_DB_PATH 环境变量指定文件路径），
 // 数据库不可用（路径未配置或文件损坏）时本中间件对每个请求都直接放行
-//（fail-open）：缺库导致全站 404 是不可接受的，而"没拦住"只是损失封禁
+//（fail-open）：缺库导致全站 403 是不可接受的，而"没拦住"只是损失封禁
 // 效果。因此部署方在打开开关前应确认 GEOIP_DB_PATH 指向有效文件。
 func GeoBlock() contract.Middleware {
 	return func(c contract.Context) {
@@ -111,7 +115,7 @@ func GeoBlock() contract.Middleware {
 
 		path := c.HTTPRequest().URL.Path
 
-		// 登录流程与 404 页面本身必须可达，否则管理员在被封禁地区无法登录。
+		// 登录流程与封禁落地页本身必须可达，否则管理员在被封禁地区无法登录。
 		if geoGateShellAllowed(path) {
 			c.Next()
 			return
@@ -135,8 +139,8 @@ func GeoBlock() contract.Middleware {
 	}
 }
 
-// geoGateShellAllowed reports whether the path belongs to the sign-in / 404
-// shell that stays reachable inside a blocked region.
+// geoGateShellAllowed reports whether the path belongs to the sign-in /
+// block-landing shell that stays reachable inside a blocked region.
 func geoGateShellAllowed(path string) bool {
 	if _, ok := geoGateShellExactPaths[path]; ok {
 		return true
@@ -193,8 +197,9 @@ func geoGateAdminCredential(c contract.Context) bool {
 	return allowed
 }
 
-// rejectGeoBlocked 以 404 语义拒绝命中地理封禁的请求并留审计日志。
-// 审计日志照实记录 "geo block"，管理员可查；访问者看到的只是一次"页面不存在"。
+// rejectGeoBlocked 以 403 语义拒绝命中地理封禁的请求并留审计日志。
+// 审计日志照实记录 "geo block"，管理员可查；访问者看到站点自己的 403 页面
+// （Web）或 403 JSON（API），不透露封禁的具体判据。
 func rejectGeoBlocked(c contract.Context, clientIP, path string) {
 	req := c.HTTPRequest()
 	logger.LogWarn(c.Context(), fmt.Sprintf(
@@ -203,21 +208,21 @@ func rejectGeoBlocked(c contract.Context, clientIP, path string) {
 	))
 
 	if geoGateAPIPath(path) {
-		c.AbortWithStatusJSON(http.StatusNotFound, common.H{
+		c.AbortWithStatusJSON(http.StatusForbidden, common.H{
 			"success": false,
-			"message": "page not found",
+			"message": "access forbidden",
 		})
 		return
 	}
 
-	// Web 页面：302 到前端 /404 路由（该路径对封禁地区豁免），
-	// 访问者看到站点自己的"页面不存在"页面。
-	c.Redirect(http.StatusFound, "/404")
+	// Web 页面：302 到前端 /403 路由（该路径对封禁地区豁免），
+	// 访问者看到站点自己的"无访问权限"页面。
+	c.Redirect(http.StatusFound, "/403")
 	c.Abort()
 }
 
-// geoGateAPIPath classifies a path as an API call (404 JSON) as opposed to a
-// web page (redirect to the SPA 404 route).
+// geoGateAPIPath classifies a path as an API call (403 JSON) as opposed to a
+// web page (redirect to the SPA 403 route).
 func geoGateAPIPath(path string) bool {
 	for _, prefix := range geoGateAPIPrefixes {
 		if strings.HasPrefix(path, prefix) {

@@ -4398,7 +4398,7 @@
     "Requests at or above this score are logged as warnings.": "达到或超过该分值的请求会记为告警日志。",
     "Requests per minute": "Yêu cầu mỗi phút",
     "requests served": "yêu cầu đã phục vụ",
-    "Requests whose IP resolves to one of these countries see a 404 page instead of the site. Case-insensitive.": "Yêu cầu có IP thuộc một trong các quốc gia này sẽ thấy trang 404 thay vì trang web. Mã quốc gia không phân biệt hoa thường.",
+    "Requests whose IP resolves to one of these countries are rejected with a 403 page. Case-insensitive.": "Yêu cầu có IP thuộc một trong các quốc gia này sẽ bị từ chối với trang 403. Mã quốc gia không phân biệt hoa thường.",
     "Requests will be forwarded to this worker. Trailing slashes are removed automatically.": "Các yêu cầu sẽ được chuyển tiếp đến worker này. Dấu gạch chéo ở cuối được tự động loại bỏ.",
     "Requests:": "Yêu cầu:",
     "Require email verification for new accounts": "Yêu cầu xác minh email cho tài khoản mới",

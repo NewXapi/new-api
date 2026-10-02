@@ -4398,7 +4398,7 @@
     "Requests at or above this score are logged as warnings.": "达到或超过该分值的请求会记为告警日志。",
     "Requests per minute": "Запросов в минуту",
     "requests served": "обслуженных запросов",
-    "Requests whose IP resolves to one of these countries see a 404 page instead of the site. Case-insensitive.": "Запросы, IP которых относится к одной из этих стран, видят страницу 404 вместо сайта. Коды стран без учёта регистра.",
+    "Requests whose IP resolves to one of these countries are rejected with a 403 page. Case-insensitive.": "Запросы, IP которых относится к одной из этих стран, получают страницу 403. Коды стран без учёта регистра.",
     "Requests will be forwarded to this worker. Trailing slashes are removed automatically.": "Запросы будут перенаправлены этому воркеру. Конечные слеши удаляются автоматически.",
     "Requests:": "Запросы:",
     "Require email verification for new accounts": "Требовать подтверждение электронной почты для новых учетных записей",
