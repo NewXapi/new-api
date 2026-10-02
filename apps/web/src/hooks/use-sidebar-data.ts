@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import {
   Activity,
   Box,
+  Coins,
   CreditCard,
   FileText,
   FlaskConical,
@@ -127,6 +128,11 @@ export function useSidebarData(): SidebarData {
             url: '/wallet',
             icon: Wallet,
             badge: walletBalance ?? undefined,
+          },
+          {
+            title: t('Marketplace Income'),
+            url: '/marketplace-income',
+            icon: Coins,
           },
           {
             title: t('Profile'),

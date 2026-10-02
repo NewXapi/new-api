@@ -1,6 +1,8 @@
 package marketplace
 
 import (
+	"errors"
+	"math"
 	"time"
 
 	"github.com/QuantumNous/new-api/internal/common"
@@ -32,7 +34,10 @@ func ExchangeMarketplaceIncome(userID int) (int, int64, int64, error) {
 	var exchangedCount int
 	var quotaTotal, sporeTotal int64
 	err := dbx.DB.Transaction(func(tx *gorm.DB) error {
-		if _, err := identity.LockUserRow(tx, userID); err != nil {
+		// users.quota is a 32-bit int column in MySQL/PostgreSQL; guard the
+		// summed income against overflowing the balance stored for this user.
+		userRow, err := identity.LockUserRow(tx, userID)
+		if err != nil {
 			return err
 		}
 		var rows []ResourceSettlement
@@ -50,6 +55,10 @@ func ExchangeMarketplaceIncome(userID int) (int, int64, int64, error) {
 			} else {
 				quotaTotal += row.AuthorAmount
 			}
+		}
+		const maxDBQuota = int64(math.MaxInt32)
+		if quotaTotal > maxDBQuota-int64(userRow.Quota) {
+			return errors.New("marketplace income exchange would exceed the wallet limit")
 		}
 		if quotaTotal > 0 {
 			if err := identity.UserQuery(tx).Where("id = ?", userID).Update("quota", gorm.Expr("quota + ?", quotaTotal)).Error; err != nil {

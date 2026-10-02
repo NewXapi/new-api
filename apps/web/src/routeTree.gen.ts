@@ -28,6 +28,7 @@ import { Route as errors500RouteImport } from './routes/(errors)/500'
 import { Route as errors503RouteImport } from './routes/(errors)/503'
 import { Route as AuthenticatedChat2linkRouteImport } from './routes/_authenticated/chat2link'
 import { Route as AuthenticatedOauth2ClientsRouteImport } from './routes/_authenticated/oauth2-clients'
+import { Route as AuthenticatedMarketplaceIncomeRouteImport } from './routes/_authenticated/marketplace-income'
 import { Route as AuthenticatedProxyRouteImport } from './routes/_authenticated/proxy'
 import { Route as AuthenticatedSystemSettingsRouteRouteImport } from './routes/_authenticated/system-settings/route'
 import { Route as AboutIndexRouteImport } from './routes/about/index'
@@ -166,6 +167,12 @@ const AuthenticatedChat2linkRoute = AuthenticatedChat2linkRouteImport.update({
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOauth2ClientsRoute =
+const AuthenticatedMarketplaceIncomeRoute =
+  AuthenticatedMarketplaceIncomeRouteImport.update({
+    id: '/marketplace-income',
+    path: '/marketplace-income',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
   AuthenticatedOauth2ClientsRouteImport.update({
     id: '/oauth2-clients',
     path: '/oauth2-clients',
@@ -445,6 +452,7 @@ export interface FileRoutesByFullPath {
   '/oauth/$provider': typeof OauthProviderRoute
   '/oauth2/consent': typeof Oauth2ConsentRoute
   '/oauth2-clients': typeof AuthenticatedOauth2ClientsRoute
+  '/marketplace-income': typeof AuthenticatedMarketplaceIncomeRoute
   '/about/': typeof AboutIndexRoute
   '/pricing/': typeof PricingIndexRoute
   '/rankings/': typeof RankingsIndexRoute
@@ -506,6 +514,7 @@ export interface FileRoutesByTo {
   '/oauth/$provider': typeof OauthProviderRoute
   '/oauth2/consent': typeof Oauth2ConsentRoute
   '/oauth2-clients': typeof AuthenticatedOauth2ClientsRoute
+  '/marketplace-income': typeof AuthenticatedMarketplaceIncomeRoute
   '/about': typeof AboutIndexRoute
   '/pricing': typeof PricingIndexRoute
   '/rankings': typeof RankingsIndexRoute
@@ -568,6 +577,7 @@ export interface FileRoutesById {
   '/(errors)/503': typeof errors503Route
   '/_authenticated/chat2link': typeof AuthenticatedChat2linkRoute
   '/_authenticated/oauth2-clients': typeof AuthenticatedOauth2ClientsRoute
+  '/_authenticated/marketplace-income': typeof AuthenticatedMarketplaceIncomeRoute
   '/_authenticated/proxy': typeof AuthenticatedProxyRoute
   '/oauth/$provider': typeof OauthProviderRoute
   '/oauth2/consent': typeof Oauth2ConsentRoute
@@ -635,6 +645,7 @@ export interface FileRouteTypes {
     | '/oauth/$provider'
     | '/oauth2/consent'
     | '/oauth2-clients'
+    | '/marketplace-income'
     | '/about/'
     | '/pricing/'
     | '/rankings/'
@@ -696,6 +707,7 @@ export interface FileRouteTypes {
     | '/oauth/$provider'
     | '/oauth2/consent'
     | '/oauth2-clients'
+    | '/marketplace-income'
     | '/about'
     | '/pricing'
     | '/rankings'
@@ -760,6 +772,7 @@ export interface FileRouteTypes {
     | '/oauth/$provider'
     | '/oauth2/consent'
     | '/_authenticated/oauth2-clients'
+    | '/_authenticated/marketplace-income'
     | '/about/'
     | '/pricing/'
     | '/rankings/'
@@ -947,6 +960,20 @@ declare module '@tanstack/react-router' {
       path: '/chat2link'
       fullPath: '/chat2link'
       preLoaderRoute: typeof AuthenticatedChat2linkRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/chat2link': {
+      id: '/_authenticated/chat2link'
+      path: '/chat2link'
+      fullPath: '/chat2link'
+      preLoaderRoute: typeof AuthenticatedChat2linkRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketplace-income': {
+      id: '/_authenticated/marketplace-income'
+      path: '/marketplace-income'
+      fullPath: '/marketplace-income'
+      preLoaderRoute: typeof AuthenticatedMarketplaceIncomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/proxy': {
@@ -1362,6 +1389,9 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedChat2linkRoute: typeof AuthenticatedChat2linkRoute
   AuthenticatedProxyRoute: typeof AuthenticatedProxyRoute
   AuthenticatedChat2linkRoute: typeof AuthenticatedChat2linkRoute
+  AuthenticatedMarketplaceIncomeRoute: typeof AuthenticatedMarketplaceIncomeRoute
+  AuthenticatedProxyRoute: typeof AuthenticatedProxyRoute
+  AuthenticatedChat2linkRoute: typeof AuthenticatedChat2linkRoute
   AuthenticatedOauth2ClientsRoute: typeof AuthenticatedOauth2ClientsRoute
   AuthenticatedProxyRoute: typeof AuthenticatedProxyRoute
   AuthenticatedChatChatIdRoute: typeof AuthenticatedChatChatIdRoute
@@ -1388,6 +1418,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSystemSettingsRouteRoute:
     AuthenticatedSystemSettingsRouteRouteWithChildren,
   AuthenticatedChat2linkRoute: AuthenticatedChat2linkRoute,
+  AuthenticatedMarketplaceIncomeRoute: AuthenticatedMarketplaceIncomeRoute,
   AuthenticatedOauth2ClientsRoute: AuthenticatedOauth2ClientsRoute,
   AuthenticatedProxyRoute: AuthenticatedProxyRoute,
   AuthenticatedChatChatIdRoute: AuthenticatedChatChatIdRoute,
