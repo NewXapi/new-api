@@ -167,12 +167,13 @@ const AuthenticatedChat2linkRoute = AuthenticatedChat2linkRouteImport.update({
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedOauth2ClientsRoute =
-const AuthenticatedMarketplaceIncomeRoute =
+  AuthenticatedOauth2ClientsRouteImport.update({const AuthenticatedMarketplaceIncomeRoute =
   AuthenticatedMarketplaceIncomeRouteImport.update({
     id: '/marketplace-income',
     path: '/marketplace-income',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOauth2ClientsRoute =
   AuthenticatedOauth2ClientsRouteImport.update({
     id: '/oauth2-clients',
     path: '/oauth2-clients',
@@ -962,20 +963,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedChat2linkRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/chat2link': {
-      id: '/_authenticated/chat2link'
-      path: '/chat2link'
-      fullPath: '/chat2link'
-      preLoaderRoute: typeof AuthenticatedChat2linkRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/marketplace-income': {
-      id: '/_authenticated/marketplace-income'
-      path: '/marketplace-income'
-      fullPath: '/marketplace-income'
-      preLoaderRoute: typeof AuthenticatedMarketplaceIncomeRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/proxy': {
       id: '/_authenticated/proxy'
       path: '/proxy'
@@ -995,6 +982,20 @@ declare module '@tanstack/react-router' {
       path: '/oauth2-clients'
       fullPath: '/oauth2-clients'
       preLoaderRoute: typeof AuthenticatedOauth2ClientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/oauth2-clients': {
+      id: '/_authenticated/oauth2-clients'
+      path: '/oauth2-clients'
+      fullPath: '/oauth2-clients'
+      preLoaderRoute: typeof AuthenticatedOauth2ClientsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketplace-income': {
+      id: '/_authenticated/marketplace-income'
+      path: '/marketplace-income'
+      fullPath: '/marketplace-income'
+      preLoaderRoute: typeof AuthenticatedMarketplaceIncomeRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/system-settings': {
@@ -1388,12 +1389,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSystemSettingsRouteRoute: typeof AuthenticatedSystemSettingsRouteRouteWithChildren
   AuthenticatedChat2linkRoute: typeof AuthenticatedChat2linkRoute
   AuthenticatedProxyRoute: typeof AuthenticatedProxyRoute
-  AuthenticatedChat2linkRoute: typeof AuthenticatedChat2linkRoute
-  AuthenticatedMarketplaceIncomeRoute: typeof AuthenticatedMarketplaceIncomeRoute
-  AuthenticatedProxyRoute: typeof AuthenticatedProxyRoute
-  AuthenticatedChat2linkRoute: typeof AuthenticatedChat2linkRoute
   AuthenticatedOauth2ClientsRoute: typeof AuthenticatedOauth2ClientsRoute
-  AuthenticatedProxyRoute: typeof AuthenticatedProxyRoute
+  AuthenticatedMarketplaceIncomeRoute: typeof AuthenticatedMarketplaceIncomeRoute
   AuthenticatedChatChatIdRoute: typeof AuthenticatedChatChatIdRoute
   AuthenticatedDashboardSectionRoute: typeof AuthenticatedDashboardSectionRoute
   AuthenticatedErrorsErrorRoute: typeof AuthenticatedErrorsErrorRoute
@@ -1418,8 +1415,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSystemSettingsRouteRoute:
     AuthenticatedSystemSettingsRouteRouteWithChildren,
   AuthenticatedChat2linkRoute: AuthenticatedChat2linkRoute,
-  AuthenticatedMarketplaceIncomeRoute: AuthenticatedMarketplaceIncomeRoute,
   AuthenticatedOauth2ClientsRoute: AuthenticatedOauth2ClientsRoute,
+  AuthenticatedMarketplaceIncomeRoute: AuthenticatedMarketplaceIncomeRoute,
   AuthenticatedProxyRoute: AuthenticatedProxyRoute,
   AuthenticatedChatChatIdRoute: AuthenticatedChatChatIdRoute,
   AuthenticatedDashboardSectionRoute: AuthenticatedDashboardSectionRoute,
