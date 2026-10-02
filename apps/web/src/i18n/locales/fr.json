@@ -4398,7 +4398,7 @@
     "Requests at or above this score are logged as warnings.": "达到或超过该分值的请求会记为告警日志。",
     "Requests per minute": "Requêtes par minute",
     "requests served": "requêtes traitées",
-    "Requests whose IP resolves to one of these countries see a 404 page instead of the site. Case-insensitive.": "Les requêtes dont l'IP est attribuée à l'un de ces pays voient une page 404 au lieu du site. Les codes de pays sont insensibles à la casse.",
+    "Requests whose IP resolves to one of these countries are rejected with a 403 page. Case-insensitive.": "Les requêtes dont l'IP est attribuée à l'un de ces pays sont rejetées avec une page 403. Les codes de pays sont insensibles à la casse.",
     "Requests will be forwarded to this worker. Trailing slashes are removed automatically.": "Les requêtes seront transmises à ce worker. Les barres obliques finales sont automatiquement supprimées.",
     "Requests:": "Requêtes :",
     "Require email verification for new accounts": "Exiger la vérification de l'e-mail pour les nouveaux comptes",
