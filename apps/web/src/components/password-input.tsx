@@ -29,11 +29,14 @@ type PasswordInputProps = Omit<
   'type'
 > & {
   ref?: React.Ref<HTMLInputElement>
+  /** Optional icon rendered inside the field's start edge (MD3 leading icon). */
+  leadingIcon?: React.ReactNode
 }
 
 export function PasswordInput({
   className,
   disabled,
+  leadingIcon,
   ref,
   ...props
 }: PasswordInputProps) {
@@ -45,6 +48,7 @@ export function PasswordInput({
         type={showPassword ? 'text' : 'password'}
         ref={ref}
         disabled={disabled}
+        leadingIcon={leadingIcon}
         {...props}
       />
       <Button

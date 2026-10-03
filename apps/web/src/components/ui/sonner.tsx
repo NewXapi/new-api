@@ -76,9 +76,11 @@ const Toaster = (props: ToasterProps) => {
       }}
       style={
         {
-          '--normal-bg': 'var(--popover)',
-          '--normal-text': 'var(--popover-foreground)',
-          '--normal-border': 'var(--border)',
+          // MD3 snackbar: plain messages sit on the inverse surface; the
+          // semantic variants below keep their tonal popover treatment.
+          '--normal-bg': 'var(--inverse-surface)',
+          '--normal-text': 'var(--inverse-on-surface)',
+          '--normal-border': 'transparent',
           '--success-bg':
             'color-mix(in oklch, var(--success) 16%, var(--popover))',
           '--success-border':
