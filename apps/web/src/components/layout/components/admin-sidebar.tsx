@@ -42,9 +42,9 @@ import {
 const adminItems = [
   { label: 'Overview', to: '/admin', icon: LayoutDashboard },
   { label: 'Channels', to: '/admin/channels', icon: ListChecks },
-  { label: 'Models', to: '/admin/models/metadata', icon: ChartNoAxesCombined },
+  { label: 'Models', to: '/admin/models', icon: ChartNoAxesCombined },
   { label: 'Users', to: '/admin/users', icon: Users },
-  { label: 'API Keys', to: '/keys', icon: KeyRound },
+  { label: 'API Keys', to: '/keys/', icon: KeyRound },
   { label: 'System Settings', to: '/admin/system-settings', icon: Settings },
 ] as const
 
