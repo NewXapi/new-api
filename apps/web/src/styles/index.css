@@ -30,6 +30,37 @@ For commercial licensing, please contact support@quantumnous.com
 @import './theme.css';
 @import './theme-presets.css';
 
+/* The application background is owned by the root image layer. Keep it fixed,
+ * non-interactive, and behind every page surface so scrolling never moves it. */
+body[data-app-background='true'] {
+  background-color: transparent;
+}
+
+body[data-app-background='true'] [data-slot='app-main'],
+body[data-app-background='true'] [data-slot='public-layout'],
+body[data-app-background='true'] [data-slot='auth-layout'],
+body[data-app-background='true'] [data-slot='sidebar-inset'],
+body[data-app-background='true'] [data-slot='sidebar-wrapper'] {
+  background-color: transparent;
+}
+
+body[data-app-background='true'] [data-slot='app-header'],
+body[data-app-background='true'] [data-slot='section-page-header'],
+body[data-app-background='true'] [data-slot='section-page-footer'] {
+  background-color: color-mix(in oklch, var(--background) 82%, transparent);
+}
+
+body[data-app-background='true'] [data-slot='app-background'] [data-app-background-image] {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  object-fit: cover;
+  animation: app-background-in 600ms ease-out both;
+}
+
 /* Shiki dual themes: token colors follow dark theme (pre background stays `bg-background` on the block) */
 @layer components {
   .shiki span {
@@ -174,6 +205,11 @@ For commercial licensing, please contact support@quantumnous.com
   animation: auth-card-in 300ms cubic-bezier(0.2, 0, 0, 1) both;
 }
 
+@keyframes app-background-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 @keyframes auth-background-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -185,7 +221,10 @@ For commercial licensing, please contact support@quantumnous.com
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .md-ripple-wave, .auth-background, .auth-card {
+  .md-ripple-wave,
+  .auth-background,
+  .auth-card,
+  body[data-app-background='true'] [data-slot='app-background'] [data-app-background-image] {
     animation: none;
   }
 }
@@ -258,6 +297,10 @@ For commercial licensing, please contact support@quantumnous.com
  * inherit body theme tokens and retain their own opaque popover surface. */
 body[data-theme-blur='true'] .auth-card,
 body[data-theme-blur='true'] [data-slot='card'],
+body[data-theme-blur='true'] [data-slot='app-main'],
+body[data-theme-blur='true'] [data-slot='public-layout'],
+body[data-theme-blur='true'] [data-slot='section-page-header'],
+body[data-theme-blur='true'] [data-slot='section-page-footer'],
 body[data-theme-blur='true'] [data-slot='popover-content'],
 body[data-theme-blur='true'] [data-slot='dialog-content'],
 body[data-theme-blur='true'] [data-slot='sheet-content'],

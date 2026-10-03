@@ -17,10 +17,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useNavigate } from '@tanstack/react-router'
-import { LogOut, Store, User, Wallet } from 'lucide-react'
-import { useMemo } from 'react'
+import { LogOut, Palette, Store, User, Wallet } from 'lucide-react'
+import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { ConfigDrawer } from '@/components/config-drawer'
 import { SignOutDialog } from '@/components/sign-out-dialog'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -45,6 +46,8 @@ export function ProfileDropdown() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const [open, setOpen] = useDialogState()
+  const [themeOpen, setThemeOpen] = useState(false)
+  const themeTriggerRef = useRef<HTMLButtonElement>(null)
   const user = useAuthStore((state) => state.auth.user)
   const { displayName, roleLabel } = useUserDisplay(user)
   const isSuperAdmin = user?.role === ROLE.SUPER_ADMIN
@@ -61,7 +64,13 @@ export function ProfileDropdown() {
     <>
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger
-          render={<Button variant='ghost' className='relative size-6 p-0' />}
+          render={
+            <Button
+              ref={themeTriggerRef}
+              variant='ghost'
+              className='relative size-6 p-0'
+            />
+          }
         >
           <Avatar className='size-6'>
             <AvatarFallback
@@ -128,6 +137,11 @@ export function ProfileDropdown() {
             </DropdownMenuItem>
           )}
 
+          <DropdownMenuItem onClick={() => setThemeOpen(true)}>
+            <Palette className='size-4' />
+            {t('Theme management')}
+          </DropdownMenuItem>
+
           <DropdownMenuSeparator />
 
           <DropdownMenuItem variant='destructive' onClick={() => setOpen(true)}>
@@ -137,6 +151,12 @@ export function ProfileDropdown() {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      <ConfigDrawer
+        open={themeOpen}
+        onOpenChange={setThemeOpen}
+        showTrigger={false}
+        finalFocus={themeTriggerRef}
+      />
       <SignOutDialog open={!!open} onOpenChange={setOpen} />
     </>
   )

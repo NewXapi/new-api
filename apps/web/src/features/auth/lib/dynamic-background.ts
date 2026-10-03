@@ -29,9 +29,6 @@ import {
  */
 export const RANDOM_BACKGROUND_API = 'https://img-pic-api.072168.xyz/api'
 
-/** 自适应随机图直连端点（仅作展示降级用，不可读像素）。 */
-export const RANDOM_BACKGROUND_URL = 'https://img-pic-api.072168.xyz/ua'
-
 /**
  * 新版 Scheme 类型才包含 surface-container 系列角色，旧类型没有；
  * 因此通过宽松的 record 读取并逐角色回退，避免对打包版本产生硬依赖。
@@ -95,84 +92,173 @@ export function applyDynamicRoles(scope: HTMLElement, roles: DynamicRoles): void
   scope.setAttribute('data-dynamic-theme', '')
 }
 
+type BackgroundResource = {
+  promise: Promise<HTMLImageElement>
+  controller: AbortController
+  subscribers: number
+  settled: boolean
+}
+
+// Root effect replay shares the pending request; successful loads survive navigation.
+let backgroundResource: BackgroundResource | undefined
+
+function parseBackgroundUrl(text: string): string {
+  for (const line of text.split(/\r?\n/)) {
+    try {
+      const url = new URL(line.trim())
+      if (
+        url.origin === 'https://img-pic-api.072168.xyz' &&
+        !url.username &&
+        !url.password &&
+        url.pathname.startsWith('/images/') &&
+        url.pathname.length > '/images/'.length &&
+        !url.search &&
+        !url.hash
+      ) {
+        return url.href
+      }
+    } catch {
+      // The text endpoint can include blank lines or non-URL text.
+    }
+  }
+  throw new Error('No allowed background image URL')
+}
+
+function loadBackgroundImage(
+  src: string,
+  signal: AbortSignal
+): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image()
+    // Anonymous CORS never sends credentials to this external image origin.
+    image.crossOrigin = 'anonymous'
+    image.referrerPolicy = 'no-referrer'
+    const timeout = window.setTimeout(onError, 12000)
+
+    function cleanup() {
+      window.clearTimeout(timeout)
+      image.removeEventListener('load', onLoad)
+      image.removeEventListener('error', onError)
+      signal.removeEventListener('abort', onError)
+    }
+    function onLoad() {
+      cleanup()
+      resolve(image)
+    }
+    function onError() {
+      cleanup()
+      image.removeAttribute('src')
+      reject(new Error('Background image unavailable'))
+    }
+
+    image.addEventListener('load', onLoad)
+    image.addEventListener('error', onError)
+    signal.addEventListener('abort', onError, { once: true })
+    if (signal.aborted) {
+      onError()
+      return
+    }
+    image.src = src
+  })
+}
+
+function createBackgroundResource(): BackgroundResource {
+  const controller = new AbortController()
+  const resource: BackgroundResource = {
+    controller,
+    subscribers: 0,
+    settled: false,
+    promise: (async () => {
+      const timeout = window.setTimeout(() => controller.abort(), 12000)
+      try {
+        const response = await fetch(
+          `${RANDOM_BACKGROUND_API}/?type=ua&format=text`,
+          {
+            cache: 'no-store',
+            credentials: 'omit',
+            referrerPolicy: 'no-referrer',
+            redirect: 'error',
+            signal: controller.signal,
+          }
+        )
+        if (!response.ok) throw new Error('Background query unavailable')
+        const url = parseBackgroundUrl(await response.text())
+        window.clearTimeout(timeout)
+        return await loadBackgroundImage(url, controller.signal)
+      } catch (error) {
+        window.clearTimeout(timeout)
+        if (controller.signal.aborted) throw new Error('Background load cancelled')
+        throw error
+      } finally {
+        window.clearTimeout(timeout)
+      }
+    })(),
+  }
+  void resource.promise.then(
+    () => {
+      resource.settled = true
+    },
+    () => {
+      resource.settled = true
+      if (backgroundResource === resource) backgroundResource = undefined
+    }
+  )
+  return resource
+}
+
 /**
- * 加载随机背景图：成功后回调展示 URL，并用 matugen 同源算法
- * （sourceColorFromImage → themeFromSourceColor）生成动态配色。
- * 图片加载或取色失败时静默放弃，页面保持静态主题，无任何副作用。
+ * Subscribe to one page-lifetime background load. Cleanup prevents stale callbacks
+ * and cancels pending work after the last subscriber leaves. Optional material
+ * color extraction stays available without changing the shared display request.
  */
 export function loadRandomBackground(
   scope: HTMLElement,
-  onUrl: (url: string) => void,
-  dynamicColor = true
+  onUrl: (url: string, image: HTMLImageElement) => void,
+  dynamicColor = false
 ): () => void {
+  const resource = backgroundResource ??= createBackgroundResource()
+  resource.subscribers += 1
   let cancelled = false
-  const controller = new AbortController()
+  let appliedRoles: DynamicRoles | undefined
 
-  const startImageLoad = (src: string, withColor: boolean): void => {
+  void resource.promise.then((image) => {
     if (cancelled) return
-    const image = new Image()
-    // 仅在需要读取像素时启用 CORS 模式；纯展示加载无需 crossOrigin。
-    if (withColor) image.crossOrigin = 'anonymous'
-
-    image.addEventListener(
-      'load',
-      () => {
-        if (cancelled) return
-        scope.setAttribute('data-has-bg', '')
-        onUrl(image.currentSrc || image.src)
-        if (!withColor) return
-        try {
-          // 限制采样像素数，避免量化高清背景时阻塞登录表单。
-          const canvas = document.createElement('canvas')
-          const scale = Math.min(1, 128 / Math.max(image.naturalWidth, image.naturalHeight))
-          canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
-          canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
-          const context = canvas.getContext('2d')
-          if (!context) return
-          context.drawImage(image, 0, 0, canvas.width, canvas.height)
-          const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
-          const argb = sourceColorFromImageBytes(pixels)
-          applyDynamicRoles(scope, rolesFromTheme(themeFromSourceColor(argb)))
-        } catch {
-          // 像素不可读时保留背景与静态配色。
-        }
-      },
-      { once: true }
-    )
-    // 加载失败时静默放弃：无背景图、无动态配色，页面保持静态主题。
-    image.addEventListener('error', () => {}, { once: true })
-
-    image.src = src
-  }
-
-  // 不能直连 /ua 读像素：其 302 首跳不带 CORS 头（crossOrigin 模式要求每跳
-  // 通过检查），且带任何查询串会直接返回文档页。因此先经查询端点
-  // （自身 ACAO:*）解析出最终图片 URL，再单跳直载 /images/*（同样 ACAO:*）；
-  // 查询失败则直连 /ua 仅作展示降级（不取色）。
-  fetch(`${RANDOM_BACKGROUND_API}/?type=ua&format=text`, {
-    cache: 'no-store',
-    signal: controller.signal,
-  })
-    .then((response) =>
-      response.ok ? response.text() : Promise.reject(new Error())
-    )
-    .then((text) => {
-      if (cancelled) return
-      const url = text
-        .split(/\r?\n/)
-        .map((line) => line.trim())
-        .find((line) => line.startsWith('http'))
-      if (!url) {
-        throw new Error('no image url in response')
-      }
-      startImageLoad(url, dynamicColor)
-    })
-    .catch(() => {
-      if (!cancelled) startImageLoad(RANDOM_BACKGROUND_URL, false)
-    })
+    onUrl(image.currentSrc || image.src, image)
+    if (!dynamicColor) return
+    try {
+      const canvas = document.createElement('canvas')
+      const scale = Math.min(1, 128 / Math.max(image.naturalWidth, image.naturalHeight))
+      canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+      canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+      const context = canvas.getContext('2d')
+      if (!context) return
+      context.drawImage(image, 0, 0, canvas.width, canvas.height)
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
+      appliedRoles = rolesFromTheme(themeFromSourceColor(sourceColorFromImageBytes(pixels)))
+      applyDynamicRoles(scope, appliedRoles)
+    } catch {
+      // Unreadable pixels do not discard the background or static theme.
+    }
+  }, () => {})
 
   return () => {
+    if (cancelled) return
     cancelled = true
-    controller.abort()
+    resource.subscribers -= 1
+    if (appliedRoles) {
+      for (const mode of ['light', 'dark'] as const) {
+        for (const key of Object.keys(appliedRoles[mode])) {
+          scope.style.removeProperty(`--dyn-${mode}-${key}`)
+        }
+      }
+      scope.removeAttribute('data-dynamic-theme')
+    }
+    // React StrictMode re-subscribes synchronously before this microtask runs.
+    queueMicrotask(() => {
+      if (resource.subscribers === 0 && !resource.settled) {
+        resource.controller.abort()
+        if (backgroundResource === resource) backgroundResource = undefined
+      }
+    })
   }
 }

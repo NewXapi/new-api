@@ -49,6 +49,7 @@ body,
     'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
 
   --color-background: var(--background);
+  --color-background-scrim: var(--background-scrim);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-surface: var(--card-surface);
@@ -123,6 +124,8 @@ body,
   --app-header-height: 3rem;
   --surface-opacity: 82%;
   --surface-blur: 18px;
+  /* Overlay scrim used by modal surfaces; keep the 82% surface opacity separate. */
+  --background-scrim: oklch(0 0 0 / 18%);
   /* Static build-channel fallback consumed when JS hasn't booted yet. */
   --app-rev: '2k6e8r7p';
   /* Currently active body font. The font axis swaps this between
@@ -130,11 +133,11 @@ body,
    * in theme-presets.css. Default mirrors `--font-sans` so behavior is
    * identical when no font preference is set. */
   --font-body: var(--font-sans);
-  --background: oklch(1 0 0);
+  --background: oklch(0.985 0 0);
   --foreground: oklch(0.321 0 0);
-  --card: oklch(1 0 0);
+  --card: oklch(0.995 0 0);
   --card-foreground: oklch(0.321 0 0);
-  --popover: oklch(1 0 0);
+  --popover: oklch(0.995 0 0);
   --popover-foreground: oklch(0.321 0 0);
   --primary: oklch(0.614 0.207 262);
   --primary-foreground: oklch(1 0 0);
@@ -165,7 +168,7 @@ body,
   --overview-accent-1: oklch(0.72 0.18 250);
   --overview-accent-2: oklch(0.65 0.15 200);
   --overview-accent-3: oklch(0.7 0.12 280);
-  --sidebar: color-mix(in oklch, var(--foreground) 0.5%, var(--background));
+  --sidebar: color-mix(in oklch, var(--foreground) 2%, var(--background));
   --sidebar-foreground: oklch(0.321 0 0);
   --sidebar-primary: oklch(0.614 0.207 262);
   --sidebar-primary-foreground: oklch(1 0 0);
@@ -216,7 +219,7 @@ body,
     0 2px 3px 0 rgb(0 0 0 / 0.3), 0 6px 10px 4px rgb(0 0 0 / 0.15);
   --elevation-5:
     0 4px 4px 0 rgb(0 0 0 / 0.3), 0 8px 12px 6px rgb(0 0 0 / 0.15);
-  --scrim: oklch(0 0 0 / 0.25);
+  --scrim: var(--background-scrim);
   --inverse-surface: oklch(0.321 0 0);
   --inverse-on-surface: oklch(0.962 0 0);
 }
@@ -224,11 +227,11 @@ body,
 .dark {
   /* Varlet-style dark scheme: #121212 canvas with tonal containers. */
   --background: oklch(0.182 0 0);
-  --foreground: oklch(0.907 0 0);
+  --foreground: oklch(0.86 0 0);
   --card: oklch(0.235 0 0);
-  --card-foreground: oklch(0.907 0 0);
+  --card-foreground: oklch(0.86 0 0);
   --popover: oklch(0.256 0 0);
-  --popover-foreground: oklch(0.907 0 0);
+  --popover-foreground: oklch(0.86 0 0);
   --primary: oklch(0.72 0.148 262);
   --primary-foreground: oklch(1 0 0);
   --secondary: color-mix(in oklch, var(--primary) 18%, var(--background));
@@ -236,7 +239,7 @@ body,
   --muted: oklch(0.256 0 0);
   --muted-foreground: oklch(0.785 0 0);
   --accent: color-mix(in oklch, var(--primary) 20%, var(--background));
-  --accent-foreground: oklch(0.907 0 0);
+  --accent-foreground: var(--foreground);
   --destructive: oklch(0.7 0.19 27);
   --destructive-foreground: oklch(0.985 0 0);
   --success: oklch(0.78 0.15 165.6);
@@ -256,7 +259,7 @@ body,
   --chart-4: oklch(0.75 0.16 325);
   --chart-5: oklch(0.76 0.14 155);
   --sidebar: oklch(0.182 0 0);
-  --sidebar-foreground: oklch(0.907 0 0);
+  --sidebar-foreground: var(--foreground);
   --sidebar-primary: oklch(0.72 0.148 262);
   --sidebar-primary-foreground: oklch(1 0 0);
   --sidebar-accent: color-mix(in oklch, var(--primary) 20%, var(--background));
@@ -299,7 +302,34 @@ body,
     0 2px 3px 0 rgb(0 0 0 / 0.65), 0 6px 10px 4px rgb(0 0 0 / 0.4);
   --elevation-5:
     0 4px 4px 0 rgb(0 0 0 / 0.7), 0 8px 12px 6px rgb(0 0 0 / 0.45);
-  --scrim: oklch(0 0 0 / 0.5);
+  --background-scrim: oklch(0 0 0 / 45%);
+  --scrim: var(--background-scrim);
   --inverse-surface: oklch(0.907 0 0);
   --inverse-on-surface: oklch(0.321 0 0);
+}
+
+/* The later preset surface bridge derives neutral containers from these
+ * achromatic anchors; do not compete with its higher-specificity surfaces. */
+[data-theme-preset='neutral-gray'] {
+  --background: oklch(0.97 0 0);
+  --foreground: oklch(0.36 0 0);
+  --card-foreground: var(--foreground);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.46 0 0);
+  --primary-foreground: oklch(0.97 0 0);
+  --secondary: color-mix(in oklch, var(--primary) 12%, var(--background));
+  --secondary-foreground: var(--foreground);
+  --ring: var(--primary);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-ring: var(--ring);
+}
+
+.dark [data-theme-preset='neutral-gray'] {
+  --background: oklch(0.18 0 0);
+  --foreground: oklch(0.84 0 0);
+  --primary: oklch(0.76 0 0);
+  --primary-foreground: oklch(0.24 0 0);
+  --secondary: color-mix(in oklch, var(--primary) 18%, var(--background));
 }

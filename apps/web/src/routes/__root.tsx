@@ -27,6 +27,7 @@ import {
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { useEffect } from 'react'
 
+import { AppBackground } from '@/components/app-background'
 import { NavigationProgress } from '@/components/navigation-progress'
 import { Toaster } from '@/components/ui/sonner'
 import { ThemeCustomizationProvider } from '@/context/theme-customization-provider'
@@ -96,8 +97,11 @@ function RootComponent() {
 
   return (
     <ThemeCustomizationProvider>
+      <AppBackground />
       <NavigationProgress />
-      <Outlet />
+      <div data-slot='app-content' className='relative z-10 min-h-svh'>
+        <Outlet />
+      </div>
       <Toaster closeButton duration={5000} position='top-center' richColors />
       {import.meta.env.MODE === 'development' && !isMobileViewport && (
         <>

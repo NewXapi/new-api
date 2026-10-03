@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { ArrowLeft, Moon, Sun } from 'lucide-react'
-import { useEffect, useId, useRef, useState } from 'react'
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { LanguageSwitcher } from '@/components/language-switcher'
@@ -26,8 +26,6 @@ import { Switch } from '@/components/ui/switch'
 import { useTheme } from '@/context/theme-provider'
 import { useThemeCustomization } from '@/context/theme-customization-provider'
 
-import { loadRandomBackground } from './lib/dynamic-background'
-
 type AuthLayoutProps = {
   children: React.ReactNode
 }
@@ -35,36 +33,16 @@ type AuthLayoutProps = {
 export function AuthLayout({ children }: AuthLayoutProps) {
   const { t } = useTranslation()
   const { resolvedTheme, setTheme } = useTheme()
-  const { blur, setBlur } = useThemeCustomization()
-  const scopeRef = useRef<HTMLDivElement>(null)
-  const [backgroundUrl, setBackgroundUrl] = useState<string | null>(null)
+  const { blur, setBlur, customization, setPreset } = useThemeCustomization()
   const blurId = useId()
   const nextTheme = resolvedTheme === 'dark' ? 'light' : 'dark'
 
-  useEffect(() => {
-    const scope = scopeRef.current
-    if (!scope) return
-    return loadRandomBackground(scope, setBackgroundUrl, false)
-  }, [])
-
   return (
     <div
-      ref={scopeRef}
+      data-slot='auth-layout'
       data-theme-blur={blur ? 'true' : undefined}
-      className='auth-scope bg-background relative grid min-h-svh max-w-none'
+      className='auth-scope bg-background relative z-10 grid min-h-svh max-w-none'
     >
-      {backgroundUrl && (
-        <>
-          <img
-            src={backgroundUrl}
-            alt=''
-            aria-hidden='true'
-            className='auth-background absolute inset-0 size-full object-cover'
-          />
-          {/* 暗色模式下叠加半透明黑层，压暗背景图降低刺眼感 */}
-          <div aria-hidden='true' className='absolute inset-0 dark:bg-black/45' />
-        </>
-      )}
       <div className='relative z-10 container mx-auto flex items-center justify-center px-4 py-8 sm:py-12'>
         <div className='mx-auto flex w-full flex-col gap-4 sm:w-[440px]'>
           <div className='auth-card bg-card text-card-foreground ring-foreground/10 relative flex flex-col justify-center rounded-2xl px-6 py-6 shadow-lg ring-1 sm:px-10 sm:py-8'>
@@ -73,7 +51,10 @@ export function AuthLayout({ children }: AuthLayoutProps) {
               variant='ghost'
               size='icon'
               aria-label={t(nextTheme === 'dark' ? 'Switch to dark mode' : 'Switch to light mode')}
-              onClick={() => setTheme(nextTheme)}
+              onClick={() => {
+                if (customization.preset === 'neutral-gray') setPreset('default')
+                setTheme(nextTheme)
+              }}
               className='absolute top-3 right-3 size-9'
             >
               <span className='relative size-4'>

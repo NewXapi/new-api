@@ -19,7 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { Radio as RadioPrimitive } from '@base-ui/react/radio'
 import { RadioGroup as Radio } from '@base-ui/react/radio-group'
 import { CircleCheck, Palette, RotateCcw } from 'lucide-react'
-import type { SVGProps } from 'react'
+import { type ComponentProps, type SVGProps, useId } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { IconDir } from '@/assets/custom/icon-dir'
@@ -31,7 +31,6 @@ import { IconSidebarInset } from '@/assets/custom/icon-sidebar-inset'
 import { IconSidebarSidebar } from '@/assets/custom/icon-sidebar-sidebar'
 import { IconThemeDark } from '@/assets/custom/icon-theme-dark'
 import { IconThemeLight } from '@/assets/custom/icon-theme-light'
-import { IconThemeSystem } from '@/assets/custom/icon-theme-system'
 import {
   sideDrawerContentClassName,
   sideDrawerFooterClassName,
@@ -50,9 +49,14 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet'
 import { useDirection } from '@/context/direction-provider'
-import { type Collapsible, useLayout } from '@/context/layout-provider'
+import {
+  type Collapsible,
+  useLayout,
+  useOptionalLayout,
+} from '@/context/layout-provider'
 import { useThemeCustomization } from '@/context/theme-customization-provider'
 import { useTheme } from '@/context/theme-provider'
+import { useThemeMode } from '@/hooks/use-theme-mode'
 import {
   type ContentLayout,
   THEME_PRESETS,
@@ -63,45 +67,64 @@ import {
 } from '@/lib/theme-customization'
 import { cn } from '@/lib/utils'
 
-import { useSidebar } from './ui/sidebar'
+import { useOptionalSidebar, useSidebar } from './ui/sidebar'
 
 const Item = RadioPrimitive.Root
 
-export function ConfigDrawer() {
+type ConfigDrawerProps = Pick<ComponentProps<typeof Sheet>, 'open' | 'onOpenChange'> & {
+  showTrigger?: boolean
+  finalFocus?: ComponentProps<typeof SheetContent>['finalFocus']
+}
+
+export function ConfigDrawer({
+  open,
+  onOpenChange,
+  showTrigger = true,
+  finalFocus,
+}: ConfigDrawerProps = {}) {
   const { t } = useTranslation()
-  const { setOpen } = useSidebar()
+  const descriptionId = useId()
+  const sidebar = useOptionalSidebar()
+  const layout = useOptionalLayout()
+  const hasSidebarControls = sidebar !== null && layout !== null
   const { resetDir } = useDirection()
   const { resetTheme } = useTheme()
-  const { resetLayout } = useLayout()
   const { resetCustomization } = useThemeCustomization()
 
   const handleReset = () => {
-    setOpen(true)
+    if (hasSidebarControls) {
+      sidebar.setOpen(true)
+      layout.resetLayout()
+    }
     resetDir()
     resetTheme()
-    resetLayout()
     resetCustomization()
   }
 
   return (
-    <Sheet>
-      <SheetTrigger
-        render={
-          <Button
-            size='icon'
-            variant='ghost'
-            aria-label={t('Open theme settings')}
-            aria-describedby='config-drawer-description'
-            className='max-md:hidden'
-          />
-        }
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      {showTrigger && (
+        <SheetTrigger
+          render={
+            <Button
+              size='icon'
+              variant='ghost'
+              aria-label={t('Theme management')}
+              aria-describedby={descriptionId}
+              className='max-md:hidden'
+            />
+          }
+        >
+          <Palette className='size-[1.2rem]' aria-hidden='true' />
+        </SheetTrigger>
+      )}
+      <SheetContent
+        className={sideDrawerContentClassName('sm:max-w-md')}
+        finalFocus={finalFocus}
       >
-        <Palette className='size-[1.2rem]' aria-hidden='true' />
-      </SheetTrigger>
-      <SheetContent className={sideDrawerContentClassName('sm:max-w-md')}>
         <SheetHeader className={sideDrawerHeaderClassName()}>
-          <SheetTitle>{t('Theme Settings')}</SheetTitle>
-          <SheetDescription id='config-drawer-description'>
+          <SheetTitle>{t('Theme management')}</SheetTitle>
+          <SheetDescription id={descriptionId}>
             {t('Adjust the appearance and layout to suit your preferences.')}
           </SheetDescription>
         </SheetHeader>
@@ -111,8 +134,12 @@ export function ConfigDrawer() {
           <FontConfig />
           <RadiusConfig />
           <ScaleConfig />
-          <SidebarConfig />
-          <LayoutConfig />
+          {hasSidebarControls && (
+            <>
+              <SidebarConfig />
+              <LayoutConfig />
+            </>
+          )}
           <ContentLayoutConfig />
           <BlurConfig />
           <DirConfig />
@@ -215,31 +242,36 @@ function RadioGroupItem(props: {
 
 function ThemeConfig() {
   const { t } = useTranslation()
-  const { defaultTheme, theme, setTheme } = useTheme()
+  const { defaultTheme, resetTheme } = useTheme()
+  const { mode, setMode: selectTheme } = useThemeMode()
+  const { customization, setPreset } = useThemeCustomization()
   return (
     <div>
       <SectionTitle
         title={t('Theme')}
-        showReset={theme !== defaultTheme}
-        onReset={() => setTheme(defaultTheme)}
+        showReset={mode === 'gray' || mode !== defaultTheme}
+        onReset={() => {
+          if (customization.preset === 'neutral-gray') setPreset('default')
+          resetTheme()
+        }}
       />
       <Radio
-        value={theme}
-        onValueChange={setTheme}
+        value={mode}
+        onValueChange={selectTheme}
         className='grid w-full max-w-md grid-cols-3 gap-4'
         aria-label={t('Select theme preference')}
         aria-describedby='theme-description'
       >
         {[
-          { value: 'system', label: t('System'), icon: IconThemeSystem },
           { value: 'light', label: t('Light'), icon: IconThemeLight },
           { value: 'dark', label: t('Dark'), icon: IconThemeDark },
+          { value: 'gray', label: t('Gray'), icon: IconThemeLight },
         ].map((item) => (
           <RadioGroupItem key={item.value} item={item} isTheme />
         ))}
       </Radio>
       <div id='theme-description' className='sr-only'>
-        {t('Choose between system preference, light mode, or dark mode')}
+        {t('Choose light, dark, or gray theme')}
       </div>
     </div>
   )

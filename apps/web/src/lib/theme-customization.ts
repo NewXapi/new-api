@@ -52,6 +52,11 @@ export const THEME_PRESETS = [
     swatches: ['oklch(0.15 0 0)', 'oklch(0.99 0 0)'],
   },
   {
+    value: 'neutral-gray',
+    name: 'Neutral Gray',
+    swatches: ['oklch(0.97 0 0)', 'oklch(0.18 0 0)'],
+  },
+  {
     value: 'underground',
     name: 'Underground',
     swatches: ['oklch(0.5315 0.0694 156.19)', 'oklch(0.5748 0.0862 336.52)'],

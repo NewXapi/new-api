@@ -16,23 +16,25 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { cn } from '@/lib/utils'
+import { useThemeCustomization } from '@/context/theme-customization-provider'
+import { useTheme } from '@/context/theme-provider'
 
-type MainProps = React.HTMLAttributes<HTMLElement> & {
-  fluid?: boolean
-}
+export type ThemeMode = 'light' | 'dark' | 'gray'
 
-export function Main({ className, fluid = true, ...props }: MainProps) {
-  return (
-    <main
-      data-slot='app-main'
-      className={cn(
-        'flex min-h-0 flex-1 flex-col overflow-hidden bg-page-surface text-foreground',
-        !fluid &&
-          '@7xl/content:mx-auto @7xl/content:w-full @7xl/content:max-w-7xl',
-        className
-      )}
-      {...props}
-    />
-  )
+export function useThemeMode() {
+  const { resolvedTheme, setTheme } = useTheme()
+  const { customization, setPreset } = useThemeCustomization()
+  const mode: ThemeMode = customization.preset === 'neutral-gray' ? 'gray' : resolvedTheme
+
+  const setMode = (value: ThemeMode) => {
+    if (value === 'gray') {
+      setPreset('neutral-gray')
+      setTheme('light')
+      return
+    }
+    if (customization.preset === 'neutral-gray') setPreset('default')
+    setTheme(value)
+  }
+
+  return { mode, setMode }
 }

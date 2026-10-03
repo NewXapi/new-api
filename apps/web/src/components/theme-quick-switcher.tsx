@@ -21,7 +21,7 @@ import { motion, useReducedMotion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
-import { useTheme } from '@/context/theme-provider'
+import { useThemeMode } from '@/hooks/use-theme-mode'
 import { cn } from '@/lib/utils'
 
 function ActiveIndicator({ prefersReduced }: { prefersReduced: boolean | null }) {
@@ -40,7 +40,7 @@ function ActiveIndicator({ prefersReduced }: { prefersReduced: boolean | null })
 
 export function ThemeQuickSwitcher() {
   const { t } = useTranslation()
-  const { theme, setTheme } = useTheme()
+  const { mode: theme, setMode: setTheme } = useThemeMode()
   const prefersReduced = useReducedMotion()
 
   return (
@@ -61,12 +61,12 @@ export function ThemeQuickSwitcher() {
             variant='ghost'
             size='icon'
             role='radio'
-            aria-label={t('System')}
-            aria-checked={theme === 'system'}
-            onClick={() => setTheme('system')}
-            className={cn('relative size-7', theme === 'system' && 'text-accent-foreground')}
+            aria-label={t('Gray')}
+            aria-checked={theme === 'gray'}
+            onClick={() => setTheme('gray')}
+            className={cn('relative size-7', theme === 'gray' && 'text-accent-foreground')}
           >
-            {theme === 'system' && <ActiveIndicator prefersReduced={prefersReduced} />}
+            {theme === 'gray' && <ActiveIndicator prefersReduced={prefersReduced} />}
             <Monitor className='relative z-10 size-[0.95rem]' />
           </Button>
           <Button

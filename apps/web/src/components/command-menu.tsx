@@ -32,7 +32,7 @@ import {
   CommandSeparator,
 } from '@/components/ui/command'
 import { useSearch } from '@/context/search-provider'
-import { useTheme } from '@/context/theme-provider'
+import { useThemeMode } from '@/hooks/use-theme-mode'
 import { useSidebarData } from '@/hooks/use-sidebar-data'
 
 import { ScrollArea } from './ui/scroll-area'
@@ -40,7 +40,7 @@ import { ScrollArea } from './ui/scroll-area'
 export function CommandMenu() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { setTheme } = useTheme()
+  const { setMode: setTheme } = useThemeMode()
   const { open, setOpen } = useSearch()
   const sidebarData = useSidebarData()
 
@@ -107,10 +107,10 @@ export function CommandMenu() {
                 <span>{t('Dark')}</span>
               </CommandItem>
               <CommandItem
-                onSelect={() => runCommand(() => setTheme('system'))}
+                onSelect={() => runCommand(() => setTheme('gray'))}
               >
                 <Laptop />
-                <span>{t('System')}</span>
+                <span>{t('Gray')}</span>
               </CommandItem>
             </CommandGroup>
           </ScrollArea>

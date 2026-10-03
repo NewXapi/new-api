@@ -30,7 +30,7 @@ import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
 type Theme = 'dark' | 'light' | 'system'
 type ResolvedTheme = Exclude<Theme, 'system'>
 
-const DEFAULT_THEME = 'system'
+const DEFAULT_THEME = 'dark'
 const THEME_COOKIE_NAME = 'vite-ui-theme'
 const THEME_COOKIE_MAX_AGE = 60 * 60 * 24 * 365 // 1 year
 const THEMES = new Set<Theme>(['dark', 'light', 'system'])
@@ -51,7 +51,7 @@ type ThemeProviderState = {
 
 const initialState: ThemeProviderState = {
   defaultTheme: DEFAULT_THEME,
-  resolvedTheme: 'light',
+  resolvedTheme: 'dark',
   theme: DEFAULT_THEME,
   setTheme: () => null,
   resetTheme: () => null,
@@ -93,9 +93,18 @@ export function ThemeProvider({
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
 
     const applyTheme = () => {
-      const nextResolvedTheme = theme === 'system' ? getSystemTheme() : theme
+      const nextResolvedTheme = resolveTheme(theme)
       root.classList.remove('light', 'dark')
       root.classList.add(nextResolvedTheme)
+      root.style.colorScheme = nextResolvedTheme
+      // Media-qualified tags follow the OS, which may differ from an explicit
+      // app preference. Keep every tag aligned with the resolved app theme.
+      document.querySelectorAll("meta[name='theme-color']").forEach((meta) => {
+        meta.setAttribute(
+          'content',
+          nextResolvedTheme === 'dark' ? '#121212' : '#fafafa'
+        )
+      })
       setResolvedTheme(nextResolvedTheme)
     }
 
