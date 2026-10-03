@@ -7,12 +7,14 @@ import (
 	"strings"
 
 	"github.com/QuantumNous/new-api/internal/common"
+	"github.com/QuantumNous/new-api/internal/oauthprovider"
 	"github.com/QuantumNous/new-api/internal/transport/contract"
 	"github.com/QuantumNous/new-api/internal/transport/middleware"
 )
 
 func SetRouter(router contract.Engine, assets WebAssets) {
 	SetApiRouter(router)
+	oauthprovider.RegisterStandardRoutes(router)
 	SetDashboardRouter(router)
 	SetRelayRouter(router)
 	SetVideoRouter(router)

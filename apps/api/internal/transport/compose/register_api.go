@@ -4,6 +4,8 @@ import (
 	"github.com/QuantumNous/new-api/internal/billing"
 	"github.com/QuantumNous/new-api/internal/identity"
 	"github.com/QuantumNous/new-api/internal/identity/policy"
+	"github.com/QuantumNous/new-api/internal/marketplace"
+	"github.com/QuantumNous/new-api/internal/oauthprovider"
 	"github.com/QuantumNous/new-api/internal/ops"
 	"github.com/QuantumNous/new-api/internal/transport/contract"
 	"github.com/QuantumNous/new-api/internal/transport/handler"
@@ -45,6 +47,8 @@ func SetApiRouter(router contract.Engine) {
 		apiRouter.POST("/qqbot/webhook", anonymousRequestBodyLimit, billing.QQBotWebhook)
 		apiRouter.POST("/qqbot/webhook/*token", anonymousRequestBodyLimit, billing.QQBotWebhook)
 		apiRouter.GET("/pricing", middleware.HeaderNavModuleAuth("pricing"), handler.GetPricing)
+		marketplace.SetApiRouter(apiRouter)
+		oauthprovider.RegisterAPIRoutes(apiRouter)
 		// /api/log routes
 		logRoute := apiRouter.Group("/log")
 		logRoute.GET("/", security.AdminAuth(), handler.GetAllLogs)
