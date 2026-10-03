@@ -22,10 +22,12 @@ import { MODELS_DEFAULT_SECTION } from '@/features/system-settings/models/sectio
 
 export const Route = createFileRoute('/_authenticated/admin/system-settings/models/')(
   {
-    beforeLoad: () => {
+    beforeLoad: ({ location }) => {
       throw redirect({
         to: '/admin/system-settings/models/$section',
         params: { section: MODELS_DEFAULT_SECTION },
+        search: location.search,
+        hash: location.hash,
       })
     },
   }

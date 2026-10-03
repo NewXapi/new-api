@@ -24,11 +24,15 @@ import { ROLE } from '@/lib/roles'
 import { useAuthStore } from '@/stores/auth-store'
 
 const adminLinks = [
-  { label: 'Channels', to: '/admin/channels' },
-  { label: 'Models', to: '/admin/models/metadata' },
-  { label: 'Users', to: '/admin/users' },
-  { label: 'User Insights', to: '/admin/user-insights' },
-  { label: 'System Settings', to: '/admin/system-settings' },
+  { label: 'Channels', to: '/admin/channels', params: undefined },
+  {
+    label: 'Models',
+    to: '/admin/models/$section',
+    params: { section: 'metadata' },
+  },
+  { label: 'Users', to: '/admin/users', params: undefined },
+  { label: 'User Insights', to: '/admin/user-insights', params: undefined },
+  { label: 'System Settings', to: '/admin/system-settings', params: undefined },
 ] as const
 
 export const Route = createFileRoute('/_authenticated/admin/')({
@@ -53,6 +57,7 @@ function AdminEntry() {
           <Link
             key={item.to}
             to={item.to}
+            params={item.params}
             className='bg-card hover:bg-accent rounded-lg border p-4 transition-colors'
           >
             <span className='font-medium'>{t(item.label)}</span>

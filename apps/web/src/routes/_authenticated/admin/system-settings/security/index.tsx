@@ -23,10 +23,12 @@ import { SECURITY_DEFAULT_SECTION } from '@/features/system-settings/security/se
 export const Route = createFileRoute(
   '/_authenticated/admin/system-settings/security/'
 )({
-  beforeLoad: () => {
+  beforeLoad: ({ location }) => {
     throw redirect({
       to: '/admin/system-settings/security/$section',
       params: { section: SECURITY_DEFAULT_SECTION },
+      search: location.search,
+      hash: location.hash,
     })
   },
 })

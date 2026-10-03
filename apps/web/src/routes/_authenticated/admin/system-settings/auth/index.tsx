@@ -21,10 +21,12 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { AUTH_DEFAULT_SECTION } from '@/features/system-settings/auth/section-registry.tsx'
 
 export const Route = createFileRoute('/_authenticated/admin/system-settings/auth/')({
-  beforeLoad: () => {
+  beforeLoad: ({ location }) => {
     throw redirect({
       to: '/admin/system-settings/auth/$section',
       params: { section: AUTH_DEFAULT_SECTION },
+      search: location.search,
+      hash: location.hash,
     })
   },
 })

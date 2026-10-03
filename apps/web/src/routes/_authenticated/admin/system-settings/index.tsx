@@ -19,9 +19,11 @@ For commercial licensing, please contact support@quantumnous.com
 import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/_authenticated/admin/system-settings/')({
-  beforeLoad: () => {
+  beforeLoad: ({ location }) => {
     throw redirect({
       to: '/admin/system-settings/site',
+      search: location.search,
+      hash: location.hash,
     })
   },
 })

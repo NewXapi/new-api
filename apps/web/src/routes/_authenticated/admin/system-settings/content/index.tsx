@@ -23,10 +23,12 @@ import { CONTENT_DEFAULT_SECTION } from '@/features/system-settings/content/sect
 export const Route = createFileRoute(
   '/_authenticated/admin/system-settings/content/'
 )({
-  beforeLoad: () => {
+  beforeLoad: ({ location }) => {
     throw redirect({
       to: '/admin/system-settings/content/$section',
       params: { section: CONTENT_DEFAULT_SECTION },
+      search: location.search,
+      hash: location.hash,
     })
   },
 })

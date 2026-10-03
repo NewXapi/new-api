@@ -23,10 +23,12 @@ import { OPERATIONS_DEFAULT_SECTION } from '@/features/system-settings/operation
 export const Route = createFileRoute(
   '/_authenticated/admin/system-settings/operations/'
 )({
-  beforeLoad: () => {
+  beforeLoad: ({ location }) => {
     throw redirect({
       to: '/admin/system-settings/operations/$section',
       params: { section: OPERATIONS_DEFAULT_SECTION },
+      search: location.search,
+      hash: location.hash,
     })
   },
 })

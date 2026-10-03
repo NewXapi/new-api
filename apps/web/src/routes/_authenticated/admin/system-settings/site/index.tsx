@@ -21,10 +21,12 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 import { SITE_DEFAULT_SECTION } from '@/features/system-settings/site/section-registry.tsx'
 
 export const Route = createFileRoute('/_authenticated/admin/system-settings/site/')({
-  beforeLoad: () => {
+  beforeLoad: ({ location }) => {
     throw redirect({
       to: '/admin/system-settings/site/$section',
       params: { section: SITE_DEFAULT_SECTION },
+      search: location.search,
+      hash: location.hash,
     })
   },
 })

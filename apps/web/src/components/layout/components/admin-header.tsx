@@ -21,8 +21,6 @@ import { useTranslation } from 'react-i18next'
 import { Link } from '@tanstack/react-router'
 
 import { Button } from '@/components/ui/button'
-import { SidebarTrigger } from '@/components/ui/sidebar'
-
 import { Header } from './header'
 import { SystemBrand } from './system-brand'
 
@@ -37,7 +35,6 @@ export function AdminHeader() {
           <ArrowLeft />
           {t('Back to user app')}
         </Button>
-        <SidebarTrigger variant='ghost' className='size-8' />
       </div>
     </Header>
   )

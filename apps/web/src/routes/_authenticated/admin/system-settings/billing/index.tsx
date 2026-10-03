@@ -23,10 +23,12 @@ import { BILLING_DEFAULT_SECTION } from '@/features/system-settings/billing/sect
 export const Route = createFileRoute(
   '/_authenticated/admin/system-settings/billing/'
 )({
-  beforeLoad: () => {
+  beforeLoad: ({ location }) => {
     throw redirect({
       to: '/admin/system-settings/billing/$section',
       params: { section: BILLING_DEFAULT_SECTION },
+      search: location.search,
+      hash: location.hash,
     })
   },
 })

@@ -23,7 +23,7 @@ import { ROLE } from '@/lib/roles'
 import { useAuthStore } from '@/stores/auth-store'
 
 export const Route = createFileRoute('/_authenticated/admin/models/')({
-  beforeLoad: () => {
+  beforeLoad: ({ location }) => {
     const { auth } = useAuthStore.getState()
 
     if (!auth.user || auth.user.role < ROLE.ADMIN) {
@@ -35,6 +35,8 @@ export const Route = createFileRoute('/_authenticated/admin/models/')({
     throw redirect({
       to: '/admin/models/$section',
       params: { section: MODELS_DEFAULT_SECTION },
+      search: location.search,
+      hash: location.hash,
     })
   },
 })
