@@ -17,6 +17,12 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
+import {
+  sideDrawerContentClassName,
+  sideDrawerHeaderClassName,
+} from '@/components/drawer-layout'
+import { Card, CardContent } from '@/components/ui/card'
+
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -64,8 +70,8 @@ export function SampleDetailSheet({
       open={sampleId !== null}
       onOpenChange={(open) => !open && onClose()}
     >
-      <SheetContent className='flex w-full flex-col gap-0 sm:max-w-2xl'>
-        <SheetHeader>
+      <SheetContent className={sideDrawerContentClassName('sm:max-w-2xl')}>
+        <SheetHeader className={sideDrawerHeaderClassName()}>
           <SheetTitle>{t('Request evidence')}</SheetTitle>
           <SheetDescription>
             {t(
@@ -74,7 +80,7 @@ export function SampleDetailSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <ScrollArea className='flex-1 px-4 pb-6'>
+        <ScrollArea className='min-h-0 flex-1 px-4 py-4 sm:px-6'>
           {detailQuery.isLoading && (
             <div className='space-y-2'>
               {Array.from({ length: 5 }).map((_, index) => (

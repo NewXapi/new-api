@@ -177,7 +177,7 @@ export function LoginSessionsCard() {
           <CardDescription>
             {t('Review and sign out devices currently using your account.')}
           </CardDescription>
-          <CardAction>
+          <CardAction className='col-start-1 row-start-3 max-w-full justify-self-start sm:col-start-2 sm:row-start-1 sm:justify-self-end'>
             <Button
               type='button'
               variant='outline'

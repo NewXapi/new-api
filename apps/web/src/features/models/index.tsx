@@ -22,6 +22,7 @@ import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
+import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 import { ModelsDialogs } from './components/models-dialogs'
@@ -67,20 +68,20 @@ function ModelsContent() {
     [navigate]
   )
 
-  const meta = SECTION_META[activeSection] ?? SECTION_META.metadata
-
   return (
     <>
       <SectionPageLayout fixedContent>
-        <SectionPageLayout.Title>{t(meta.titleKey)}</SectionPageLayout.Title>
-          <SectionPageLayout.Actions>
-            {activeSection === 'metadata' ? (
-              <ModelsPrimaryButtons />
-            ) : null}
-          </SectionPageLayout.Actions>
+        <SectionPageLayout.Title>{t('Models')}</SectionPageLayout.Title>
+        <SectionPageLayout.Actions>
+          {activeSection === 'metadata' ? <ModelsPrimaryButtons /> : null}
+        </SectionPageLayout.Actions>
         <SectionPageLayout.Content>
           <div className='flex h-full min-h-0 flex-col gap-4'>
-            <Tabs value={activeSection} onValueChange={handleSectionChange} className='shrink-0'>
+            <Tabs
+              value={activeSection}
+              onValueChange={handleSectionChange}
+              className='shrink-0'
+            >
               <TabsList className='max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto'>
                 {MODELS_SECTION_IDS.map((section) => (
                   <TabsTrigger key={section} value={section}>
@@ -89,9 +90,11 @@ function ModelsContent() {
                 ))}
               </TabsList>
             </Tabs>
-            <div className='min-h-0 flex-1'>
-              <ModelsTable />
-            </div>
+            <Card className='min-h-0 flex-1 gap-0 py-0'>
+              <CardContent className='flex min-h-0 flex-1 flex-col p-3 sm:p-4'>
+                <ModelsTable />
+              </CardContent>
+            </Card>
           </div>
         </SectionPageLayout.Content>
       </SectionPageLayout>

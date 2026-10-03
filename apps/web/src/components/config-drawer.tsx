@@ -39,6 +39,7 @@ import {
   sideDrawerHeaderClassName,
 } from '@/components/drawer-layout'
 import { Button } from '@/components/ui/button'
+import { Switch } from '@/components/ui/switch'
 import {
   Sheet,
   SheetContent,
@@ -113,6 +114,7 @@ export function ConfigDrawer() {
           <SidebarConfig />
           <LayoutConfig />
           <ContentLayoutConfig />
+          <BlurConfig />
           <DirConfig />
         </div>
         <SheetFooter className={sideDrawerFooterClassName('grid-cols-1')}>
@@ -697,6 +699,29 @@ function ContentLayoutPreview(props: { centered: boolean }) {
         <span className='bg-foreground/60 block h-[2px] w-full rounded-full' />
         <span className='bg-foreground/60 block h-[2px] w-3/4 rounded-full' />
       </div>
+    </div>
+  )
+}
+
+function BlurConfig() {
+  const { t } = useTranslation()
+  const { defaults, customization, setBlur } = useThemeCustomization()
+
+  return (
+    <div>
+      <SectionTitle
+        title={t('Blur')}
+        showReset={customization.blur !== defaults.blur}
+        onReset={() => setBlur(defaults.blur)}
+      />
+      <label className='flex items-center justify-between gap-3 rounded-lg border p-3 text-sm'>
+        <span>{t('Enable surface blur')}</span>
+        <Switch
+          checked={customization.blur}
+          onCheckedChange={setBlur}
+          aria-label={t('Enable surface blur')}
+        />
+      </label>
     </div>
   )
 }

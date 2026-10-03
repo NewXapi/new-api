@@ -18,6 +18,14 @@ For commercial licensing, please contact support@quantumnous.com
 */
 @custom-variant dark (&:is(.dark *));
 
+/* Resolve derived surfaces where presets and scoped colors are inherited. */
+body,
+.auth-scope {
+  --card-surface: color-mix(in oklch, var(--card) var(--surface-opacity), transparent);
+  --header-surface: color-mix(in oklch, var(--background) var(--surface-opacity), transparent);
+  --page-surface: color-mix(in oklch, var(--primary) 3%, var(--background));
+}
+
 @theme inline {
   --font-sans: 'MiSans', 'Public Sans Variable', 'Public Sans', sans-serif;
   /* Editorial serif token — the body face used by the `serif` font axis
@@ -43,6 +51,9 @@ For commercial licensing, please contact support@quantumnous.com
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
+  --color-card-surface: var(--card-surface);
+  --color-page-surface: var(--page-surface);
+  --color-header-surface: var(--header-surface);
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
@@ -110,6 +121,8 @@ For commercial licensing, please contact support@quantumnous.com
 :root {
   --radius: 1rem;
   --app-header-height: 3rem;
+  --surface-opacity: 82%;
+  --surface-blur: 18px;
   /* Static build-channel fallback consumed when JS hasn't booted yet. */
   --app-rev: '2k6e8r7p';
   /* Currently active body font. The font axis swaps this between

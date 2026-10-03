@@ -32,6 +32,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { ErrorState } from '@/components/error-state'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import {
   Popover,
   PopoverContent,
@@ -74,14 +75,13 @@ const INSTANCE_SKELETON_KEYS = [
 ]
 
 const STATUS_CLASS_NAME: Record<SystemInstanceStatus, string> = {
-  online:
-    'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300',
-  stale: 'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+  online: 'bg-success/15 text-success',
+  stale: 'bg-warning/15 text-warning',
 }
 
 const STATUS_DOT_CLASS_NAME: Record<SystemInstanceStatus, string> = {
-  online: 'bg-emerald-500',
-  stale: 'bg-amber-500',
+  online: 'bg-success',
+  stale: 'bg-warning',
 }
 
 function roleLabel(instance: SystemInstance) {
@@ -136,9 +136,9 @@ function formatBytes(bytes?: number): string {
 
 function ringColorClass(percent: number | null) {
   if (percent === null) return 'text-muted-foreground/40'
-  if (percent >= 90) return 'text-red-500'
-  if (percent >= 70) return 'text-amber-500'
-  return 'text-emerald-500'
+  if (percent >= 90) return 'text-destructive'
+  if (percent >= 70) return 'text-warning'
+  return 'text-success'
 }
 
 type RingProgressProps = {
@@ -184,7 +184,7 @@ function RingProgress(props: RingProgressProps) {
         strokeDasharray={circumference}
         strokeDashoffset={offset}
         className={cn(
-          'transition-[stroke-dashoffset] duration-500',
+          'motion-reduce:transition-none',
           ringColorClass(props.percent)
         )}
       />
@@ -304,7 +304,7 @@ function SystemInstancesList(props: SystemInstancesTableProps) {
                             >
                               <Badge
                                 variant='outline'
-                                className='border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-300'
+                                className='border-warning/30 bg-warning/15 text-warning'
                               >
                                 <AlertTriangle
                                   className='size-3'
@@ -462,7 +462,7 @@ function SystemInstancesList(props: SystemInstancesTableProps) {
                             >
                               {isDeletingThisInstance ? (
                                 <Loader2
-                                  className='size-3 animate-spin'
+                                  className='size-3 animate-spin motion-reduce:animate-none'
                                   aria-hidden='true'
                                 />
                               ) : (
@@ -628,8 +628,8 @@ export function SystemInstancesPanel() {
 
   return (
     <>
-      <section className='bg-card overflow-hidden rounded-lg border shadow-xs'>
-        <div className='flex flex-col gap-3 border-b px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5'>
+      <Card className='gap-0 py-0'>
+        <CardHeader className='flex flex-col gap-3 border-b py-4 sm:flex-row sm:items-center sm:justify-between sm:px-5'>
           <div className='min-w-0'>
             <div className='flex items-center gap-2'>
               <span className='bg-muted text-muted-foreground inline-flex size-7 items-center justify-center rounded-md'>
@@ -664,7 +664,7 @@ export function SystemInstancesPanel() {
                 {deleteStaleInstancesMutation.isPending ? (
                   <Loader2
                     data-icon='inline-start'
-                    className='size-3.5 animate-spin'
+                    className='size-3.5 animate-spin motion-reduce:animate-none'
                     aria-hidden='true'
                   />
                 ) : (
@@ -687,16 +687,18 @@ export function SystemInstancesPanel() {
             >
               <RefreshCw
                 data-icon='inline-start'
-                className={cn('size-3.5', refreshing && 'animate-spin')}
+                className={cn('size-3.5', refreshing && 'animate-spin motion-reduce:animate-none')}
                 aria-hidden='true'
               />
               {refreshing ? t('Refreshing...') : t('Refresh')}
             </Button>
           </div>
-        </div>
+        </CardHeader>
 
-        <div aria-busy={instancesQuery.isFetching}>{instancesContent}</div>
-      </section>
+        <CardContent className='px-0' aria-busy={instancesQuery.isFetching}>
+          {instancesContent}
+        </CardContent>
+      </Card>
 
       <ConfirmDialog
         open={deleteAllConfirmOpen}

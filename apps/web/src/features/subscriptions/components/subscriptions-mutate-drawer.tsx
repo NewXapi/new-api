@@ -275,7 +275,7 @@ export function SubscriptionsMutateDrawer({
           <form
             id='subscription-form'
             onSubmit={form.handleSubmit(onSubmit)}
-            className={sideDrawerFormClassName()}
+            className={sideDrawerFormClassName('gap-4 sm:gap-6')}
           >
             {/* Basic Info */}
             <SideDrawerSection>

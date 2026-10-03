@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Card, CardContent } from '@/components/ui/card'
 
 import { SubscriptionsDialogs } from './components/subscriptions-dialogs'
 import { SubscriptionsPrimaryButtons } from './components/subscriptions-primary-buttons'
@@ -41,7 +42,7 @@ function SubscriptionsContent() {
           {t('Subscription Management')}
         </SectionPageLayout.Title>
         <SectionPageLayout.Actions>
-          <div className='flex items-center gap-2'>
+          <div className='flex min-w-0 flex-wrap items-center justify-end gap-2'>
             <Alert variant='default' className='hidden px-3 py-2 sm:flex'>
               <Info className='h-4 w-4' />
               <AlertDescription className='text-xs'>
@@ -64,9 +65,11 @@ function SubscriptionsContent() {
                 </AlertDescription>
               </Alert>
             ) : null}
-            <div className='min-h-0 flex-1'>
-              <SubscriptionsTable />
-            </div>
+            <Card className='min-h-0 flex-1 gap-0 py-0'>
+              <CardContent className='flex min-h-0 flex-1 flex-col p-3 sm:p-4'>
+                <SubscriptionsTable />
+              </CardContent>
+            </Card>
           </div>
         </SectionPageLayout.Content>
       </SectionPageLayout>

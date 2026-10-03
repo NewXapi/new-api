@@ -27,6 +27,7 @@ import * as z from 'zod'
 
 import {
   SideDrawerSection,
+  SideDrawerSectionHeader,
   sideDrawerContentClassName,
   sideDrawerFooterClassName,
   sideDrawerFormClassName,
@@ -771,9 +772,7 @@ export function ModelMutateDrawer({
           >
             {/* Basic Information */}
             <SideDrawerSection>
-              <h3 className='text-sm font-semibold'>
-                {t('Basic Information')}
-              </h3>
+              <SideDrawerSectionHeader title={t('Basic Information')} />
 
               <FormField
                 control={form.control}
@@ -898,7 +897,7 @@ export function ModelMutateDrawer({
 
             {/* Matching Configuration */}
             <SideDrawerSection>
-              <h3 className='text-sm font-semibold'>{t('Matching Rules')}</h3>
+              <SideDrawerSectionHeader title={t('Matching Rules')} />
 
               <FormField
                 control={form.control}
@@ -945,7 +944,7 @@ export function ModelMutateDrawer({
             {/* Endpoints Configuration */}
             <SideDrawerSection>
               <div className='flex items-center justify-between'>
-                <h3 className='text-sm font-semibold'>{t('Endpoints')}</h3>
+                <SideDrawerSectionHeader title={t('Endpoints')} />
                 <Select<string>
                   items={Object.keys(ENDPOINT_TEMPLATES).map((key) => ({
                     value: key,
@@ -1001,9 +1000,7 @@ export function ModelMutateDrawer({
 
             {/* Pricing Configuration */}
             <SideDrawerSection>
-              <h3 className='text-sm font-semibold'>
-                {t('Pricing Configuration')}
-              </h3>
+              <SideDrawerSectionHeader title={t('Pricing Configuration')} />
 
               <div className='space-y-4'>
                 <Label>{t('Pricing mode')}</Label>
@@ -1223,7 +1220,7 @@ export function ModelMutateDrawer({
                     >
                       {t('Advanced options')}
                       <ChevronDown
-                        className={`h-4 w-4 transition-transform duration-200 ${
+                        className={`h-4 w-4 transition-transform duration-200 motion-reduce:transition-none ${
                           advancedOpen ? 'rotate-180' : ''
                         }`}
                       />
@@ -1344,7 +1341,7 @@ export function ModelMutateDrawer({
 
             {/* Status & Sync */}
             <SideDrawerSection>
-              <h3 className='text-sm font-semibold'>{t('Status & Sync')}</h3>
+              <SideDrawerSectionHeader title={t('Status & Sync')} />
 
               <FormField
                 control={form.control}

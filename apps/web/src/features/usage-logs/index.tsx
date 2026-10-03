@@ -130,8 +130,8 @@ function UsageLogsContent() {
         </SectionPageLayout.Title>
         {canManageScope && (
           <SectionPageLayout.Actions>
-            <Tabs value={viewScope} onValueChange={handleViewScopeChange}>
-              <TabsList>
+            <Tabs value={viewScope} onValueChange={handleViewScopeChange} className='min-w-0'>
+              <TabsList className='max-w-full flex-wrap group-data-horizontal/tabs:h-auto'>
                 <TabsTrigger value='all'>{t('All')}</TabsTrigger>
                 <TabsTrigger value='self'>{t('Only Mine')}</TabsTrigger>
               </TabsList>
@@ -139,7 +139,7 @@ function UsageLogsContent() {
           </SectionPageLayout.Actions>
         )}
         <SectionPageLayout.Content>
-          <div className='flex h-full min-h-0 flex-col gap-4'>
+          <div className='flex h-full min-h-0 min-w-0 flex-col gap-4'>
             {showTaskSwitcher && (
               <Tabs value={activeCategory} onValueChange={handleSectionChange} className='shrink-0'>
                 <TabsList className='max-w-full flex-wrap justify-start group-data-horizontal/tabs:h-auto'>
@@ -151,7 +151,7 @@ function UsageLogsContent() {
                 </TabsList>
               </Tabs>
             )}
-            <div className='min-h-0 flex-1'>
+            <div className='min-h-0 min-w-0 flex-1'>
               <UsageLogsTable logCategory={activeCategory} />
             </div>
           </div>

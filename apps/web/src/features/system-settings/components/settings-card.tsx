@@ -18,6 +18,8 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { memo } from 'react'
 
+import { cn } from '@/lib/utils'
+
 import {
   Card,
   CardContent,
@@ -40,12 +42,16 @@ export const SettingsCard = memo(function SettingsCard({
   className,
 }: SettingsCardProps) {
   return (
-    <Card className={className}>
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        {description && <CardDescription>{description}</CardDescription>}
+    <Card className={cn('gap-5', className)}>
+      <CardHeader className='border-b border-border/60'>
+        <CardTitle className='text-base font-semibold'>{title}</CardTitle>
+        {description && (
+          <CardDescription className='max-w-3xl leading-relaxed'>
+            {description}
+          </CardDescription>
+        )}
       </CardHeader>
-      <CardContent>{children}</CardContent>
+      <CardContent className='space-y-5'>{children}</CardContent>
     </Card>
   )
 })

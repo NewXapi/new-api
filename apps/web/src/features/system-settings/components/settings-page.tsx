@@ -21,6 +21,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
+import { Card, CardContent } from '@/components/ui/card'
 
 import { useSystemOptions, getOptionValue } from '../hooks/use-system-options'
 import type { SystemOption } from '../types'
@@ -130,9 +131,16 @@ export function SettingsPage<
   if (isLoading) {
     return (
       <SettingsPageFrame title={t(sectionMeta.titleKey)}>
-        <div className='text-muted-foreground flex min-h-40 items-center justify-center text-sm'>
-          {t(loadingMessage)}
-        </div>
+        <Card aria-busy='true'>
+          <CardContent>
+            <div
+              role='status'
+              className='text-muted-foreground flex min-h-40 items-center justify-center text-sm'
+            >
+              {t(loadingMessage)}
+            </div>
+          </CardContent>
+        </Card>
       </SettingsPageFrame>
     )
   }

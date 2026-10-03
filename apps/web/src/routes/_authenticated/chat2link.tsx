@@ -22,6 +22,8 @@ import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
+import { Main } from '@/components/layout'
+import { Card, CardContent } from '@/components/ui/card'
 import { useActiveChatKey } from '@/features/chat/hooks/use-active-chat-key'
 import { useChatPresets } from '@/features/chat/hooks/use-chat-presets'
 import { resolveChatUrl } from '@/features/chat/lib/chat-links'
@@ -84,11 +86,15 @@ function Chat2LinkPage() {
   ])
 
   return (
-    <div className='flex h-full flex-col items-center justify-center gap-3'>
-      <Loader2 className='text-muted-foreground h-8 w-8 animate-spin' />
-      <p className='text-muted-foreground text-sm'>
-        {t('Redirecting to chat page...')}
-      </p>
-    </div>
+    <Main className='min-w-0 justify-center overflow-y-auto p-3 sm:p-6'>
+      <Card className='mx-auto w-full max-w-xl gap-0 py-0'>
+        <CardContent className='flex flex-col items-center gap-4 p-5 text-center sm:p-8' role='status'>
+          <Loader2 className='text-primary size-8 motion-safe:animate-spin' aria-hidden='true' />
+          <p className='text-muted-foreground text-sm'>
+            {t('Redirecting to chat page...')}
+          </p>
+        </CardContent>
+      </Card>
+    </Main>
   )
 }

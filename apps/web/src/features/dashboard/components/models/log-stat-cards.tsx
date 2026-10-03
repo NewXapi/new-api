@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Card, CardContent } from '@/components/ui/card'
 import { IconBadge } from '@/components/ui/icon-badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { getUserQuotaDates } from '@/features/dashboard/api'
@@ -143,8 +144,7 @@ export function LogStatCards(props: LogStatCardsProps) {
   })
 
   return (
-    <div className='overflow-hidden rounded-lg border'>
-      <div className='divide-border/60 grid min-w-0 grid-cols-2 divide-x sm:grid-cols-3 lg:grid-cols-5'>
+    <div className='grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5'>
         {items.map((it, idx) => {
           const Icon = it.icon
           let valueContent
@@ -183,15 +183,16 @@ export function LogStatCards(props: LogStatCardsProps) {
           }
 
           return (
-            <div
+            <Card
               key={it.title}
               className={cn(
-                'min-w-0 px-2.5 py-1.5 sm:px-5 sm:py-4',
+                'min-w-0 gap-0 py-0',
                 idx === items.length - 1 &&
                   items.length % 2 !== 0 &&
                   'col-span-2 sm:col-span-1'
               )}
             >
+              <CardContent className='p-3 sm:p-4'>
               <div className='flex min-w-0 items-center gap-1.5 sm:gap-2'>
                 <IconBadge
                   tone={it.iconTone}
@@ -206,10 +207,10 @@ export function LogStatCards(props: LogStatCardsProps) {
               </div>
 
               {valueContent}
-            </div>
+              </CardContent>
+            </Card>
           )
         })}
-      </div>
     </div>
   )
 }

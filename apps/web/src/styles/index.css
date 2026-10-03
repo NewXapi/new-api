@@ -250,11 +250,25 @@ For commercial licensing, please contact support@quantumnous.com
   --sidebar-ring: var(--dyn-dark-sidebar-ring);
 }
 
-/* Translucent frosted auth card once a background image is shown. */
-.auth-scope[data-has-bg] .auth-card {
-  background: color-mix(in oklch, var(--card) 82%, transparent);
-  backdrop-filter: blur(18px) saturate(150%);
-  -webkit-backdrop-filter: blur(18px) saturate(150%);
+.auth-card {
+  background-color: var(--card-surface);
+}
+
+/* Blur only: surface opacity never depends on the preference. Portals
+ * inherit body theme tokens and retain their own opaque popover surface. */
+body[data-theme-blur='true'] .auth-card,
+body[data-theme-blur='true'] [data-slot='card'],
+body[data-theme-blur='true'] [data-slot='popover-content'],
+body[data-theme-blur='true'] [data-slot='dialog-content'],
+body[data-theme-blur='true'] [data-slot='sheet-content'],
+body[data-theme-blur='true'] [data-slot='app-header'],
+body[data-theme-blur='true'] [data-slot='sidebar-inner'],
+body[data-theme-blur='true'] [data-slot='dialog-overlay'],
+body[data-theme-blur='true'] [data-slot='alert-dialog-overlay'],
+body[data-theme-blur='true'] [data-slot='sheet-overlay'],
+body[data-theme-blur='true'] [data-slot='drawer-overlay'] {
+  backdrop-filter: blur(var(--surface-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(150%);
 }
 
 /* TextShimmer: background-position sweep from right to left */
@@ -823,11 +837,7 @@ For commercial licensing, please contact support@quantumnous.com
   @media (min-width: 641px) {
     [data-slot='card']:not([data-card-hover='false']):hover {
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgb(0 0 0 / 0.06);
-    }
-
-    .dark [data-slot='card']:not([data-card-hover='false']):hover {
-      box-shadow: 0 4px 12px rgb(0 0 0 / 0.3);
+      box-shadow: var(--elevation-2);
     }
   }
 

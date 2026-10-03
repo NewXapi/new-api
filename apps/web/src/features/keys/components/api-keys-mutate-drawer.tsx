@@ -390,7 +390,7 @@ export function ApiKeysMutateDrawer({
             onSubmit={form.handleSubmit(onSubmit, onInvalid)}
             aria-busy={!isFormInitialized}
             inert={!isFormInitialized || isSubmitting ? true : undefined}
-            className={sideDrawerFormClassName('gap-5')}
+            className={sideDrawerFormClassName('gap-4 sm:gap-6')}
           >
             <SideDrawerSection>
               <SideDrawerSectionHeader

@@ -21,8 +21,10 @@ import { Loader2, MessageCircleWarning } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Main } from '@/components/layout'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import { useActiveChatKey } from '@/features/chat/hooks/use-active-chat-key'
 import { useChatPresets } from '@/features/chat/hooks/use-chat-presets'
 import {
@@ -75,51 +77,67 @@ function ChatRouteComponent() {
 
   if (!preset) {
     return (
-      <div className='flex h-full flex-col items-center justify-center gap-4 p-6 text-center'>
-        <MessageCircleWarning className='text-muted-foreground h-12 w-12' />
-        <div className='space-y-1'>
-          <h2 className='text-lg font-semibold'>
-            {t('Chat preset not found')}
-          </h2>
-          <p className='text-muted-foreground'>
-            {t('The requested chat preset does not exist or has been removed.')}
-          </p>
-        </div>
-        <Button variant='outline' render={<Link to='/dashboard' />}>
-          {t('Return to dashboard')}
-        </Button>
-      </div>
+      <Main className='min-w-0 justify-center overflow-y-auto p-3 sm:p-6'>
+        <Card className='mx-auto w-full max-w-xl gap-0 py-0'>
+          <CardContent className='flex min-w-0 flex-col items-center gap-4 p-5 text-center sm:p-8'>
+            <div className='bg-secondary text-secondary-foreground flex size-14 items-center justify-center rounded-full'>
+              <MessageCircleWarning className='size-6' aria-hidden='true' />
+            </div>
+            <div className='min-w-0 space-y-1 break-words'>
+              <h2 className='text-lg font-semibold'>
+                {t('Chat preset not found')}
+              </h2>
+              <p className='text-muted-foreground'>
+                {t('The requested chat preset does not exist or has been removed.')}
+              </p>
+            </div>
+            <Button variant='outline' render={<Link to='/dashboard' />}>
+              {t('Return to dashboard')}
+            </Button>
+          </CardContent>
+        </Card>
+      </Main>
     )
   }
 
   if (!isWebLink) {
     return (
-      <div className='flex h-full flex-col items-center justify-center gap-4 p-6 text-center'>
-        <MessageCircleWarning className='text-muted-foreground h-12 w-12' />
-        <div className='space-y-1'>
-          <h2 className='text-lg font-semibold'>{t('Use sidebar shortcut')}</h2>
-          <p className='text-muted-foreground'>
-            {preset.name}{' '}
-            {t(
-              'opens in an external client. Trigger it from the sidebar or API key actions to launch the configured application.'
-            )}
-          </p>
-        </div>
-        <Button variant='outline' render={<Link to='/dashboard' />}>
-          {t('Return to dashboard')}
-        </Button>
-      </div>
+      <Main className='min-w-0 justify-center overflow-y-auto p-3 sm:p-6'>
+        <Card className='mx-auto w-full max-w-xl gap-0 py-0'>
+          <CardContent className='flex min-w-0 flex-col items-center gap-4 p-5 text-center sm:p-8'>
+            <div className='bg-secondary text-secondary-foreground flex size-14 items-center justify-center rounded-full'>
+              <MessageCircleWarning className='size-6' aria-hidden='true' />
+            </div>
+            <div className='min-w-0 space-y-1 break-words'>
+              <h2 className='text-lg font-semibold'>{t('Use sidebar shortcut')}</h2>
+              <p className='text-muted-foreground'>
+                {preset.name}{' '}
+                {t(
+                  'opens in an external client. Trigger it from the sidebar or API key actions to launch the configured application.'
+                )}
+              </p>
+            </div>
+            <Button variant='outline' render={<Link to='/dashboard' />}>
+              {t('Return to dashboard')}
+            </Button>
+          </CardContent>
+        </Card>
+      </Main>
     )
   }
 
   if (requiresActiveKey && isPending) {
     return (
-      <div className='flex h-full flex-col items-center justify-center gap-4'>
-        <Loader2 className='text-muted-foreground h-8 w-8 animate-spin' />
-        <p className='text-muted-foreground text-sm'>
-          {t('Preparing your chat link…')}
-        </p>
-      </div>
+      <Main className='min-w-0 justify-center overflow-y-auto p-3 sm:p-6'>
+        <Card className='mx-auto w-full max-w-xl gap-0 py-0'>
+          <CardContent className='flex flex-col items-center gap-4 p-5 text-center sm:p-8' role='status'>
+            <Loader2 className='text-primary size-8 motion-safe:animate-spin' aria-hidden='true' />
+            <p className='text-muted-foreground text-sm'>
+              {t('Preparing your chat link…')}
+            </p>
+          </CardContent>
+        </Card>
+      </Main>
     )
   }
 
@@ -129,19 +147,19 @@ function ChatRouteComponent() {
         ? error.message
         : 'Unable to generate chat link. Please check your API keys.'
     return (
-      <div className='flex h-full flex-col items-center justify-center p-6'>
-        <Alert variant='destructive' className='max-w-xl'>
+      <Main className='min-w-0 justify-center overflow-y-auto p-3 sm:p-6'>
+        <Alert variant='destructive' className='mx-auto w-full max-w-xl break-words'>
           <AlertTitle>{t('Unable to open chat')}</AlertTitle>
           <AlertDescription>{message}</AlertDescription>
         </Alert>
-      </div>
+      </Main>
     )
   }
 
   if (!requiresActiveKey && !iframeSrc) {
     return (
-      <div className='flex h-full flex-col items-center justify-center p-6'>
-        <Alert variant='destructive' className='max-w-xl'>
+      <Main className='min-w-0 justify-center overflow-y-auto p-3 sm:p-6'>
+        <Alert variant='destructive' className='mx-auto w-full max-w-xl break-words'>
           <AlertTitle>{t('Unable to open chat')}</AlertTitle>
           <AlertDescription>
             {t(
@@ -149,17 +167,21 @@ function ChatRouteComponent() {
             )}
           </AlertDescription>
         </Alert>
-      </div>
+      </Main>
     )
   }
 
   return (
-    <iframe
-      src={iframeSrc}
-      key={iframeSrc}
-      className='h-full w-full border-0'
-      allow='camera; microphone'
-      title={`Chat preset: ${preset.name}`}
-    />
+    <Main className='min-w-0 p-2 sm:p-4'>
+      <Card className='min-h-0 min-w-0 flex-1 gap-0 py-0'>
+        <iframe
+          src={iframeSrc}
+          key={iframeSrc}
+          className='h-full min-h-0 w-full flex-1 border-0'
+          allow='camera; microphone'
+          title={`Chat preset: ${preset.name}`}
+        />
+      </Card>
+    </Main>
   )
 }

@@ -16,25 +16,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { SidebarTrigger } from '@/components/ui/sidebar'
-import { cn } from '@/lib/utils'
+import type { ReactNode } from 'react'
 
-type HeaderProps = React.HTMLAttributes<HTMLElement>
-
-export function Header({ className, children, ...props }: HeaderProps) {
+export function SectionTitle(props: { children: ReactNode }) {
   return (
-    <header
-      data-slot='app-header'
-      className={cn(
-        'sticky top-0 z-40 h-[var(--app-header-height,3rem)] w-full shrink-0 border-b border-border/60 bg-header-surface text-foreground',
-        className
-      )}
-      {...props}
-    >
-      <div className='flex h-full items-center gap-1.5 px-2 sm:gap-2 sm:px-3'>
-        <SidebarTrigger variant='ghost' className='size-8' />
-        {children}
-      </div>
-    </header>
+    <h2 className='text-foreground mb-3 text-sm font-semibold tracking-tight'>
+      {props.children}
+    </h2>
   )
 }
+

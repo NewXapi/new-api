@@ -138,7 +138,7 @@ export type DataTableToolbarProps<TData> = {
 }
 
 /**
- * Unified data-table filter panel — Ant Design Pro inspired.
+ * Unified data-table filter panel using the shared MD3 surface.
  *
  * Layout (single flex-wrap row):
  * - Filters (search input + additional inputs + filter chips + expandable
@@ -148,8 +148,8 @@ export type DataTableToolbarProps<TData> = {
  *   wraps to the next line — still right-aligned — matching the
  *   collapsed/expanded states from the user's reference design.
  *
- * No background panel, no row separators — relies on whitespace and the
- * adjacent table border for visual hierarchy.
+ * A tonal filter surface separates controls from dense, opaque table rows.
+ * Search/reset handlers and wrapping behavior remain consumer-controlled.
  */
 export function DataTableToolbar<TData>(props: DataTableToolbarProps<TData>) {
   const { t } = useTranslation()
@@ -343,7 +343,7 @@ export function DataTableToolbar<TData>(props: DataTableToolbarProps<TData>) {
 
   if (hasLeftActions) {
     return (
-      <div className={cn('flex flex-col gap-2', props.className)}>
+      <div className={cn('bg-card-surface text-card-foreground flex flex-col gap-2 rounded-lg border border-border p-3', props.className)}>
         <div className='flex flex-wrap items-center gap-2 sm:gap-3'>
           {props.customSearch !== undefined ? props.customSearch : searchInput}
           {props.additionalSearch}
@@ -376,7 +376,7 @@ export function DataTableToolbar<TData>(props: DataTableToolbarProps<TData>) {
   return (
     <div
       className={cn(
-        'flex flex-wrap items-center gap-2 sm:gap-3',
+        'bg-card-surface text-card-foreground flex flex-wrap items-center gap-2 rounded-lg border border-border p-3 sm:gap-3',
         props.className
       )}
     >

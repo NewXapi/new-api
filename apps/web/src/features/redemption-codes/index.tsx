@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
+import { Card, CardContent } from '@/components/ui/card'
 
 import { RedemptionsDialogs } from './components/redemptions-dialogs'
 import { RedemptionsPrimaryButtons } from './components/redemptions-primary-buttons'
@@ -37,7 +38,11 @@ export function Redemptions() {
           <RedemptionsPrimaryButtons />
         </SectionPageLayout.Actions>
         <SectionPageLayout.Content>
-          <RedemptionsTable />
+          <Card className='h-full min-h-0 gap-0 py-0'>
+            <CardContent className='flex min-h-0 flex-1 flex-col p-3 sm:p-4'>
+              <RedemptionsTable />
+            </CardContent>
+          </Card>
         </SectionPageLayout.Content>
       </SectionPageLayout>
 

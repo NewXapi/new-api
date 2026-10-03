@@ -75,7 +75,7 @@ export function Playground() {
   })
 
   return (
-    <div className='relative flex size-full min-h-0 flex-col overflow-hidden'>
+    <div className='relative flex size-full min-h-0 min-w-0 flex-col overflow-hidden bg-muted/20'>
       {/* Full-width scroll container: scrolling works even over side whitespace */}
       <div className='flex min-h-0 flex-1 flex-col overflow-hidden'>
         <PlaygroundChat
@@ -94,7 +94,7 @@ export function Playground() {
       </div>
 
       {/* Input area: center content and constrain to the same container width */}
-      <div className='mx-auto w-full max-w-4xl'>
+      <div className='mx-auto w-full max-w-4xl shrink-0 px-3 pt-2 sm:px-5'>
         <PlaygroundInput
           config={config}
           disabled={isGenerating}

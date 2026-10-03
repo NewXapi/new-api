@@ -102,7 +102,8 @@ export function applyDynamicRoles(scope: HTMLElement, roles: DynamicRoles): void
  */
 export function loadRandomBackground(
   scope: HTMLElement,
-  onUrl: (url: string) => void
+  onUrl: (url: string) => void,
+  dynamicColor = true
 ): () => void {
   let cancelled = false
   const controller = new AbortController()
@@ -164,7 +165,7 @@ export function loadRandomBackground(
       if (!url) {
         throw new Error('no image url in response')
       }
-      startImageLoad(url, true)
+      startImageLoad(url, dynamicColor)
     })
     .catch(() => {
       if (!cancelled) startImageLoad(RANDOM_BACKGROUND_URL, false)

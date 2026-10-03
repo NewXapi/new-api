@@ -21,6 +21,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
+import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useMediaQuery } from '@/hooks'
 
@@ -86,8 +87,8 @@ export function UserInsights() {
             defaultValue='profiles'
             className='flex h-full min-h-0 flex-col'
           >
-            <div className='flex shrink-0 items-center justify-between gap-3'>
-              <TabsList>
+            <div className='flex shrink-0 flex-wrap items-center justify-between gap-3'>
+              <TabsList className='h-auto max-w-full flex-wrap justify-start'>
                 <TabsTrigger value='profiles'>{t('Profiles')}</TabsTrigger>
                 <TabsTrigger value='samples'>
                   {t('Evidence samples')}
@@ -117,12 +118,14 @@ export function UserInsights() {
                   isLoading={summaryQuery.isLoading}
                 />
               </div>
-              <div className='flex min-h-0 flex-1 flex-col'>
-                <InsightsTable
-                  onViewEvidence={setEvidenceUser}
-                  blockedClients={blockedClients}
-                />
-              </div>
+              <Card className='min-h-0 flex-1 gap-0 py-0'>
+                <CardContent className='flex min-h-0 flex-1 flex-col p-3 sm:p-4'>
+                  <InsightsTable
+                    onViewEvidence={setEvidenceUser}
+                    blockedClients={blockedClients}
+                  />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent

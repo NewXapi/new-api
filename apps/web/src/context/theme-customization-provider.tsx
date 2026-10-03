@@ -54,6 +54,13 @@ function readCookie<T extends string>(
   return value && allowed.has(value as T) ? (value as T) : fallback
 }
 
+function readBooleanCookie(name: string, fallback: boolean) {
+  const value = getCookie(name)
+  if (value === 'true') return true
+  if (value === 'false') return false
+  return fallback
+}
+
 function applyAttribute(name: string, value: string | null) {
   if (typeof document === 'undefined') return
   const body = document.body
@@ -73,6 +80,8 @@ type ThemeCustomizationContextType = {
   setRadius: (radius: ThemeRadius) => void
   setScale: (scale: ThemeScale) => void
   setContentLayout: (contentLayout: ContentLayout) => void
+  blur: boolean
+  setBlur: (blur: boolean) => void
   resetCustomization: () => void
 }
 
@@ -88,6 +97,8 @@ const FALLBACK_CONTEXT: ThemeCustomizationContextType = {
   setRadius: () => {},
   setScale: () => {},
   setContentLayout: () => {},
+  blur: false,
+  setBlur: () => {},
   resetCustomization: () => {},
 }
 
@@ -132,6 +143,9 @@ export function ThemeCustomizationProvider(props: {
       DEFAULT_THEME_CUSTOMIZATION.contentLayout
     )
   )
+  const [blur, _setBlur] = useState(() =>
+    readBooleanCookie(THEME_COOKIE_KEYS.blur, DEFAULT_THEME_CUSTOMIZATION.blur)
+  )
 
   // Mirror state to the <body> via data-* attributes so theme-presets.css can
   // override CSS variables at the right cascade layer.
@@ -169,6 +183,10 @@ export function ThemeCustomizationProvider(props: {
   useEffect(() => {
     applyAttribute('data-theme-content-layout', contentLayout)
   }, [contentLayout])
+
+  useEffect(() => {
+    applyAttribute('data-theme-blur', blur ? 'true' : null)
+  }, [blur])
 
   const setPreset = useCallback((value: ThemePreset) => {
     _setPreset(value)
@@ -215,18 +233,30 @@ export function ThemeCustomizationProvider(props: {
     }
   }, [])
 
+  const setBlur = useCallback((value: boolean) => {
+    _setBlur(value)
+    if (value === DEFAULT_THEME_CUSTOMIZATION.blur) {
+      removeCookie(THEME_COOKIE_KEYS.blur)
+    } else {
+      setCookie(THEME_COOKIE_KEYS.blur, String(value), COOKIE_MAX_AGE)
+    }
+  }, [])
+
   const resetCustomization = useCallback(() => {
     setPreset(DEFAULT_THEME_CUSTOMIZATION.preset)
     setFont(DEFAULT_THEME_CUSTOMIZATION.font)
     setRadius(DEFAULT_THEME_CUSTOMIZATION.radius)
     setScale(DEFAULT_THEME_CUSTOMIZATION.scale)
     setContentLayout(DEFAULT_THEME_CUSTOMIZATION.contentLayout)
-  }, [setPreset, setFont, setRadius, setScale, setContentLayout])
+    setBlur(DEFAULT_THEME_CUSTOMIZATION.blur)
+  }, [setPreset, setFont, setRadius, setScale, setContentLayout, setBlur])
 
   const value = useMemo<ThemeCustomizationContextType>(
     () => ({
       defaults: DEFAULT_THEME_CUSTOMIZATION,
-      customization: { preset, font, radius, scale, contentLayout },
+      customization: { preset, font, radius, scale, contentLayout, blur },
+      blur,
+      setBlur,
       setPreset,
       setFont,
       setRadius,
@@ -240,7 +270,9 @@ export function ThemeCustomizationProvider(props: {
       radius,
       scale,
       contentLayout,
+      blur,
       setPreset,
+      setBlur,
       setFont,
       setRadius,
       setScale,

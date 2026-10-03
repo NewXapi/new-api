@@ -44,7 +44,7 @@ export function LoginSessionItem({ session, onRevoke }: LoginSessionItemProps) {
       <div className='bg-muted flex size-10 shrink-0 items-center justify-center rounded-lg'>
         <HugeiconsIcon icon={LaptopIcon} className='size-5' strokeWidth={2} />
       </div>
-      <div className='min-w-0 flex-1'>
+      <div className='min-w-0 flex-1 break-words'>
         <div className='flex flex-wrap items-center gap-2'>
           <p className='font-medium'>
             {sessionDevice(
@@ -73,6 +73,7 @@ export function LoginSessionItem({ session, onRevoke }: LoginSessionItemProps) {
         type='button'
         variant={session.current ? 'outline' : 'ghost'}
         size='sm'
+        className='w-full shrink-0 sm:w-auto'
         onClick={() => onRevoke(session)}
       >
         {session.current ? t('Sign out') : t('Revoke')}

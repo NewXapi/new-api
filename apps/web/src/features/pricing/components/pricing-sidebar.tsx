@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Collapsible,
   CollapsibleContent,
@@ -97,14 +98,17 @@ function FilterChip(props: {
   onClick: () => void
 }) {
   return (
-    <button
+    <Button
       type='button'
       onClick={props.onClick}
+      variant='outline'
+      size='sm'
+      aria-pressed={props.active}
       className={cn(
-        'group inline-flex max-w-full items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium transition-all',
+        'group h-auto max-w-full gap-1.5 whitespace-normal px-2.5 py-1.5 text-xs',
         props.active
-          ? 'border-foreground/30 bg-foreground/5 text-foreground shadow-sm'
-          : 'border-border/70 bg-background text-muted-foreground hover:border-border hover:bg-muted/50 hover:text-foreground'
+          ? 'border-primary/30 bg-secondary text-secondary-foreground'
+          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
       )}
       title={props.option.label}
     >
@@ -124,7 +128,7 @@ function FilterChip(props: {
           {props.option.suffix ?? props.option.count}
         </span>
       )}
-    </button>
+    </Button>
   )
 }
 
@@ -138,7 +142,7 @@ function FilterSection(props: FilterSectionProps) {
         <span className='text-foreground text-sm font-semibold'>
           {props.title}
         </span>
-        <ChevronDown className='text-muted-foreground size-4 transition-transform group-data-[panel-open]:rotate-180' />
+        <ChevronDown className='text-muted-foreground size-4 transition-transform motion-reduce:transition-none group-data-[panel-open]:rotate-180' />
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className='flex flex-wrap gap-1.5'>
@@ -246,7 +250,9 @@ export function PricingSidebar(props: PricingSidebarProps) {
   ]
 
   return (
-    <aside className={cn('rounded-xl border p-3', props.className)}>
+    <Card size='sm' className={props.className}>
+      <CardContent>
+      <aside aria-label={t('Filter')}>
       <div className='mb-2.5 flex items-center justify-between gap-2'>
         <div>
           <h2 className='text-foreground text-sm font-bold'>{t('Filter')}</h2>
@@ -305,6 +311,8 @@ export function PricingSidebar(props: PricingSidebarProps) {
           onChange={props.onEndpointTypeChange}
         />
       </div>
-    </aside>
+      </aside>
+      </CardContent>
+    </Card>
   )
 }

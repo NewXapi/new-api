@@ -26,6 +26,7 @@ import {
   type StatusVariant,
 } from '@/components/status-badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
+import { Card } from '@/components/ui/card'
 import {
   Empty,
   EmptyDescription,
@@ -51,10 +52,8 @@ import { StreamTpsCell, TimingMetricsCell } from './timing-metrics-cell'
 import { useUsageLogsContext } from './usage-logs-provider'
 
 const logTypeRowTint: Record<number, string> = {
-  [LOG_TYPE_ENUM.ERROR]:
-    'bg-rose-50/40 dark:bg-rose-950/20 border-rose-200/50 dark:border-rose-900/30',
-  [LOG_TYPE_ENUM.REFUND]:
-    'bg-blue-50/30 dark:bg-blue-950/15 border-blue-200/50 dark:border-blue-900/30',
+  [LOG_TYPE_ENUM.ERROR]: 'bg-destructive/5 border-l-destructive/40',
+  [LOG_TYPE_ENUM.REFUND]: 'bg-info/5 border-l-info/40',
 }
 
 interface UsageLogsMobileListProps<TData> {
@@ -67,7 +66,7 @@ interface UsageLogsMobileListProps<TData> {
 
 function UsageLogsMobileSkeleton() {
   return (
-    <div className='border-border/50 bg-card overflow-hidden rounded-lg border'>
+    <Card className='min-w-0 gap-0 py-0'>
       {[1, 2, 3].map((i) => (
         <div
           key={i}
@@ -87,7 +86,7 @@ function UsageLogsMobileSkeleton() {
           </div>
         </div>
       ))}
-    </div>
+    </Card>
   )
 }
 
@@ -469,7 +468,7 @@ export function UsageLogsMobileList<TData>({
 
   if (!rows || rows.length === 0) {
     return (
-      <div className='rounded-lg border p-6'>
+      <Card className='min-w-0 p-6'>
         <Empty className='border-none p-0'>
           <EmptyHeader>
             <EmptyMedia variant='icon'>
@@ -479,12 +478,12 @@ export function UsageLogsMobileList<TData>({
             <EmptyDescription>{resolvedEmptyDescription}</EmptyDescription>
           </EmptyHeader>
         </Empty>
-      </div>
+      </Card>
     )
   }
 
   return (
-    <div className='border-border/50 bg-card overflow-hidden rounded-lg border'>
+    <Card className='min-w-0 gap-0 py-0'>
       {rows.map((row) => {
         const cells = new Map(
           row.getVisibleCells().map((cell) => [cell.column.id, cell])
@@ -509,6 +508,6 @@ export function UsageLogsMobileList<TData>({
           </div>
         )
       })}
-    </div>
+    </Card>
   )
 }

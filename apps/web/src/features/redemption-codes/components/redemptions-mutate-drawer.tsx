@@ -25,6 +25,7 @@ import { toast } from 'sonner'
 import { DateTimePicker } from '@/components/datetime-picker'
 import {
   SideDrawerSection,
+  SideDrawerSectionHeader,
   sideDrawerContentClassName,
   sideDrawerFooterClassName,
   sideDrawerFormClassName,
@@ -269,6 +270,7 @@ export function RedemptionsMutateDrawer({
               className='contents'
             >
               <SideDrawerSection>
+                <SideDrawerSectionHeader title={t('Basic Information')} />
                 <FormField
                   control={form.control}
                   name='name'
@@ -317,6 +319,10 @@ export function RedemptionsMutateDrawer({
                   )}
                 />
 
+              </SideDrawerSection>
+
+              <SideDrawerSection>
+                <SideDrawerSectionHeader title={t('Expiration Time')} />
                 <FormField
                   control={form.control}
                   name='expired_time'

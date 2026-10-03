@@ -20,9 +20,10 @@ import { ChevronRight, Copy } from 'lucide-react'
 import { memo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { useCopyToClipboard } from '@/hooks/use-copy-to-clipboard'
 import { getLobeIcon } from '@/lib/lobe-icon'
-import { cn } from '@/lib/utils'
 
 import { DEFAULT_TOKEN_UNIT } from '../constants'
 import {
@@ -96,7 +97,7 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
     if (dynamicSummary.isSpecialExpression) {
       priceSummary = (
         <span className='min-w-0'>
-          <span className='text-amber-700 dark:text-amber-300'>
+          <span className='text-foreground font-medium'>
             {t('Special billing expression')}
           </span>
           <code className='text-muted-foreground/70 mt-0.5 line-clamp-1 block font-mono text-[11px] break-all'>
@@ -194,14 +195,9 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
   }
 
   return (
-    <div
-      className={cn(
-        'group relative flex flex-col rounded-xl border p-3 transition-colors sm:p-5',
-        'hover:bg-muted/20'
-      )}
-    >
+    <Card className='h-full gap-4'>
       {/* Header: icon + name + price + actions */}
-      <div className='flex items-start justify-between gap-2.5 sm:gap-3'>
+      <CardHeader className='flex flex-wrap items-start justify-between gap-3'>
         <div className='flex min-w-0 items-start gap-2.5 sm:gap-3'>
           <div className='bg-muted/40 flex size-9 shrink-0 items-center justify-center rounded-lg sm:size-10 sm:rounded-xl'>
             {modelIcon || (
@@ -211,42 +207,48 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
             )}
           </div>
           <div className='min-w-0'>
-            <h3 className='text-foreground truncate font-mono text-[15px] leading-tight font-bold'>
+            <h3 className='text-foreground line-clamp-2 font-mono text-sm leading-snug font-semibold break-all'>
               {props.model.model_name}
             </h3>
-            <div className='mt-0.5 flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm sm:mt-1 sm:gap-x-3'>
-              {priceSummary}
-            </div>
+            <p className='text-muted-foreground mt-1 truncate text-xs'>{props.model.vendor_name}</p>
           </div>
         </div>
 
-        <div className='flex shrink-0 items-center gap-1.5'>
-          <button
+        <div className='flex shrink-0 flex-col items-end gap-1.5'>
+          <Button
             type='button'
             onClick={props.onClick}
-            className='text-muted-foreground hover:text-foreground hover:bg-muted inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs transition-colors sm:px-2.5 sm:py-1.5'
+            variant='outline'
+            size='sm'
+            aria-label={`${t('Details')} · ${props.model.model_name}`}
           >
             {t('Details')}
             <ChevronRight className='size-3.5' />
-          </button>
-          <button
+          </Button>
+          <Button
             type='button'
             onClick={handleCopy}
-            className='text-muted-foreground hover:text-foreground hover:bg-muted rounded-md border p-1.5 transition-colors'
-            title={t('Copy')}
+            variant='ghost'
+            size='icon-sm'
+            aria-label={t('Copy model name')}
           >
             <Copy className='size-3.5' />
-          </button>
+          </Button>
         </div>
-      </div>
+      </CardHeader>
 
+      <CardContent className='flex flex-1 flex-col gap-4'>
+      <div className='bg-muted/40 flex flex-wrap items-baseline gap-x-4 gap-y-2 rounded-lg p-3 text-sm'>
+        {priceSummary}
+        {(isTokenBased || dynamicSummary) && <span className='text-muted-foreground text-xs'>/ {tokenUnitLabel} tokens</span>}
+      </div>
       {/* Description */}
-      <p className='text-muted-foreground mt-2 line-clamp-1 flex-1 text-[13px] leading-relaxed sm:mt-4 sm:line-clamp-2 sm:min-h-[2.5rem]'>
+      <p className='text-muted-foreground line-clamp-2 flex-1 text-sm leading-relaxed'>
         {props.model.description || t('No description available.')}
       </p>
 
       {/* Footer: left metadata and right performance summary share row alignment */}
-      <div className='mt-2 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-1 sm:mt-4'>
+      <div className='grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-2 gap-y-2 border-t pt-3'>
         <div className='flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1'>
           {primaryGroup && (
             <span className='text-muted-foreground text-sm font-medium'>
@@ -263,9 +265,6 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
               {item}
             </span>
           ))}
-          <span className='text-muted-foreground/50 text-xs'>
-            {tokenUnitLabel}
-          </span>
           {hiddenCount > 0 && (
             <span className='text-muted-foreground/40 text-xs'>
               +{hiddenCount}
@@ -273,6 +272,7 @@ export const ModelCard = memo(function ModelCard(props: ModelCardProps) {
           )}
         </div>
       </div>
-    </div>
+      </CardContent>
+    </Card>
   )
 })

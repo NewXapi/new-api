@@ -122,6 +122,7 @@ export type ThemeCustomization = {
   radius: ThemeRadius
   scale: ThemeScale
   contentLayout: ContentLayout
+  blur: boolean
 }
 
 export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
@@ -130,6 +131,7 @@ export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
   radius: 'default',
   scale: 'default',
   contentLayout: 'full',
+  blur: false,
 }
 
 export const THEME_PRESET_VALUES = new Set(
@@ -169,6 +171,7 @@ export const THEME_COOKIE_KEYS = {
   radius: 'theme_radius',
   scale: 'theme_scale',
   contentLayout: 'theme_content_layout',
+  blur: 'theme_blur',
 } as const
 
 /**

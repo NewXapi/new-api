@@ -74,20 +74,23 @@ function ChannelsContent() {
             }}
             className='flex h-full min-h-0 flex-col'
           >
-            <div className='shrink-0 px-3 pt-1 sm:px-4 sm:pt-5 sm:pb-3'>
+            <header className='shrink-0 space-y-3 px-3 pt-3 pb-3 sm:px-4 sm:pt-5'>
+              <h1 className='text-xl font-semibold tracking-tight sm:text-2xl'>
+                {t('Channel Management')}
+              </h1>
               <div className='flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-3 sm:gap-y-2'>
-                <TabsList className='grid w-full grid-cols-2 items-center bg-muted/60 p-1 sm:w-fit group-data-horizontal/tabs:h-auto'>
+                <TabsList className='grid h-auto w-full grid-cols-2 sm:w-fit'>
                   <TabsTrigger
                     value='create'
                     disabled={!canCreateChannel}
-                    className='h-7 px-3 text-xs font-medium data-active:bg-background data-active:shadow-sm'
+                    className='px-4 text-sm'
                   >
                     <span className='sm:hidden'>{t('Create')}</span>
                     <span className='hidden sm:inline'>{t('Create Channel')}</span>
                   </TabsTrigger>
                   <TabsTrigger
                     value='channels'
-                    className='h-7 px-3 text-xs font-medium data-active:bg-background data-active:shadow-sm'
+                    className='px-4 text-sm'
                   >
                     {t('Channels')}
                   </TabsTrigger>
@@ -101,7 +104,7 @@ function ChannelsContent() {
                   }
                 />
               </div>
-            </div>
+            </header>
 
             <div
               ref={createScrollContainerRef}

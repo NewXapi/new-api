@@ -26,6 +26,7 @@ import { toast } from 'sonner'
 
 import {
   SideDrawerSection,
+  SideDrawerSectionHeader,
   sideDrawerContentClassName,
   sideDrawerFooterClassName,
   sideDrawerFormClassName,
@@ -246,9 +247,7 @@ export function UsersMutateDrawer({
             >
               {/* Basic Information */}
               <SideDrawerSection>
-                <h3 className='text-sm font-medium'>
-                  {t('Basic Information')}
-                </h3>
+                <SideDrawerSectionHeader title={t('Basic Information')} />
 
                 <FormField
                   control={form.control}
@@ -354,7 +353,7 @@ export function UsersMutateDrawer({
               {/* Group & Quota Settings (Update only) */}
               {isUpdate && (
                 <SideDrawerSection>
-                  <h3 className='text-sm font-medium'>{t('Group & Quota')}</h3>
+                  <SideDrawerSectionHeader title={t('Group & Quota')} />
 
                   <FormField
                     control={form.control}
@@ -457,14 +456,12 @@ export function UsersMutateDrawer({
                 targetIsAdmin &&
                 permissionCatalog.resources.length > 0 && (
                   <SideDrawerSection>
-                    <h3 className='text-sm font-medium'>
-                      {t('Admin Permissions')}
-                    </h3>
-                    <p className='text-muted-foreground text-xs'>
-                      {t(
+                    <SideDrawerSectionHeader
+                      title={t('Admin Permissions')}
+                      description={t(
                         'Default administrator permissions can be overridden for this user.'
                       )}
-                    </p>
+                    />
                     <FormField
                       control={form.control}
                       name='admin_permissions'
@@ -547,14 +544,12 @@ export function UsersMutateDrawer({
               {/* Binding Information (Read-only) */}
               {isUpdate && (
                 <SideDrawerSection>
-                  <h3 className='text-sm font-medium'>
-                    {t('Binding Information')}
-                  </h3>
-                  <p className='text-muted-foreground text-xs'>
-                    {t(
+                  <SideDrawerSectionHeader
+                    title={t('Binding Information')}
+                    description={t(
                       'Third-party account bindings (read-only, managed by user in profile settings)'
                     )}
-                  </p>
+                  />
 
                   <div className='flex flex-col gap-3'>
                     {BINDING_FIELDS.map(({ key, label }) => (

@@ -57,8 +57,8 @@ export function Profile() {
           </CardStaggerItem>
 
           <CardStaggerItem>
-            <div className='grid gap-4 sm:gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.46fr)] xl:items-start'>
-              <div className='space-y-4 sm:space-y-6'>
+            <div className='grid min-w-0 gap-4 sm:gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,0.46fr)] xl:items-start'>
+              <div className='min-w-0 space-y-4 sm:space-y-6'>
                 <ProfileSettingsCard
                   profile={profile}
                   loading={loading}

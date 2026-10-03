@@ -66,6 +66,7 @@ export function PricingTable(props: PricingTableProps) {
     usdExchangeRate,
     showRechargePrice,
     selectedGroup,
+    onModelClick,
   })
 
   const { table } = useDataTable({
@@ -103,7 +104,7 @@ export function PricingTable(props: PricingTableProps) {
           <DataTableRow
             key={row.id}
             row={row}
-            className='hover:bg-muted/30 cursor-pointer transition-colors'
+            className='hover:bg-muted/30 cursor-pointer transition-colors motion-reduce:transition-none'
             onClick={() => handleRowClick(row.original)}
           />
         )}

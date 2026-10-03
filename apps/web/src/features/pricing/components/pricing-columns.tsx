@@ -24,6 +24,7 @@ import {
   BadgeListCell,
   DataTableColumnHeader,
 } from '@/components/data-table'
+import { Button } from '@/components/ui/button'
 import { GroupBadge } from '@/components/group-badge'
 import { StatusBadge } from '@/components/status-badge'
 import { getLobeIcon } from '@/lib/lobe-icon'
@@ -53,6 +54,7 @@ export interface PricingColumnsOptions {
   usdExchangeRate?: number
   showRechargePrice?: boolean
   selectedGroup?: string
+  onModelClick?: (modelName: string) => void
 }
 
 export function usePricingColumns(
@@ -85,9 +87,18 @@ export function usePricingColumns(
         return (
           <div className='flex max-w-full min-w-0 items-center gap-2'>
             {modelIcon}
-            <span className='truncate font-mono text-sm font-medium'>
-              {model.model_name}
-            </span>
+            <Button
+              variant='ghost'
+              size='sm'
+              className='h-auto min-w-0 justify-start px-0 font-mono text-sm'
+              onClick={(event) => {
+                event.stopPropagation()
+                options.onModelClick?.(model.model_name)
+              }}
+              aria-label={`${t('Details')} · ${model.model_name}`}
+            >
+              <span className='truncate'>{model.model_name}</span>
+            </Button>
           </div>
         )
       },
@@ -129,7 +140,7 @@ export function usePricingColumns(
           if (dynamicSummary.isSpecialExpression) {
             return (
               <div className='max-w-full min-w-0'>
-                <div className='text-xs font-medium text-amber-700 dark:text-amber-300'>
+                <div className='text-xs font-medium text-foreground'>
                   {t('Special billing expression')}
                 </div>
                 <div className='text-muted-foreground text-[11px]'>
@@ -159,7 +170,7 @@ export function usePricingColumns(
                     {index > 0 && (
                       <span className='text-muted-foreground/40 mx-1'>/</span>
                     )}
-                    {stripTrailingZeros(entry.formatted)}
+                    {t(entry.shortLabel)} {stripTrailingZeros(entry.formatted)}
                   </span>
                 ))}
               </span>
@@ -203,9 +214,9 @@ export function usePricingColumns(
           return (
             <div className='max-w-full min-w-0'>
               <span className='font-mono text-sm tabular-nums'>
-                {inputPrice}
+                {t('Input')} {inputPrice}
                 <span className='text-muted-foreground/40 mx-1'>/</span>
-                {outputPrice}
+                {t('Output')} {outputPrice}
               </span>
               <div className='text-muted-foreground/50 text-[10px]'>
                 / {tokenUnitLabel} tokens

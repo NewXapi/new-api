@@ -27,6 +27,8 @@ import {
 } from '@/components/drawer-layout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -101,31 +103,27 @@ function SegmentedControl(props: {
   ariaLabel: string
 }) {
   return (
-    <div
-      role='group'
+    <ToggleGroup
+      value={[props.value]}
+      onValueChange={(values) => {
+        if (values[0]) props.onChange(values[0])
+      }}
       aria-label={props.ariaLabel}
-      className='bg-muted/60 inline-flex h-8 items-center rounded-lg border p-0.5'
+      variant='outline'
+      size='sm'
     >
       {props.options.map((option) => {
         const Icon = option.icon
-        const isActive = option.value === props.value
         const button = (
-          <button
+          <ToggleGroupItem
             key={option.value}
-            type='button'
-            onClick={() => props.onChange(option.value)}
-            aria-pressed={isActive}
-            className={cn(
-              'inline-flex h-full items-center justify-center rounded-md text-xs font-medium transition-all',
-              Icon && !option.label ? 'w-7' : 'gap-1.5 px-3',
-              isActive
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'text-muted-foreground hover:text-foreground'
-            )}
+            value={option.value}
+            aria-label={option.tooltip || option.label}
+            className='h-8 px-3 text-xs'
           >
             {Icon && <Icon className='size-3.5' />}
             {option.label}
-          </button>
+          </ToggleGroupItem>
         )
 
         if (!option.tooltip) {
@@ -141,7 +139,7 @@ function SegmentedControl(props: {
           </Tooltip>
         )
       })}
-    </div>
+    </ToggleGroup>
   )
 }
 
@@ -166,7 +164,8 @@ export function PricingToolbar(props: PricingToolbarProps) {
   )
 
   return (
-    <div className='rounded-xl border p-3'>
+    <Card size='sm'>
+      <CardContent className='space-y-3'>
       <div className='flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between'>
         <div className='flex items-center gap-2'>
           <Button
@@ -185,7 +184,7 @@ export function PricingToolbar(props: PricingToolbarProps) {
             )}
           </Button>
 
-          <div className='text-muted-foreground flex items-baseline gap-1 text-sm'>
+          <div role='status' aria-live='polite' className='text-muted-foreground flex items-baseline gap-1 text-sm'>
             <span className='text-foreground font-semibold tabular-nums'>
               {props.filteredCount.toLocaleString()}
             </span>
@@ -199,7 +198,7 @@ export function PricingToolbar(props: PricingToolbarProps) {
         </div>
 
         <div className='flex flex-wrap items-center gap-2'>
-          <div className='hidden items-center gap-2 sm:flex'>
+          <div className='flex flex-wrap items-center gap-2'>
             <SegmentedControl
               options={[
                 { value: 'standard', label: t('Standard') },
@@ -273,6 +272,7 @@ export function PricingToolbar(props: PricingToolbarProps) {
         </div>
       </div>
 
+      </CardContent>
       <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
         <SheetContent
           side='right'
@@ -308,6 +308,6 @@ export function PricingToolbar(props: PricingToolbarProps) {
           </div>
         </SheetContent>
       </Sheet>
-    </div>
+    </Card>
   )
 }

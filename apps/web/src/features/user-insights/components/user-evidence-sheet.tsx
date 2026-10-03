@@ -21,6 +21,10 @@ import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import {
+  sideDrawerContentClassName,
+  sideDrawerHeaderClassName,
+} from '@/components/drawer-layout'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -88,8 +92,8 @@ export function UserEvidenceSheet({
 
   return (
     <Sheet open={userId !== null} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent className='flex w-full flex-col gap-0 sm:max-w-2xl'>
-        <SheetHeader>
+      <SheetContent className={sideDrawerContentClassName('sm:max-w-2xl')}>
+        <SheetHeader className={sideDrawerHeaderClassName()}>
           <SheetTitle>
             {username
               ? t('Evidence for {{name}}', { name: username })
@@ -120,7 +124,7 @@ export function UserEvidenceSheet({
           </div>
         )}
 
-        <ScrollArea className='flex-1 px-4 pb-6'>
+        <ScrollArea className='min-h-0 flex-1 px-4 py-4 sm:px-6'>
           {samplesQuery.isLoading && (
             <div className='space-y-2'>
               {Array.from({ length: 4 }).map((_, index) => (

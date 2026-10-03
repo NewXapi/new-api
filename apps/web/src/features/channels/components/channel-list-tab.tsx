@@ -16,12 +16,16 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { Card, CardContent } from '@/components/ui/card'
+
 import { ChannelsTable } from './channels-table'
 
 export function ChannelListTab() {
   return (
-    <div className='flex h-full min-h-0 flex-1 flex-col overflow-hidden'>
-      <ChannelsTable />
-    </div>
+    <Card className='h-full min-h-0 flex-1 gap-0 py-0'>
+      <CardContent className='flex min-h-0 flex-1 flex-col p-3 sm:p-4'>
+        <ChannelsTable />
+      </CardContent>
+    </Card>
   )
 }

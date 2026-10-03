@@ -24,6 +24,7 @@ import { useTranslation } from 'react-i18next'
 import { DataTableViewOptions } from '@/components/data-table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import {
   Drawer,
   DrawerContent,
@@ -127,7 +128,7 @@ export function LogsFilterToolbar<TData>(props: LogsFilterToolbarProps<TData>) {
       )}
       <ChevronDown
         className={cn(
-          'size-3.5 transition-transform duration-200',
+          'size-3.5 motion-safe:transition-transform motion-safe:duration-200',
           advancedOpen && 'rotate-180'
         )}
       />
@@ -137,8 +138,8 @@ export function LogsFilterToolbar<TData>(props: LogsFilterToolbarProps<TData>) {
   if (isMobile && props.mobilePinnedFilters != null) {
     return (
       <Drawer open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
-        <div
-          className={cn('bg-card/50 rounded-lg border p-2.5', props.className)}
+        <Card
+          className={cn('min-w-0 gap-0 p-3', props.className)}
         >
           {!mobilePanelCollapsed && (
             <div className='grid gap-2'>{props.mobilePinnedFilters}</div>
@@ -151,7 +152,7 @@ export function LogsFilterToolbar<TData>(props: LogsFilterToolbarProps<TData>) {
             )}
           >
             {!mobilePanelCollapsed && props.stats}
-            <div className='flex items-center justify-end gap-1.5'>
+            <div className='flex min-w-0 flex-wrap items-center justify-end gap-2'>
               <Button
                 type='button'
                 variant='ghost'
@@ -161,11 +162,11 @@ export function LogsFilterToolbar<TData>(props: LogsFilterToolbarProps<TData>) {
                 }
                 aria-expanded={!mobilePanelCollapsed}
                 aria-label={mobilePanelCollapsed ? t('Expand') : t('Collapse')}
-                className='text-muted-foreground hover:text-foreground mr-auto size-7'
+                className='text-muted-foreground hover:text-foreground mr-auto size-10'
               >
                 <ChevronDown
                   className={cn(
-                    'size-3.5 transition-transform duration-200',
+                    'size-3.5 motion-safe:transition-transform motion-safe:duration-200',
                     !mobilePanelCollapsed && 'rotate-180'
                   )}
                 />
@@ -200,7 +201,7 @@ export function LogsFilterToolbar<TData>(props: LogsFilterToolbarProps<TData>) {
               <DataTableViewOptions table={props.table} />
             </div>
           </div>
-        </div>
+        </Card>
 
         <DrawerContent className='max-h-[85dvh] p-0'>
           <div className='mx-auto flex w-full max-w-md flex-1 flex-col overflow-hidden'>
@@ -243,9 +244,9 @@ export function LogsFilterToolbar<TData>(props: LogsFilterToolbarProps<TData>) {
   }
 
   return (
-    <div
+    <Card
       className={cn(
-        'bg-card/50 rounded-lg border p-2.5 sm:p-3',
+        'min-w-0 gap-0 p-3 sm:p-4',
         props.className
       )}
     >
@@ -289,6 +290,6 @@ export function LogsFilterToolbar<TData>(props: LogsFilterToolbarProps<TData>) {
           <DataTableViewOptions table={props.table} />
         </div>
       </div>
-    </div>
+    </Card>
   )
 }

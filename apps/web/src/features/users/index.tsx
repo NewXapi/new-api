@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { useTranslation } from 'react-i18next'
 
 import { SectionPageLayout } from '@/components/layout'
+import { Card, CardContent } from '@/components/ui/card'
 
 import { UsersDeleteDialog } from './components/users-delete-dialog'
 import { UsersMutateDrawer } from './components/users-mutate-drawer'
@@ -38,7 +39,11 @@ function UsersContent() {
           <UsersPrimaryButtons />
         </SectionPageLayout.Actions>
         <SectionPageLayout.Content>
-          <UsersTable />
+          <Card className='h-full min-h-0 gap-0 py-0'>
+            <CardContent className='flex min-h-0 flex-1 flex-col p-3 sm:p-4'>
+              <UsersTable />
+            </CardContent>
+          </Card>
         </SectionPageLayout.Content>
       </SectionPageLayout>
 
