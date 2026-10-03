@@ -23,7 +23,13 @@ import {
   type Theme,
 } from '@material/material-color-utilities'
 
-/** 自适应随机图端点（按屏幕方向返回横/竖图）。 */
+/**
+ * 随机图查询端点：`/api/?type=ua&format=text` 返回一条最终图片 URL 的纯文本。
+ * 自身带 Access-Control-Allow-Origin:*，可安全用 fetch 读取。
+ */
+export const RANDOM_BACKGROUND_API = 'https://img-pic-api.072168.xyz/api'
+
+/** 自适应随机图直连端点（仅作展示降级用，不可读像素）。 */
 export const RANDOM_BACKGROUND_URL = 'https://img-pic-api.072168.xyz/ua'
 
 /**
@@ -99,31 +105,64 @@ export function loadRandomBackground(
   onUrl: (url: string) => void
 ): () => void {
   let cancelled = false
-  const image = new Image()
-  image.crossOrigin = 'anonymous'
 
-  const handleLoad = () => {
+  const startImageLoad = (src: string, withColor: boolean): void => {
     if (cancelled) return
-    scope.setAttribute('data-has-bg', '')
-    onUrl(image.currentSrc || image.src)
-    sourceColorFromImage(image)
-      .then((argb) => {
+    const image = new Image()
+    // 仅在需要读取像素时启用 CORS 模式；纯展示加载无需 crossOrigin。
+    if (withColor) image.crossOrigin = 'anonymous'
+
+    image.addEventListener(
+      'load',
+      () => {
         if (cancelled) return
-        applyDynamicRoles(scope, rolesFromTheme(themeFromSourceColor(argb)))
-      })
-      .catch(() => {
-        // 取像素失败（如 CORS 变化）时保留静态主题。
-      })
+        scope.setAttribute('data-has-bg', '')
+        onUrl(image.currentSrc || image.src)
+        if (!withColor) return
+        sourceColorFromImage(image)
+          .then((argb) => {
+            if (cancelled) return
+            applyDynamicRoles(
+              scope,
+              rolesFromTheme(themeFromSourceColor(argb))
+            )
+          })
+          .catch(() => {
+            // 取像素失败（如 CORS 变化）时保留静态配色。
+          })
+      },
+      { once: true }
+    )
+    // 加载失败时静默放弃：无背景图、无动态配色，页面保持静态主题。
+    image.addEventListener('error', () => {}, { once: true })
+
+    image.src = src
   }
 
-  image.addEventListener('load', handleLoad, { once: true })
-  // 加载失败时静默放弃：无背景图、无动态配色，页面保持静态主题。
-  image.addEventListener('error', () => {}, { once: true })
-
-  image.src = `${RANDOM_BACKGROUND_URL}?_=${Date.now()}`
+  // 不能直连 /ua 读像素：其 302 首跳不带 CORS 头（crossOrigin 模式要求每跳
+  // 通过检查），且带任何查询串会直接返回文档页。因此先经查询端点
+  // （自身 ACAO:*）解析出最终图片 URL，再单跳直载 /images/*（同样 ACAO:*）；
+  // 查询失败则直连 /ua 仅作展示降级（不取色）。
+  fetch(`${RANDOM_BACKGROUND_API}/?type=ua&format=text`, { cache: 'no-store' })
+    .then((response) =>
+      response.ok ? response.text() : Promise.reject(new Error())
+    )
+    .then((text) => {
+      if (cancelled) return
+      const url = text
+        .split(/\r?\n/)
+        .map((line) => line.trim())
+        .find((line) => line.startsWith('http'))
+      if (!url) {
+        throw new Error('no image url in response')
+      }
+      startImageLoad(url, true)
+    })
+    .catch(() => {
+      if (!cancelled) startImageLoad(RANDOM_BACKGROUND_URL, false)
+    })
 
   return () => {
     cancelled = true
-    image.removeEventListener('load', handleLoad)
   }
 }
