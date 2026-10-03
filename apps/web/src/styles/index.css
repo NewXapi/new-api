@@ -162,6 +162,73 @@ For commercial licensing, please contact support@quantumnous.com
   }
 }
 
+/* matugen-style dynamic color: JS extracts MD3 roles from the random auth
+ * background image into --dyn-light-* / --dyn-dark-* on .auth-scope. The
+ * scoped mapping only applies to the auth shell and switches with
+ * html.dark; the static palettes in theme.css stay untouched elsewhere. */
+.auth-scope[data-dynamic-theme] {
+  --background: var(--dyn-light-background);
+  --foreground: var(--dyn-light-foreground);
+  --card: var(--dyn-light-card);
+  --card-foreground: var(--dyn-light-card-foreground);
+  --popover: var(--dyn-light-popover);
+  --popover-foreground: var(--dyn-light-popover-foreground);
+  --primary: var(--dyn-light-primary);
+  --primary-foreground: var(--dyn-light-primary-foreground);
+  --secondary: var(--dyn-light-secondary);
+  --secondary-foreground: var(--dyn-light-secondary-foreground);
+  --muted: var(--dyn-light-muted);
+  --muted-foreground: var(--dyn-light-muted-foreground);
+  --accent: var(--dyn-light-accent);
+  --accent-foreground: var(--dyn-light-accent-foreground);
+  --destructive: var(--dyn-light-destructive);
+  --destructive-foreground: var(--dyn-light-destructive-foreground);
+  --border: var(--dyn-light-border);
+  --input: var(--dyn-light-input);
+  --ring: var(--dyn-light-ring);
+  --sidebar: var(--dyn-light-sidebar);
+  --sidebar-foreground: var(--dyn-light-sidebar-foreground);
+  --sidebar-accent: var(--dyn-light-sidebar-accent);
+  --sidebar-accent-foreground: var(--dyn-light-sidebar-accent-foreground);
+  --sidebar-border: var(--dyn-light-sidebar-border);
+  --sidebar-ring: var(--dyn-light-sidebar-ring);
+}
+
+.dark .auth-scope[data-dynamic-theme] {
+  --background: var(--dyn-dark-background);
+  --foreground: var(--dyn-dark-foreground);
+  --card: var(--dyn-dark-card);
+  --card-foreground: var(--dyn-dark-card-foreground);
+  --popover: var(--dyn-dark-popover);
+  --popover-foreground: var(--dyn-dark-popover-foreground);
+  --primary: var(--dyn-dark-primary);
+  --primary-foreground: var(--dyn-dark-primary-foreground);
+  --secondary: var(--dyn-dark-secondary);
+  --secondary-foreground: var(--dyn-dark-secondary-foreground);
+  --muted: var(--dyn-dark-muted);
+  --muted-foreground: var(--dyn-dark-muted-foreground);
+  --accent: var(--dyn-dark-accent);
+  --accent-foreground: var(--dyn-dark-accent-foreground);
+  --destructive: var(--dyn-dark-destructive);
+  --destructive-foreground: var(--dyn-dark-destructive-foreground);
+  --border: var(--dyn-dark-border);
+  --input: var(--dyn-dark-input);
+  --ring: var(--dyn-dark-ring);
+  --sidebar: var(--dyn-dark-sidebar);
+  --sidebar-foreground: var(--dyn-dark-sidebar-foreground);
+  --sidebar-accent: var(--dyn-dark-sidebar-accent);
+  --sidebar-accent-foreground: var(--dyn-dark-sidebar-accent-foreground);
+  --sidebar-border: var(--dyn-dark-sidebar-border);
+  --sidebar-ring: var(--dyn-dark-sidebar-ring);
+}
+
+/* Translucent frosted auth card once a background image is shown. */
+.auth-scope[data-has-bg] .auth-card {
+  background: color-mix(in oklch, var(--card) 82%, transparent);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
 /* TextShimmer: background-position sweep from right to left */
 @keyframes shimmer {
   0% { background-position: 100% center; }
