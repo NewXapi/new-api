@@ -22,7 +22,10 @@ import { ArrowRight, Flame, ShieldCheck, TrendingDown } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { StaggerContainer, StaggerItem } from '@/components/page-transition'
+import {
+  CardStaggerContainer,
+  CardStaggerItem,
+} from '@/components/page-transition'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { getUserQuotaDates } from '@/features/dashboard/api'
@@ -264,9 +267,9 @@ export function SummaryCards() {
               </p>
             </div>
           </div>
-          <StaggerContainer className='grid grid-cols-3 gap-1.5 sm:gap-3'>
+          <CardStaggerContainer className='grid grid-cols-3 gap-1.5 sm:gap-3'>
             {items.map((it) => (
-              <StaggerItem
+              <CardStaggerItem
                 key={it.key}
                 className='bg-background/60 rounded-lg border px-2 py-1.5 sm:rounded-xl sm:p-3'
               >
@@ -281,9 +284,9 @@ export function SummaryCards() {
                   loading={loading}
                   compactMobile
                 />
-              </StaggerItem>
+              </CardStaggerItem>
             ))}
-          </StaggerContainer>
+          </CardStaggerContainer>
         </div>
 
         <div className='bg-secondary/40 flex min-w-0 flex-col justify-between gap-3 border-t p-4 sm:gap-4 sm:p-5 xl:border-t-0 xl:border-l'>

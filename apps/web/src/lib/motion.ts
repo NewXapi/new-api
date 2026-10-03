@@ -74,6 +74,15 @@ export const MOTION_VARIANTS = {
     animate: { opacity: 1, x: 0 },
     exit: { opacity: 0, x: -8 },
   },
+  adminMenu: {
+    initial: { opacity: 0, x: -6 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: 6 },
+  },
+  adminStatus: {
+    initial: { opacity: 0, scale: 0.85 },
+    animate: { opacity: 1, scale: 1 },
+  },
 } as const
 
 export const STAGGER_VARIANTS: Variants = {

@@ -50,6 +50,15 @@ body[data-app-background='true'] [data-slot='section-page-footer'] {
   background-color: color-mix(in oklch, var(--background) 82%, transparent);
 }
 
+/* Keep the console sidebar readable over the optional app background without
+ * changing its layout behavior or the surfaces used by the header and pages.
+ * The mobile sheet is rendered through a portal, so target its slot from body
+ * rather than relying on the sidebar wrapper ancestry. */
+body[data-app-background='true'] [data-slot='sidebar-inner'],
+body[data-app-background='true'] [data-slot='sidebar'][data-mobile='true'] {
+  background-color: var(--card-surface);
+}
+
 body[data-app-background='true'] [data-slot='app-background'] [data-app-background-image] {
   position: absolute;
   z-index: 0;

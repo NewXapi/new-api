@@ -36,6 +36,33 @@ import { Route as RankingsIndexRouteImport } from './routes/rankings/index'
 import { Route as SetupIndexRouteImport } from './routes/setup/index'
 import { Route as authUserResetRouteImport } from './routes/(auth)/user/reset'
 import { Route as AuthenticatedChannelsIndexRouteImport } from './routes/_authenticated/channels/index'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
+import { Route as AuthenticatedAdminChannelsIndexRouteImport } from './routes/_authenticated/admin/channels/index'
+import { Route as AuthenticatedAdminModelsIndexRouteImport } from './routes/_authenticated/admin/models/index'
+import { Route as AuthenticatedAdminModelsSectionRouteImport } from './routes/_authenticated/admin/models/$section'
+import { Route as AuthenticatedAdminProxyRouteImport } from './routes/_authenticated/admin/proxy'
+import { Route as AuthenticatedAdminRedemptionCodesIndexRouteImport } from './routes/_authenticated/admin/redemption-codes/index'
+import { Route as AuthenticatedAdminSubscriptionsIndexRouteImport } from './routes/_authenticated/admin/subscriptions/index'
+import { Route as AuthenticatedAdminSystemInfoIndexRouteImport } from './routes/_authenticated/admin/system-info/index'
+import { Route as AuthenticatedAdminSystemSettingsRouteRouteImport } from './routes/_authenticated/admin/system-settings/route'
+import { Route as AuthenticatedAdminSystemSettingsIndexRouteImport } from './routes/_authenticated/admin/system-settings/index'
+import { Route as AuthenticatedAdminSystemSettingsAuthIndexRouteImport } from './routes/_authenticated/admin/system-settings/auth/index'
+import { Route as AuthenticatedAdminSystemSettingsAuthSectionRouteImport } from './routes/_authenticated/admin/system-settings/auth/$section'
+import { Route as AuthenticatedAdminSystemSettingsBillingIndexRouteImport } from './routes/_authenticated/admin/system-settings/billing/index'
+import { Route as AuthenticatedAdminSystemSettingsBillingSectionRouteImport } from './routes/_authenticated/admin/system-settings/billing/$section'
+import { Route as AuthenticatedAdminSystemSettingsContentIndexRouteImport } from './routes/_authenticated/admin/system-settings/content/index'
+import { Route as AuthenticatedAdminSystemSettingsContentSectionRouteImport } from './routes/_authenticated/admin/system-settings/content/$section'
+import { Route as AuthenticatedAdminSystemSettingsModelsIndexRouteImport } from './routes/_authenticated/admin/system-settings/models/index'
+import { Route as AuthenticatedAdminSystemSettingsModelsSectionRouteImport } from './routes/_authenticated/admin/system-settings/models/$section'
+import { Route as AuthenticatedAdminSystemSettingsOperationsIndexRouteImport } from './routes/_authenticated/admin/system-settings/operations/index'
+import { Route as AuthenticatedAdminSystemSettingsOperationsSectionRouteImport } from './routes/_authenticated/admin/system-settings/operations/$section'
+import { Route as AuthenticatedAdminSystemSettingsSecurityIndexRouteImport } from './routes/_authenticated/admin/system-settings/security/index'
+import { Route as AuthenticatedAdminSystemSettingsSecuritySectionRouteImport } from './routes/_authenticated/admin/system-settings/security/$section'
+import { Route as AuthenticatedAdminSystemSettingsSiteIndexRouteImport } from './routes/_authenticated/admin/system-settings/site/index'
+import { Route as AuthenticatedAdminSystemSettingsSiteSectionRouteImport } from './routes/_authenticated/admin/system-settings/site/$section'
+import { Route as AuthenticatedAdminUserInsightsIndexRouteImport } from './routes/_authenticated/admin/user-insights/index'
+import { Route as AuthenticatedAdminUsersIndexRouteImport } from './routes/_authenticated/admin/users/index'
 import { Route as AuthenticatedChatChatIdRouteImport } from './routes/_authenticated/chat/$chatId'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
 import { Route as AuthenticatedDashboardSectionRouteImport } from './routes/_authenticated/dashboard/$section'
@@ -204,6 +231,165 @@ const AuthenticatedChannelsIndexRoute =
     id: '/channels/',
     path: '/channels/',
     getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAdminChannelsIndexRoute =
+  AuthenticatedAdminChannelsIndexRouteImport.update({
+    id: '/channels/',
+    path: '/channels/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminModelsIndexRoute =
+  AuthenticatedAdminModelsIndexRouteImport.update({
+    id: '/models/',
+    path: '/models/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminModelsSectionRoute =
+  AuthenticatedAdminModelsSectionRouteImport.update({
+    id: '/models/$section',
+    path: '/models/$section',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminProxyRoute = AuthenticatedAdminProxyRouteImport.update({
+  id: '/proxy',
+  path: '/proxy',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
+const AuthenticatedAdminRedemptionCodesIndexRoute =
+  AuthenticatedAdminRedemptionCodesIndexRouteImport.update({
+    id: '/redemption-codes/',
+    path: '/redemption-codes/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminSubscriptionsIndexRoute =
+  AuthenticatedAdminSubscriptionsIndexRouteImport.update({
+    id: '/subscriptions/',
+    path: '/subscriptions/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemInfoIndexRoute =
+  AuthenticatedAdminSystemInfoIndexRouteImport.update({
+    id: '/system-info/',
+    path: '/system-info/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsRouteRoute =
+  AuthenticatedAdminSystemSettingsRouteRouteImport.update({
+    id: '/system-settings',
+    path: '/system-settings',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsIndexRoute =
+  AuthenticatedAdminSystemSettingsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsAuthIndexRoute =
+  AuthenticatedAdminSystemSettingsAuthIndexRouteImport.update({
+    id: '/auth/',
+    path: '/auth/',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsAuthSectionRoute =
+  AuthenticatedAdminSystemSettingsAuthSectionRouteImport.update({
+    id: '/auth/$section',
+    path: '/auth/$section',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsBillingIndexRoute =
+  AuthenticatedAdminSystemSettingsBillingIndexRouteImport.update({
+    id: '/billing/',
+    path: '/billing/',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsBillingSectionRoute =
+  AuthenticatedAdminSystemSettingsBillingSectionRouteImport.update({
+    id: '/billing/$section',
+    path: '/billing/$section',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsContentIndexRoute =
+  AuthenticatedAdminSystemSettingsContentIndexRouteImport.update({
+    id: '/content/',
+    path: '/content/',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsContentSectionRoute =
+  AuthenticatedAdminSystemSettingsContentSectionRouteImport.update({
+    id: '/content/$section',
+    path: '/content/$section',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsModelsIndexRoute =
+  AuthenticatedAdminSystemSettingsModelsIndexRouteImport.update({
+    id: '/models/',
+    path: '/models/',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsModelsSectionRoute =
+  AuthenticatedAdminSystemSettingsModelsSectionRouteImport.update({
+    id: '/models/$section',
+    path: '/models/$section',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsOperationsIndexRoute =
+  AuthenticatedAdminSystemSettingsOperationsIndexRouteImport.update({
+    id: '/operations/',
+    path: '/operations/',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsOperationsSectionRoute =
+  AuthenticatedAdminSystemSettingsOperationsSectionRouteImport.update({
+    id: '/operations/$section',
+    path: '/operations/$section',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsSecurityIndexRoute =
+  AuthenticatedAdminSystemSettingsSecurityIndexRouteImport.update({
+    id: '/security/',
+    path: '/security/',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsSecuritySectionRoute =
+  AuthenticatedAdminSystemSettingsSecuritySectionRouteImport.update({
+    id: '/security/$section',
+    path: '/security/$section',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsSiteIndexRoute =
+  AuthenticatedAdminSystemSettingsSiteIndexRouteImport.update({
+    id: '/site/',
+    path: '/site/',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminSystemSettingsSiteSectionRoute =
+  AuthenticatedAdminSystemSettingsSiteSectionRouteImport.update({
+    id: '/site/$section',
+    path: '/site/$section',
+    getParentRoute: () => AuthenticatedAdminSystemSettingsRouteRoute,
+  } as any)
+const AuthenticatedAdminUserInsightsIndexRoute =
+  AuthenticatedAdminUserInsightsIndexRouteImport.update({
+    id: '/user-insights/',
+    path: '/user-insights/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminUsersIndexRoute =
+  AuthenticatedAdminUsersIndexRouteImport.update({
+    id: '/users/',
+    path: '/users/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
   } as any)
 const AuthenticatedChatChatIdRoute = AuthenticatedChatChatIdRouteImport.update({
   id: '/chat/$chatId',
@@ -404,6 +590,33 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/user-agreement': typeof UserAgreementRoute
+  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/channels/': typeof AuthenticatedAdminChannelsIndexRoute
+  '/admin/models/': typeof AuthenticatedAdminModelsIndexRoute
+  '/admin/models/$section': typeof AuthenticatedAdminModelsSectionRoute
+  '/admin/proxy': typeof AuthenticatedAdminProxyRoute
+  '/admin/redemption-codes/': typeof AuthenticatedAdminRedemptionCodesIndexRoute
+  '/admin/subscriptions/': typeof AuthenticatedAdminSubscriptionsIndexRoute
+  '/admin/system-info/': typeof AuthenticatedAdminSystemInfoIndexRoute
+  '/admin/system-settings': typeof AuthenticatedAdminSystemSettingsRouteRouteWithChildren
+  '/admin/system-settings/': typeof AuthenticatedAdminSystemSettingsIndexRoute
+  '/admin/system-settings/auth/': typeof AuthenticatedAdminSystemSettingsAuthIndexRoute
+  '/admin/system-settings/auth/$section': typeof AuthenticatedAdminSystemSettingsAuthSectionRoute
+  '/admin/system-settings/billing/': typeof AuthenticatedAdminSystemSettingsBillingIndexRoute
+  '/admin/system-settings/billing/$section': typeof AuthenticatedAdminSystemSettingsBillingSectionRoute
+  '/admin/system-settings/content/': typeof AuthenticatedAdminSystemSettingsContentIndexRoute
+  '/admin/system-settings/content/$section': typeof AuthenticatedAdminSystemSettingsContentSectionRoute
+  '/admin/system-settings/models/': typeof AuthenticatedAdminSystemSettingsModelsIndexRoute
+  '/admin/system-settings/models/$section': typeof AuthenticatedAdminSystemSettingsModelsSectionRoute
+  '/admin/system-settings/operations/': typeof AuthenticatedAdminSystemSettingsOperationsIndexRoute
+  '/admin/system-settings/operations/$section': typeof AuthenticatedAdminSystemSettingsOperationsSectionRoute
+  '/admin/system-settings/security/': typeof AuthenticatedAdminSystemSettingsSecurityIndexRoute
+  '/admin/system-settings/security/$section': typeof AuthenticatedAdminSystemSettingsSecuritySectionRoute
+  '/admin/system-settings/site/': typeof AuthenticatedAdminSystemSettingsSiteIndexRoute
+  '/admin/system-settings/site/$section': typeof AuthenticatedAdminSystemSettingsSiteSectionRoute
+  '/admin/user-insights/': typeof AuthenticatedAdminUserInsightsIndexRoute
+  '/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/system-settings': typeof AuthenticatedSystemSettingsRouteRouteWithChildren
   '/forgot-password': typeof authForgotPasswordRoute
   '/oauth': typeof authOauthRoute
@@ -464,6 +677,33 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/user-agreement': typeof UserAgreementRoute
+  '/admin': typeof AuthenticatedAdminRouteRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
+  '/admin/channels': typeof AuthenticatedAdminChannelsIndexRoute
+  '/admin/models': typeof AuthenticatedAdminModelsIndexRoute
+  '/admin/models/$section': typeof AuthenticatedAdminModelsSectionRoute
+  '/admin/proxy': typeof AuthenticatedAdminProxyRoute
+  '/admin/redemption-codes': typeof AuthenticatedAdminRedemptionCodesIndexRoute
+  '/admin/subscriptions': typeof AuthenticatedAdminSubscriptionsIndexRoute
+  '/admin/system-info': typeof AuthenticatedAdminSystemInfoIndexRoute
+  '/admin/system-settings': typeof AuthenticatedAdminSystemSettingsRouteRoute
+  '/admin/system-settings/': typeof AuthenticatedAdminSystemSettingsIndexRoute
+  '/admin/system-settings/auth': typeof AuthenticatedAdminSystemSettingsAuthIndexRoute
+  '/admin/system-settings/auth/$section': typeof AuthenticatedAdminSystemSettingsAuthSectionRoute
+  '/admin/system-settings/billing': typeof AuthenticatedAdminSystemSettingsBillingIndexRoute
+  '/admin/system-settings/billing/$section': typeof AuthenticatedAdminSystemSettingsBillingSectionRoute
+  '/admin/system-settings/content': typeof AuthenticatedAdminSystemSettingsContentIndexRoute
+  '/admin/system-settings/content/$section': typeof AuthenticatedAdminSystemSettingsContentSectionRoute
+  '/admin/system-settings/models': typeof AuthenticatedAdminSystemSettingsModelsIndexRoute
+  '/admin/system-settings/models/$section': typeof AuthenticatedAdminSystemSettingsModelsSectionRoute
+  '/admin/system-settings/operations': typeof AuthenticatedAdminSystemSettingsOperationsIndexRoute
+  '/admin/system-settings/operations/$section': typeof AuthenticatedAdminSystemSettingsOperationsSectionRoute
+  '/admin/system-settings/security': typeof AuthenticatedAdminSystemSettingsSecurityIndexRoute
+  '/admin/system-settings/security/$section': typeof AuthenticatedAdminSystemSettingsSecuritySectionRoute
+  '/admin/system-settings/site': typeof AuthenticatedAdminSystemSettingsSiteIndexRoute
+  '/admin/system-settings/site/$section': typeof AuthenticatedAdminSystemSettingsSiteSectionRoute
+  '/admin/user-insights': typeof AuthenticatedAdminUserInsightsIndexRoute
+  '/admin/users': typeof AuthenticatedAdminUsersIndexRoute
   '/forgot-password': typeof authForgotPasswordRoute
   '/oauth': typeof authOauthRoute
   '/otp': typeof authOtpRoute
@@ -524,6 +764,33 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/(auth)': typeof authRouteRouteWithChildren
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
+  '/_authenticated/admin/channels/': typeof AuthenticatedAdminChannelsIndexRoute
+  '/_authenticated/admin/models/': typeof AuthenticatedAdminModelsIndexRoute
+  '/_authenticated/admin/models/$section': typeof AuthenticatedAdminModelsSectionRoute
+  '/_authenticated/admin/proxy': typeof AuthenticatedAdminProxyRoute
+  '/_authenticated/admin/redemption-codes/': typeof AuthenticatedAdminRedemptionCodesIndexRoute
+  '/_authenticated/admin/subscriptions/': typeof AuthenticatedAdminSubscriptionsIndexRoute
+  '/_authenticated/admin/system-info/': typeof AuthenticatedAdminSystemInfoIndexRoute
+  '/_authenticated/admin/system-settings': typeof AuthenticatedAdminSystemSettingsRouteRouteWithChildren
+  '/_authenticated/admin/system-settings/': typeof AuthenticatedAdminSystemSettingsIndexRoute
+  '/_authenticated/admin/system-settings/auth/': typeof AuthenticatedAdminSystemSettingsAuthIndexRoute
+  '/_authenticated/admin/system-settings/auth/$section': typeof AuthenticatedAdminSystemSettingsAuthSectionRoute
+  '/_authenticated/admin/system-settings/billing/': typeof AuthenticatedAdminSystemSettingsBillingIndexRoute
+  '/_authenticated/admin/system-settings/billing/$section': typeof AuthenticatedAdminSystemSettingsBillingSectionRoute
+  '/_authenticated/admin/system-settings/content/': typeof AuthenticatedAdminSystemSettingsContentIndexRoute
+  '/_authenticated/admin/system-settings/content/$section': typeof AuthenticatedAdminSystemSettingsContentSectionRoute
+  '/_authenticated/admin/system-settings/models/': typeof AuthenticatedAdminSystemSettingsModelsIndexRoute
+  '/_authenticated/admin/system-settings/models/$section': typeof AuthenticatedAdminSystemSettingsModelsSectionRoute
+  '/_authenticated/admin/system-settings/operations/': typeof AuthenticatedAdminSystemSettingsOperationsIndexRoute
+  '/_authenticated/admin/system-settings/operations/$section': typeof AuthenticatedAdminSystemSettingsOperationsSectionRoute
+  '/_authenticated/admin/system-settings/security/': typeof AuthenticatedAdminSystemSettingsSecurityIndexRoute
+  '/_authenticated/admin/system-settings/security/$section': typeof AuthenticatedAdminSystemSettingsSecuritySectionRoute
+  '/_authenticated/admin/system-settings/site/': typeof AuthenticatedAdminSystemSettingsSiteIndexRoute
+  '/_authenticated/admin/system-settings/site/$section': typeof AuthenticatedAdminSystemSettingsSiteSectionRoute
+  '/_authenticated/admin/user-insights/': typeof AuthenticatedAdminUserInsightsIndexRoute
+  '/_authenticated/admin/users/': typeof AuthenticatedAdminUsersIndexRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/user-agreement': typeof UserAgreementRoute
   '/_authenticated/system-settings': typeof AuthenticatedSystemSettingsRouteRouteWithChildren
@@ -1236,6 +1503,78 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
   authRouteRouteChildren,
 )
 
+interface AuthenticatedAdminSystemSettingsRouteRouteChildren {
+  AuthenticatedAdminSystemSettingsIndexRoute: typeof AuthenticatedAdminSystemSettingsIndexRoute
+  AuthenticatedAdminSystemSettingsAuthSectionRoute: typeof AuthenticatedAdminSystemSettingsAuthSectionRoute
+  AuthenticatedAdminSystemSettingsBillingSectionRoute: typeof AuthenticatedAdminSystemSettingsBillingSectionRoute
+  AuthenticatedAdminSystemSettingsContentSectionRoute: typeof AuthenticatedAdminSystemSettingsContentSectionRoute
+  AuthenticatedAdminSystemSettingsModelsSectionRoute: typeof AuthenticatedAdminSystemSettingsModelsSectionRoute
+  AuthenticatedAdminSystemSettingsOperationsSectionRoute: typeof AuthenticatedAdminSystemSettingsOperationsSectionRoute
+  AuthenticatedAdminSystemSettingsSecuritySectionRoute: typeof AuthenticatedAdminSystemSettingsSecuritySectionRoute
+  AuthenticatedAdminSystemSettingsSiteSectionRoute: typeof AuthenticatedAdminSystemSettingsSiteSectionRoute
+  AuthenticatedAdminSystemSettingsAuthIndexRoute: typeof AuthenticatedAdminSystemSettingsAuthIndexRoute
+  AuthenticatedAdminSystemSettingsBillingIndexRoute: typeof AuthenticatedAdminSystemSettingsBillingIndexRoute
+  AuthenticatedAdminSystemSettingsContentIndexRoute: typeof AuthenticatedAdminSystemSettingsContentIndexRoute
+  AuthenticatedAdminSystemSettingsModelsIndexRoute: typeof AuthenticatedAdminSystemSettingsModelsIndexRoute
+  AuthenticatedAdminSystemSettingsOperationsIndexRoute: typeof AuthenticatedAdminSystemSettingsOperationsIndexRoute
+  AuthenticatedAdminSystemSettingsSecurityIndexRoute: typeof AuthenticatedAdminSystemSettingsSecurityIndexRoute
+  AuthenticatedAdminSystemSettingsSiteIndexRoute: typeof AuthenticatedAdminSystemSettingsSiteIndexRoute
+}
+
+const AuthenticatedAdminSystemSettingsRouteRouteChildren: AuthenticatedAdminSystemSettingsRouteRouteChildren = {
+  AuthenticatedAdminSystemSettingsIndexRoute: AuthenticatedAdminSystemSettingsIndexRoute,
+  AuthenticatedAdminSystemSettingsAuthSectionRoute: AuthenticatedAdminSystemSettingsAuthSectionRoute,
+  AuthenticatedAdminSystemSettingsBillingSectionRoute: AuthenticatedAdminSystemSettingsBillingSectionRoute,
+  AuthenticatedAdminSystemSettingsContentSectionRoute: AuthenticatedAdminSystemSettingsContentSectionRoute,
+  AuthenticatedAdminSystemSettingsModelsSectionRoute: AuthenticatedAdminSystemSettingsModelsSectionRoute,
+  AuthenticatedAdminSystemSettingsOperationsSectionRoute: AuthenticatedAdminSystemSettingsOperationsSectionRoute,
+  AuthenticatedAdminSystemSettingsSecuritySectionRoute: AuthenticatedAdminSystemSettingsSecuritySectionRoute,
+  AuthenticatedAdminSystemSettingsSiteSectionRoute: AuthenticatedAdminSystemSettingsSiteSectionRoute,
+  AuthenticatedAdminSystemSettingsAuthIndexRoute: AuthenticatedAdminSystemSettingsAuthIndexRoute,
+  AuthenticatedAdminSystemSettingsBillingIndexRoute: AuthenticatedAdminSystemSettingsBillingIndexRoute,
+  AuthenticatedAdminSystemSettingsContentIndexRoute: AuthenticatedAdminSystemSettingsContentIndexRoute,
+  AuthenticatedAdminSystemSettingsModelsIndexRoute: AuthenticatedAdminSystemSettingsModelsIndexRoute,
+  AuthenticatedAdminSystemSettingsOperationsIndexRoute: AuthenticatedAdminSystemSettingsOperationsIndexRoute,
+  AuthenticatedAdminSystemSettingsSecurityIndexRoute: AuthenticatedAdminSystemSettingsSecurityIndexRoute,
+  AuthenticatedAdminSystemSettingsSiteIndexRoute: AuthenticatedAdminSystemSettingsSiteIndexRoute,
+}
+
+const AuthenticatedAdminSystemSettingsRouteRouteWithChildren =
+  AuthenticatedAdminSystemSettingsRouteRoute._addFileChildren(
+    AuthenticatedAdminSystemSettingsRouteRouteChildren,
+  )
+
+interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminSystemSettingsRouteRoute: typeof AuthenticatedAdminSystemSettingsRouteRouteWithChildren
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminChannelsIndexRoute: typeof AuthenticatedAdminChannelsIndexRoute
+  AuthenticatedAdminModelsSectionRoute: typeof AuthenticatedAdminModelsSectionRoute
+  AuthenticatedAdminProxyRoute: typeof AuthenticatedAdminProxyRoute
+  AuthenticatedAdminRedemptionCodesIndexRoute: typeof AuthenticatedAdminRedemptionCodesIndexRoute
+  AuthenticatedAdminSubscriptionsIndexRoute: typeof AuthenticatedAdminSubscriptionsIndexRoute
+  AuthenticatedAdminSystemInfoIndexRoute: typeof AuthenticatedAdminSystemInfoIndexRoute
+  AuthenticatedAdminModelsIndexRoute: typeof AuthenticatedAdminModelsIndexRoute
+  AuthenticatedAdminUserInsightsIndexRoute: typeof AuthenticatedAdminUserInsightsIndexRoute
+  AuthenticatedAdminUsersIndexRoute: typeof AuthenticatedAdminUsersIndexRoute
+}
+
+const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren = {
+  AuthenticatedAdminSystemSettingsRouteRoute: AuthenticatedAdminSystemSettingsRouteRouteWithChildren,
+  AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+  AuthenticatedAdminChannelsIndexRoute: AuthenticatedAdminChannelsIndexRoute,
+  AuthenticatedAdminModelsSectionRoute: AuthenticatedAdminModelsSectionRoute,
+  AuthenticatedAdminProxyRoute: AuthenticatedAdminProxyRoute,
+  AuthenticatedAdminRedemptionCodesIndexRoute: AuthenticatedAdminRedemptionCodesIndexRoute,
+  AuthenticatedAdminSubscriptionsIndexRoute: AuthenticatedAdminSubscriptionsIndexRoute,
+  AuthenticatedAdminSystemInfoIndexRoute: AuthenticatedAdminSystemInfoIndexRoute,
+  AuthenticatedAdminModelsIndexRoute: AuthenticatedAdminModelsIndexRoute,
+  AuthenticatedAdminUserInsightsIndexRoute: AuthenticatedAdminUserInsightsIndexRoute,
+  AuthenticatedAdminUsersIndexRoute: AuthenticatedAdminUsersIndexRoute,
+}
+
+const AuthenticatedAdminRouteRouteWithChildren =
+  AuthenticatedAdminRouteRoute._addFileChildren(AuthenticatedAdminRouteRouteChildren)
+
 interface AuthenticatedSystemSettingsRouteRouteChildren {
   AuthenticatedSystemSettingsIndexRoute: typeof AuthenticatedSystemSettingsIndexRoute
   AuthenticatedSystemSettingsAuthSectionRoute: typeof AuthenticatedSystemSettingsAuthSectionRoute
@@ -1294,6 +1633,7 @@ const AuthenticatedSystemSettingsRouteRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedSystemSettingsRouteRoute: typeof AuthenticatedSystemSettingsRouteRouteWithChildren
   AuthenticatedChat2linkRoute: typeof AuthenticatedChat2linkRoute
   AuthenticatedProxyRoute: typeof AuthenticatedProxyRoute
@@ -1318,6 +1658,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedSystemSettingsRouteRoute:
     AuthenticatedSystemSettingsRouteRouteWithChildren,
   AuthenticatedChat2linkRoute: AuthenticatedChat2linkRoute,

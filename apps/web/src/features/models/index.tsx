@@ -61,7 +61,7 @@ function ModelsContent() {
   const handleSectionChange = useCallback(
     (section: string) => {
       void navigate({
-        to: '/models/$section',
+        to: '/admin/models/$section',
         params: { section: section as ModelsSectionId },
       })
     },

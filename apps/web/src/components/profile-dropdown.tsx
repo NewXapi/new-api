@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useNavigate } from '@tanstack/react-router'
-import { LogOut, Palette, Store, User, Wallet } from 'lucide-react'
+import { ArrowUpRight, LogOut, Palette, Store, User, Wallet } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -50,6 +50,7 @@ export function ProfileDropdown() {
   const themeTriggerRef = useRef<HTMLButtonElement>(null)
   const user = useAuthStore((state) => state.auth.user)
   const { displayName, roleLabel } = useUserDisplay(user)
+  const isAdmin = (user?.role ?? ROLE.GUEST) >= ROLE.ADMIN
   const isSuperAdmin = user?.role === ROLE.SUPER_ADMIN
   const isWalletVisible = useIsSidebarModuleVisible('/wallet')
   const walletBalance = useWalletBalance()
@@ -134,6 +135,13 @@ export function ProfileDropdown() {
             <DropdownMenuItem onClick={() => navigate({ to: '/pricing' })}>
               <Store className='size-4' />
               {t('Model Square')}
+            </DropdownMenuItem>
+          )}
+
+          {isAdmin && (
+            <DropdownMenuItem onClick={() => navigate({ to: '/admin' })}>
+              <ArrowUpRight className='size-4' />
+              {t('Admin')}
             </DropdownMenuItem>
           )}
 
