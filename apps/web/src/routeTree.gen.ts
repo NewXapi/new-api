@@ -161,13 +161,7 @@ const AuthenticatedChat2linkRoute = AuthenticatedChat2linkRouteImport.update({
   path: '/chat2link',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedChat2linkRoute = AuthenticatedChat2linkRouteImport.update({
-  id: '/chat2link',
-  path: '/chat2link',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedOauth2ClientsRoute =
-  AuthenticatedOauth2ClientsRouteImport.update({const AuthenticatedMarketplaceIncomeRoute =
+const AuthenticatedMarketplaceIncomeRoute =
   AuthenticatedMarketplaceIncomeRouteImport.update({
     id: '/marketplace-income',
     path: '/marketplace-income',
@@ -193,11 +187,6 @@ const AuthenticatedSystemSettingsRouteRoute =
 const AboutIndexRoute = AboutIndexRouteImport.update({
   id: '/about/',
   path: '/about/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OauthProviderRoute = OauthProviderRouteImport.update({
-  id: '/oauth/$provider',
-  path: '/oauth/$provider',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OauthProviderRoute = OauthProviderRouteImport.update({
@@ -970,20 +959,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProxyRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/proxy': {
-      id: '/_authenticated/proxy'
-      path: '/proxy'
-      fullPath: '/proxy'
-      preLoaderRoute: typeof AuthenticatedProxyRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/oauth2-clients': {
-      id: '/_authenticated/oauth2-clients'
-      path: '/oauth2-clients'
-      fullPath: '/oauth2-clients'
-      preLoaderRoute: typeof AuthenticatedOauth2ClientsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/oauth2-clients': {
       id: '/_authenticated/oauth2-clients'
       path: '/oauth2-clients'
@@ -1010,13 +985,6 @@ declare module '@tanstack/react-router' {
       path: '/about'
       fullPath: '/about/'
       preLoaderRoute: typeof AboutIndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/oauth/$provider': {
-      id: '/oauth/$provider'
-      path: '/oauth/$provider'
-      fullPath: '/oauth/$provider'
-      preLoaderRoute: typeof OauthProviderRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/oauth/$provider': {
