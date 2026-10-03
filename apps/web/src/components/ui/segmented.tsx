@@ -22,14 +22,14 @@ import * as React from 'react'
 
 import { cn } from '@/lib/utils'
 
-type SegmentedOption<Value extends string | number> = {
+type SegmentedOption<Value extends string> = {
   label: React.ReactNode
   value: Value
   icon?: React.ReactNode
   disabled?: boolean
 }
 
-type SegmentedProps<Value extends string | number> = {
+type SegmentedProps<Value extends string> = {
   options: SegmentedOption<Value>[]
   value?: Value | null
   onValueChange?: (value: Value) => void
@@ -39,7 +39,7 @@ type SegmentedProps<Value extends string | number> = {
 }
 
 /** MD3 segmented button: pill container, tonal selected segment. */
-function Segmented<Value extends string | number>({
+function Segmented<Value extends string>({
   options,
   value,
   onValueChange,
