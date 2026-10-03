@@ -33,11 +33,9 @@ export function AdminHeader() {
     <Header>
       <SystemBrand variant='inline' />
       <div className='ms-auto flex items-center gap-2'>
-        <Button asChild variant='ghost' size='sm'>
-          <Link to='/'>
-            <ArrowLeft />
-            {t('Back to user app')}
-          </Link>
+        <Button render={<Link to='/' />} variant='ghost' size='sm'>
+          <ArrowLeft />
+          {t('Back to user app')}
         </Button>
         <SidebarTrigger variant='ghost' className='size-8' />
       </div>

@@ -152,7 +152,7 @@ function AdminDashboard() {
     result.requests += numberValue(item.count)
     result.consumption += numberValue(item.quota_display)
     result.tokens += numberValue(item.token_used)
-    if (item.user_id || item.username) result.users.add(item.user_id ?? item.username)
+    if (item.user_id || item.username) result.users.add(item.user_id ?? item.username ?? 0)
     return result
   }, { requests: 0, consumption: 0, tokens: 0, users: new Set<number | string>() }), [usage])
 

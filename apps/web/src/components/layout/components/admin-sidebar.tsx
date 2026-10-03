@@ -67,11 +67,9 @@ export function AdminSidebar() {
 
                 return (
                   <SidebarMenuItem key={item.to}>
-                    <SidebarMenuButton asChild isActive={isActive} tooltip={t(item.label)}>
-                      <Link to={item.to}>
-                        <item.icon />
-                        <span>{t(item.label)}</span>
-                      </Link>
+                    <SidebarMenuButton render={<Link to={item.to} />} isActive={isActive} tooltip={t(item.label)}>
+                      <item.icon />
+                      <span>{t(item.label)}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )

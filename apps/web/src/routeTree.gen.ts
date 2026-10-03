@@ -1075,6 +1075,195 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin/': {
+      id: '/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/channels/': {
+      id: '/channels/'
+      path: '/channels'
+      fullPath: '/admin/channels/'
+      preLoaderRoute: typeof AuthenticatedAdminChannelsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/models/': {
+      id: '/models/'
+      path: '/models'
+      fullPath: '/admin/models/'
+      preLoaderRoute: typeof AuthenticatedAdminModelsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/models/$section': {
+      id: '/models/$section'
+      path: '/models/$section'
+      fullPath: '/admin/models/$section'
+      preLoaderRoute: typeof AuthenticatedAdminModelsSectionRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/proxy': {
+      id: '/proxy'
+      path: '/proxy'
+      fullPath: '/admin/proxy'
+      preLoaderRoute: typeof AuthenticatedAdminProxyRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/redemption-codes/': {
+      id: '/redemption-codes/'
+      path: '/redemption-codes'
+      fullPath: '/admin/redemption-codes/'
+      preLoaderRoute: typeof AuthenticatedAdminRedemptionCodesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/subscriptions/': {
+      id: '/subscriptions/'
+      path: '/subscriptions'
+      fullPath: '/admin/subscriptions/'
+      preLoaderRoute: typeof AuthenticatedAdminSubscriptionsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/system-info/': {
+      id: '/system-info/'
+      path: '/system-info'
+      fullPath: '/admin/system-info/'
+      preLoaderRoute: typeof AuthenticatedAdminSystemInfoIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/system-settings': {
+      id: '/system-settings'
+      path: '/system-settings'
+      fullPath: '/admin/system-settings'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsRouteRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/system-settings/': {
+      id: '/'
+      path: '/'
+      fullPath: '/admin/system-settings/'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/system-settings/auth/': {
+      id: '/auth/'
+      path: '/auth'
+      fullPath: '/admin/system-settings/auth/'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsAuthIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/system-settings/auth/$section': {
+      id: '/auth/$section'
+      path: '/auth/$section'
+      fullPath: '/admin/system-settings/auth/$section'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsAuthSectionRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/system-settings/billing/': {
+      id: '/billing/'
+      path: '/billing'
+      fullPath: '/admin/system-settings/billing/'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsBillingIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/system-settings/billing/$section': {
+      id: '/billing/$section'
+      path: '/billing/$section'
+      fullPath: '/admin/system-settings/billing/$section'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsBillingSectionRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/system-settings/content/': {
+      id: '/content/'
+      path: '/content'
+      fullPath: '/admin/system-settings/content/'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsContentIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/system-settings/content/$section': {
+      id: '/content/$section'
+      path: '/content/$section'
+      fullPath: '/admin/system-settings/content/$section'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsContentSectionRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/system-settings/models/': {
+      id: '/models/'
+      path: '/models'
+      fullPath: '/admin/system-settings/models/'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsModelsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/system-settings/models/$section': {
+      id: '/models/$section'
+      path: '/models/$section'
+      fullPath: '/admin/system-settings/models/$section'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsModelsSectionRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/system-settings/operations/': {
+      id: '/operations/'
+      path: '/operations'
+      fullPath: '/admin/system-settings/operations/'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsOperationsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/system-settings/operations/$section': {
+      id: '/operations/$section'
+      path: '/operations/$section'
+      fullPath: '/admin/system-settings/operations/$section'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsOperationsSectionRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/system-settings/security/': {
+      id: '/security/'
+      path: '/security'
+      fullPath: '/admin/system-settings/security/'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsSecurityIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/system-settings/security/$section': {
+      id: '/security/$section'
+      path: '/security/$section'
+      fullPath: '/admin/system-settings/security/$section'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsSecuritySectionRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/system-settings/site/': {
+      id: '/site/'
+      path: '/site'
+      fullPath: '/admin/system-settings/site/'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsSiteIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/system-settings/site/$section': {
+      id: '/site/$section'
+      path: '/site/$section'
+      fullPath: '/admin/system-settings/site/$section'
+      preLoaderRoute: typeof AuthenticatedAdminSystemSettingsSiteSectionRouteImport
+      parentRoute: typeof AuthenticatedAdminSystemSettingsRouteRoute
+    }
+    '/_authenticated/admin/user-insights/': {
+      id: '/user-insights/'
+      path: '/user-insights'
+      fullPath: '/admin/user-insights/'
+      preLoaderRoute: typeof AuthenticatedAdminUserInsightsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/users/': {
+      id: '/users/'
+      path: '/users'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AuthenticatedAdminUsersIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/privacy-policy': {
       id: '/privacy-policy'
       path: '/privacy-policy'
