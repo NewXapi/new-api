@@ -19,6 +19,19 @@ For commercial licensing, please contact support@quantumnous.com
 // Static translation keys that don't get picked up by the t('...') regex.
 // These cover dynamic labels (e.g. constants, configs) that are passed into t at runtime.
 export const STATIC_I18N_KEYS = [
+  // Admin navigation registry
+  'admin.administration',
+  'admin.overview',
+  'admin.channels',
+  'admin.models',
+  'admin.users',
+  'admin.insights',
+  'admin.redemptions',
+  'admin.subscriptions',
+  'admin.proxy',
+  'admin.systemInfo',
+  'admin.systemSettings',
+
   // Header navigation
   'Home',
   'Console',

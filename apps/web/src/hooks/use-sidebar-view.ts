@@ -19,10 +19,13 @@ For commercial licensing, please contact support@quantumnous.com
 import { useMemo } from 'react'
 
 import type { NavGroup, ResolvedSidebarView } from '@/components/layout/types'
+import { hasPermission } from '@/lib/admin-permissions'
 import { ROLE } from '@/lib/roles'
 import { useAuthStore } from '@/stores/auth-store'
 
 import { useSidebarConfig } from './use-sidebar-config'
+import { getVisibleAdminNavigation } from '@/components/layout/config/admin-navigation.config'
+
 import { useSidebarData } from './use-sidebar-data'
 
 /** Sentinel key used for the root navigation in animation `key=` props */
@@ -50,8 +53,14 @@ export function useSidebarView(): ResolvedSidebarView {
     return configFilteredRoot
       .filter((group) => (group.id === 'admin' ? isAdmin : true))
       .map((group) => {
-        const items = group.items.filter(
-          (item) => item.requiredRole === undefined || role >= item.requiredRole
+        if (group.id !== 'admin') return group
+        const visible = getVisibleAdminNavigation(
+          useAuthStore.getState().auth.user,
+          hasPermission
+        )
+        const visibleUrls = new Set(visible.map((item) => item.to))
+        const items = group.items.filter((item) =>
+          typeof item.url === 'string' && visibleUrls.has(item.url)
         )
         return items.length === group.items.length ? group : { ...group, items }
       })

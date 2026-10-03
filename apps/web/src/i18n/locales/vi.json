@@ -2337,7 +2337,7 @@
     "footer.columns.related.links.oneApi": "One API",
     "footer.columns.related.title": "Các Dự Án Liên Quan",
     "footer.defaultCopyright": "Bản quyền được bảo lưu.",
-    "footer.new\u0061pi.projectAttributionSuffix": "Bản quyền được bảo lưu. Được thiết kế và phát triển bởi các cộng tác viên dự án.",
+    "footer.newapi.projectAttributionSuffix": "Bản quyền được bảo lưu. Được thiết kế và phát triển bởi các cộng tác viên dự án.",
     "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment": "Đối với các kênh được thêm sau ngày 10 tháng 5 năm 2025, không cần loại bỏ \".\" khỏi tên mô hình trong quá trình triển khai",
     "For private deployments, format: https://fastgpt.run/api/openapi": "Đối với các triển khai riêng tư, định dạng: https://fastgpt.run/api/openapi",
     "For security, existing access tokens cannot be displayed. Regenerate only when you need a new token.": "Vì lý do bảo mật, không thể hiển thị lại token truy cập hiện có. Chỉ tạo lại khi bạn cần token mới.",
@@ -6032,6 +6032,17 @@
     "Spam drop denial (percent)": "Spam drop denial (percent)",
     "Base percent added to the drop-denial chance while the sender is spam-penalized, stacks with stack step. 0 disables": "Base percent added to the drop-denial chance while the sender is spam-penalized, stacks with stack step. 0 disables",
     "Spam steal-rate bonus (percent)": "Spam steal-rate bonus (percent)",
-    "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables": "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables"
+    "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables": "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables",
+    "admin.administration": "Quản trị",
+    "admin.overview": "Tổng quan",
+    "admin.channels": "Kênh",
+    "admin.models": "Mô hình",
+    "admin.users": "Người dùng",
+    "admin.insights": "Thông tin người dùng",
+    "admin.redemptions": "Mã đổi thưởng",
+    "admin.subscriptions": "Gói đăng ký",
+    "admin.proxy": "Cấu hình proxy",
+    "admin.systemInfo": "Thông tin hệ thống",
+    "admin.systemSettings": "Cài đặt hệ thống"
   }
 }

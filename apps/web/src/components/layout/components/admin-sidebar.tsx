@@ -16,16 +16,11 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import {
-  ChartNoAxesCombined,
-  LayoutDashboard,
-  ListChecks,
-  Settings,
-  Users,
-} from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from '@tanstack/react-router'
 
+import { getVisibleAdminNavigation } from '@/components/layout/config/admin-navigation.config'
+import { hasPermission } from '@/lib/admin-permissions'
 import {
   Sidebar,
   SidebarContent,
@@ -37,37 +32,41 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from '@/components/ui/sidebar'
-
-const adminItems = [
-  { label: 'Overview', to: '/admin', icon: LayoutDashboard },
-  { label: 'Channels', to: '/admin/channels', icon: ListChecks },
-  { label: 'Models', to: '/admin/models', icon: ChartNoAxesCombined },
-  { label: 'Users', to: '/admin/users', icon: Users },
-  { label: 'System Settings', to: '/admin/system-settings', icon: Settings },
-] as const
+import { useAuthStore } from '@/stores/auth-store'
 
 export function AdminSidebar() {
   const { t } = useTranslation()
   const pathname = useLocation({ select: (location) => location.pathname })
+  const user = useAuthStore((state) => state.auth.user)
+  const visibleItems = getVisibleAdminNavigation(user, hasPermission)
 
   return (
     <Sidebar collapsible='icon'>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>{t('Administration')}</SidebarGroupLabel>
+          <SidebarGroupLabel>{t('admin.administration')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {adminItems.map((item) => {
+              {visibleItems.map((item) => {
                 const isActive =
                   item.to === '/admin'
                     ? pathname === '/admin' || pathname === '/admin/'
                     : pathname === item.to || pathname.startsWith(`${item.to}/`)
 
                 return (
-                  <SidebarMenuItem key={item.to}>
-                    <SidebarMenuButton render={<Link to={item.to} />} isActive={isActive} tooltip={t(item.label)}>
+                  <SidebarMenuItem key={item.id}>
+                    <SidebarMenuButton
+                      render={
+                        <Link
+                          to={item.to as never}
+                          params={item.id === 'models' ? { section: 'metadata' } : undefined}
+                        />
+                      }
+                      isActive={isActive}
+                      tooltip={t(item.labelKey)}
+                    >
                       <item.icon />
-                      <span>{t(item.label)}</span>
+                      <span>{t(item.labelKey)}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )

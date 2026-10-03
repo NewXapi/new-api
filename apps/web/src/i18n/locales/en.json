@@ -2337,7 +2337,7 @@
     "footer.columns.related.links.oneApi": "One API",
     "footer.columns.related.title": "Related Projects",
     "footer.defaultCopyright": "All rights reserved.",
-    "footer.new\u0061pi.projectAttributionSuffix": "All rights reserved. Designed and developed by the project contributors.",
+    "footer.newapi.projectAttributionSuffix": "All rights reserved. Designed and developed by the project contributors.",
     "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment": "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment",
     "For private deployments, format: https://fastgpt.run/api/openapi": "For private deployments, format: https://fastgpt.run/api/openapi",
     "For security, existing access tokens cannot be displayed. Regenerate only when you need a new token.": "For security, existing access tokens cannot be displayed. Regenerate only when you need a new token.",
@@ -6032,6 +6032,17 @@
     "Spam drop denial (percent)": "Spam drop denial (percent)",
     "Base percent added to the drop-denial chance while the sender is spam-penalized, stacks with stack step. 0 disables": "Base percent added to the drop-denial chance while the sender is spam-penalized, stacks with stack step. 0 disables",
     "Spam steal-rate bonus (percent)": "Spam steal-rate bonus (percent)",
-    "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables": "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables"
+    "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables": "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables",
+    "admin.administration": "Administration",
+    "admin.overview": "Overview",
+    "admin.channels": "Channels",
+    "admin.models": "Models",
+    "admin.users": "Users",
+    "admin.insights": "User Insights",
+    "admin.redemptions": "Redemption Codes",
+    "admin.subscriptions": "Subscriptions",
+    "admin.proxy": "Proxy Config",
+    "admin.systemInfo": "System Info",
+    "admin.systemSettings": "System Settings"
   }
 }

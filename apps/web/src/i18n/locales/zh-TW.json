@@ -2337,7 +2337,7 @@
     "footer.columns.related.links.oneApi": "One API",
     "footer.columns.related.title": "相關項目",
     "footer.defaultCopyright": "版權所有。",
-    "footer.new\u0061pi.projectAttributionSuffix": "版權所有，由項目貢獻者設計與開發。",
+    "footer.newapi.projectAttributionSuffix": "版權所有，由項目貢獻者設計與開發。",
     "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment": "對於 2025 年 5 月 10 日之後新增的渠道，在部署時無需從模型名稱中移除 \".\"",
     "For private deployments, format: https://fastgpt.run/api/openapi": "對於私有部署，格式為：https://fastgpt.run/api/openapi",
     "For security, existing access tokens cannot be displayed. Regenerate only when you need a new token.": "基於安全考量，現有存取令牌無法再次顯示。僅在需要新令牌時重新生成。",
@@ -6032,6 +6032,17 @@
     "Spam drop denial (percent)": "刷屏掉落拒發（百分比）",
     "Base percent added to the drop-denial chance while the sender is spam-penalized, stacks with stack step. 0 disables": "刷屏懲罰期間加在掉落拒發率上的基礎百分點，與疊加步長相加。0 關閉",
     "Spam steal-rate bonus (percent)": "刷屏被偷加成（百分比）",
-    "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables": "刷屏懲罰期間加在被偷成功率上的基礎百分點，與疊加步長相加。0 關閉"
+    "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables": "刷屏懲罰期間加在被偷成功率上的基礎百分點，與疊加步長相加。0 關閉",
+    "admin.administration": "管理後台",
+    "admin.overview": "概覽",
+    "admin.channels": "渠道",
+    "admin.models": "模型",
+    "admin.users": "使用者",
+    "admin.insights": "使用者洞察",
+    "admin.redemptions": "兌換碼",
+    "admin.subscriptions": "訂閱",
+    "admin.proxy": "代理配置",
+    "admin.systemInfo": "系統資訊",
+    "admin.systemSettings": "系統設定"
   }
 }

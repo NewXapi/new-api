@@ -18,32 +18,23 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import {
   Activity,
-  Box,
-  CreditCard,
   FileText,
   FlaskConical,
   Key,
   LayoutDashboard,
   ListTodo,
   MessageSquare,
-  Network,
-  Radio,
-  ScanSearch,
-  ServerCog,
   Store,
-  Ticket,
   User,
-  Users,
   Wallet,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
-import { getSystemSettingsThemeNavItems } from '@/components/layout/config/system-settings.config'
+import { ADMIN_NAVIGATION } from '@/components/layout/config/admin-navigation.config'
 import { type SidebarData } from '@/components/layout/types'
 import { useStatus } from '@/hooks/use-status'
 import { useWalletBalance } from '@/hooks/use-wallet-balance'
 import { isPricingModuleEnabled } from '@/lib/nav-modules'
-import { ROLE } from '@/lib/roles'
 
 /**
  * Root navigation groups for the application sidebar.
@@ -137,56 +128,12 @@ export function useSidebarData(): SidebarData {
       {
         id: 'admin',
         title: t('Admin'),
-        items: [
-          {
-            title: t('Channels'),
-            url: '/channels',
-            icon: Radio,
-          },
-          {
-            title: t('Models'),
-            url: '/models/metadata',
-            icon: Box,
-          },
-          {
-            title: t('Users'),
-            url: '/users',
-            icon: Users,
-          },
-          {
-            title: t('User Insights'),
-            url: '/user-insights',
-            icon: ScanSearch,
-          },
-          {
-            title: t('Redemption Codes'),
-            url: '/redemption-codes',
-            icon: Ticket,
-          },
-          {
-            title: t('Subscriptions'),
-            url: '/subscriptions',
-            icon: CreditCard,
-          },
-          {
-            title: t('Proxy Config'),
-            url: '/proxy',
-            icon: Network,
-            requiredRole: ROLE.SUPER_ADMIN,
-          },
-          {
-            title: t('System Info'),
-            url: '/system-info',
-            icon: ServerCog,
-            requiredRole: ROLE.SUPER_ADMIN,
-          },
-          {
-            title: t('QQ Bot'),
-            url: '/system-settings/billing/qqbot',
-            icon: MessageSquare,
-          },
-          ...getSystemSettingsThemeNavItems(t),
-        ],
+        items: ADMIN_NAVIGATION.map((item) => ({
+          title: t(item.labelKey),
+          url: item.to,
+          icon: item.icon,
+          requiredRole: item.requiredRole,
+        })),
       },
     ],
   }

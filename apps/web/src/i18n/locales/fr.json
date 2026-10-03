@@ -2337,7 +2337,7 @@
     "footer.columns.related.links.oneApi": "One API",
     "footer.columns.related.title": "Projets liés",
     "footer.defaultCopyright": "Tous droits réservés.",
-    "footer.new\u0061pi.projectAttributionSuffix": "Tous droits réservés. Conçu et développé par les contributeurs du projet.",
+    "footer.newapi.projectAttributionSuffix": "Tous droits réservés. Conçu et développé par les contributeurs du projet.",
     "For channels added after May 10, 2025, no need to remove \".\" from model names during deployment": "Pour les canaux ajoutés après le 10 mai 2025, pas besoin de supprimer \".\" des noms de modèles lors du déploiement",
     "For private deployments, format: https://fastgpt.run/api/openapi": "Pour les déploiements privés, format : https://fastgpt.run/api/openapi",
     "For security, existing access tokens cannot be displayed. Regenerate only when you need a new token.": "Pour des raisons de sécurité, les jetons d'accès existants ne peuvent pas être réaffichés. Ne les régénérez que si vous en avez besoin d'un nouveau.",
@@ -6032,6 +6032,17 @@
     "Spam drop denial (percent)": "Spam drop denial (percent)",
     "Base percent added to the drop-denial chance while the sender is spam-penalized, stacks with stack step. 0 disables": "Base percent added to the drop-denial chance while the sender is spam-penalized, stacks with stack step. 0 disables",
     "Spam steal-rate bonus (percent)": "Spam steal-rate bonus (percent)",
-    "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables": "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables"
+    "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables": "Base percent added to the victim's steal success chance while they are spam-penalized, stacks with stack step. 0 disables",
+    "admin.administration": "Administration",
+    "admin.overview": "Vue d’ensemble",
+    "admin.channels": "Canaux",
+    "admin.models": "Modèles",
+    "admin.users": "Utilisateurs",
+    "admin.insights": "Analyses des utilisateurs",
+    "admin.redemptions": "Codes d’échange",
+    "admin.subscriptions": "Abonnements",
+    "admin.proxy": "Configuration du proxy",
+    "admin.systemInfo": "Infos système",
+    "admin.systemSettings": "Paramètres système"
   }
 }
