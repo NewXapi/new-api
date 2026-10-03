@@ -18,7 +18,7 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import {
   hexFromArgb,
-  sourceColorFromImage,
+  sourceColorFromImageBytes,
   themeFromSourceColor,
   type Theme,
 } from '@material/material-color-utilities'
@@ -105,6 +105,7 @@ export function loadRandomBackground(
   onUrl: (url: string) => void
 ): () => void {
   let cancelled = false
+  const controller = new AbortController()
 
   const startImageLoad = (src: string, withColor: boolean): void => {
     if (cancelled) return
@@ -119,17 +120,21 @@ export function loadRandomBackground(
         scope.setAttribute('data-has-bg', '')
         onUrl(image.currentSrc || image.src)
         if (!withColor) return
-        sourceColorFromImage(image)
-          .then((argb) => {
-            if (cancelled) return
-            applyDynamicRoles(
-              scope,
-              rolesFromTheme(themeFromSourceColor(argb))
-            )
-          })
-          .catch(() => {
-            // 取像素失败（如 CORS 变化）时保留静态配色。
-          })
+        try {
+          // 限制采样像素数，避免量化高清背景时阻塞登录表单。
+          const canvas = document.createElement('canvas')
+          const scale = Math.min(1, 128 / Math.max(image.naturalWidth, image.naturalHeight))
+          canvas.width = Math.max(1, Math.round(image.naturalWidth * scale))
+          canvas.height = Math.max(1, Math.round(image.naturalHeight * scale))
+          const context = canvas.getContext('2d')
+          if (!context) return
+          context.drawImage(image, 0, 0, canvas.width, canvas.height)
+          const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data
+          const argb = sourceColorFromImageBytes(pixels)
+          applyDynamicRoles(scope, rolesFromTheme(themeFromSourceColor(argb)))
+        } catch {
+          // 像素不可读时保留背景与静态配色。
+        }
       },
       { once: true }
     )
@@ -143,7 +148,10 @@ export function loadRandomBackground(
   // 通过检查），且带任何查询串会直接返回文档页。因此先经查询端点
   // （自身 ACAO:*）解析出最终图片 URL，再单跳直载 /images/*（同样 ACAO:*）；
   // 查询失败则直连 /ua 仅作展示降级（不取色）。
-  fetch(`${RANDOM_BACKGROUND_API}/?type=ua&format=text`, { cache: 'no-store' })
+  fetch(`${RANDOM_BACKGROUND_API}/?type=ua&format=text`, {
+    cache: 'no-store',
+    signal: controller.signal,
+  })
     .then((response) =>
       response.ok ? response.text() : Promise.reject(new Error())
     )
@@ -164,5 +172,6 @@ export function loadRandomBackground(
 
   return () => {
     cancelled = true
+    controller.abort()
   }
 }

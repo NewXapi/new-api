@@ -69,8 +69,19 @@ function Chip({
       data-variant={variant}
       data-selected={selected || undefined}
       className={cn(chipVariants({ variant }), className)}
-      onPointerDown={onPointerDown}
       {...props}
+      aria-pressed={variant === 'filter' ? selected : undefined}
+      onPointerDown={(event) => {
+        props.onPointerDown?.(event)
+        if (!event.defaultPrevented) onPointerDown(event)
+      }}
+      onKeyDown={(event) => {
+        props.onKeyDown?.(event)
+        if (!event.defaultPrevented && onRemove && (event.key === 'Delete' || event.key === 'Backspace')) {
+          event.preventDefault()
+          onRemove()
+        }
+      }}
     >
       <RippleContainer ripples={ripples} onRemove={removeRipple} />
       {variant === 'filter' && selected && <Check aria-hidden='true' />}
@@ -78,9 +89,7 @@ function Chip({
       {children}
       {onRemove && (
         <span
-          role='button'
-          tabIndex={-1}
-          aria-label='Remove'
+          aria-hidden='true'
           className='-end-1.5 grid size-5 shrink-0 cursor-pointer place-items-center rounded-full transition-colors hover:bg-foreground/10'
           onClick={(event) => {
             event.stopPropagation()

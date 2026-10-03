@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Button as ButtonPrimitive } from '@base-ui/react/button'
+import { mergeProps } from '@base-ui/react/merge-props'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { isValidElement } from 'react'
 
@@ -86,8 +87,7 @@ function Button({
       className={cn(buttonVariants({ variant, size, className }))}
       nativeButton={nativeButton ?? isNativeButtonRender(render)}
       render={render}
-      onPointerDown={onPointerDown}
-      {...props}
+      {...mergeProps({ onPointerDown }, props)}
     >
       <RippleContainer ripples={ripples} onRemove={removeRipple} />
       {children}

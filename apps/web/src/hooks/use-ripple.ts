@@ -17,7 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import * as React from 'react'
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export type Ripple = {
   id: number
@@ -35,13 +35,33 @@ export type Ripple = {
 export function useRipple() {
   const [ripples, setRipples] = useState<Ripple[]>([])
   const nextId = useRef(0)
+  const timers = useRef(new Map<number, ReturnType<typeof setTimeout>>())
+
+  useEffect(() => () => {
+    for (const timer of timers.current.values()) clearTimeout(timer)
+    timers.current.clear()
+  }, [])
 
   const onPointerDown = useCallback(
     (event: React.PointerEvent<HTMLElement>) => {
+      if (
+        event.button !== 0 ||
+        event.currentTarget.matches(':disabled, [aria-disabled="true"]') ||
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches
+      ) {
+        return
+      }
       const el = event.currentTarget
       const rect = el.getBoundingClientRect()
-      const size = Math.max(rect.width, rect.height) * 2
+      const x = event.clientX - rect.left
+      const y = event.clientY - rect.top
+      const size = Math.hypot(Math.max(x, rect.width - x), Math.max(y, rect.height - y)) * 2
       const id = nextId.current++
+      // 动画被取消时也清理波纹，避免依赖 animationend 导致残留。
+      timers.current.set(id, setTimeout(() => {
+        timers.current.delete(id)
+        setRipples((waves) => waves.filter((wave) => wave.id !== id))
+      }, 700))
       setRipples((waves) => [
         ...waves,
         {
@@ -56,7 +76,11 @@ export function useRipple() {
   )
 
   const removeRipple = useCallback((id: number) => {
-    setRipples((waves) => waves.filter((wave) => wave.id !== id))
+    clearTimeout(timers.current.get(id))
+    timers.current.delete(id)
+    setRipples((waves) => waves.some((wave) => wave.id === id)
+      ? waves.filter((wave) => wave.id !== id)
+      : waves)
   }, [])
 
   return { onPointerDown, removeRipple, ripples }
