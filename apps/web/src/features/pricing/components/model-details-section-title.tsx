@@ -25,4 +25,3 @@ export function SectionTitle(props: { children: ReactNode }) {
     </h2>
   )
 }
-

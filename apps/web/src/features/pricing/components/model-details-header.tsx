@@ -67,4 +67,3 @@ export function ModelHeader(props: { model: PricingModel }) {
     </Card>
   )
 }
-

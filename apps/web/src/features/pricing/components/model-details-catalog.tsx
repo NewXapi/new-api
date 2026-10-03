@@ -461,4 +461,3 @@ export function ModelBackendDetailsSection(props: { model: PricingModel }) {
     </>
   )
 }
-

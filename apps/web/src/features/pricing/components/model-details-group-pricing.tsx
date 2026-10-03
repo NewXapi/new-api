@@ -356,4 +356,3 @@ export function GroupPricingSection(props: {
     </section>
   )
 }
-

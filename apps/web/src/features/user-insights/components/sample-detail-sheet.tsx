@@ -21,8 +21,6 @@ import {
   sideDrawerContentClassName,
   sideDrawerHeaderClassName,
 } from '@/components/drawer-layout'
-import { Card, CardContent } from '@/components/ui/card'
-
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
