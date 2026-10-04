@@ -19,6 +19,8 @@ For commercial licensing, please contact support@quantumnous.com
 import {
   Children,
   isValidElement,
+  useEffect,
+  useRef,
   useState,
   type ReactElement,
   type ReactNode,
@@ -52,12 +54,15 @@ SectionPageLayoutBreadcrumb.displayName = 'SectionPageLayout.Breadcrumb'
 export type SectionPageLayoutProps = {
   children: ReactNode
   fixedContent?: boolean
+  collapsibleHeader?: boolean
 }
 
 export function SectionPageLayout(props: SectionPageLayoutProps) {
   const [footerContainer, setFooterContainer] = useState<HTMLDivElement | null>(
     null
   )
+  const contentRef = useRef<HTMLDivElement | null>(null)
+  const [headerHidden, setHeaderHidden] = useState(false)
 
   let title: ReactNode = null
   let actions: ReactNode = null
@@ -76,12 +81,32 @@ export function SectionPageLayout(props: SectionPageLayoutProps) {
       breadcrumb = child.props.children
   })
 
+  useEffect(() => {
+    if (!props.collapsibleHeader) return
+    const content = contentRef.current
+    if (!content) return
+    let previousTop = content.scrollTop
+    const onScroll = () => {
+      const top = content.scrollTop
+      setHeaderHidden(top > 24 && top > previousTop)
+      if (top <= 8) setHeaderHidden(false)
+      previousTop = top
+    }
+    content.addEventListener('scroll', onScroll, { passive: true })
+    return () => content.removeEventListener('scroll', onScroll)
+  }, [props.collapsibleHeader])
+
   return (
     <PageFooterProvider container={footerContainer}>
       <Main>
         <div
           data-slot='section-page-header'
-          className='bg-background shrink-0 border-b border-border/60 px-3 pt-3 pb-2.5 sm:px-4 sm:pt-5 sm:pb-3'
+          className={cn(
+            'bg-background/72 shrink-0 border-b border-border/50 px-3 pt-3 pb-2.5 backdrop-blur-md transition-[max-height,opacity,transform,padding] duration-200 sm:px-4 sm:pt-5 sm:pb-3',
+            props.collapsibleHeader && headerHidden
+              ? 'pointer-events-none max-h-0 -translate-y-2 overflow-hidden border-b-0 py-0 opacity-0'
+              : 'max-h-32 opacity-100'
+          )}
         >
           {breadcrumb != null && (
             <div className='mb-2 sm:mb-3'>{breadcrumb}</div>
@@ -106,6 +131,7 @@ export function SectionPageLayout(props: SectionPageLayoutProps) {
               ? 'flex min-h-0 flex-1 flex-col overflow-hidden px-3 pt-1 pb-3 sm:px-4 sm:pt-1.5 sm:pb-4'
               : 'min-h-0 flex-1 overflow-auto px-3 pt-1 pb-3 sm:px-4 sm:pt-1.5 sm:pb-4'
           }
+          ref={contentRef}
         >
           {content}
         </div>
