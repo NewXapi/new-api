@@ -51,6 +51,7 @@ function AdminEntry() {
           <Link
             key={item.id}
             to={item.to as never}
+            params={item.id === 'models' ? { section: 'metadata' } : undefined}
             className='bg-card hover:bg-accent rounded-lg border p-4 transition-colors'
           >
             <span className='font-medium'>{t(item.labelKey)}</span>

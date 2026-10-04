@@ -20,6 +20,8 @@ import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from '@tanstack/react-router'
 
 import { getVisibleAdminNavigation } from '@/components/layout/config/admin-navigation.config'
+import { getSystemSettingsThemeNavItems } from '@/components/layout/config/system-settings.config'
+import { NavGroup } from '@/components/layout/components/nav-group'
 import { hasPermission } from '@/lib/admin-permissions'
 import {
   Sidebar,
@@ -39,6 +41,22 @@ export function AdminSidebar() {
   const pathname = useLocation({ select: (location) => location.pathname })
   const user = useAuthStore((state) => state.auth.user)
   const visibleItems = getVisibleAdminNavigation(user, hasPermission)
+  const systemSettingsItem = visibleItems.find((item) => item.id === 'system-settings')
+  const systemSettingsGroups = systemSettingsItem
+    ? getSystemSettingsThemeNavItems(t).map((group) => ({
+        ...group,
+        items: group.items.map((item) => ({
+          ...item,
+          url: item.url.replace('/system-settings', '/admin/system-settings') as never,
+          activeUrls: item.activeUrls?.map((url) =>
+            url.replace('/system-settings', '/admin/system-settings')
+          ),
+        })),
+        activeUrls: group.activeUrls?.map((url) =>
+          url.replace('/system-settings', '/admin/system-settings')
+        ),
+      }))
+    : []
 
   return (
     <Sidebar collapsible='icon'>
@@ -47,7 +65,7 @@ export function AdminSidebar() {
           <SidebarGroupLabel>{t('admin.administration')}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {visibleItems.map((item) => {
+              {visibleItems.filter((item) => item.id !== 'system-settings').map((item) => {
                 const isActive =
                   item.to === '/admin'
                     ? pathname === '/admin' || pathname === '/admin/'
@@ -74,6 +92,9 @@ export function AdminSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {systemSettingsGroups.map((group) => (
+          <NavGroup key={group.title} {...group} />
+        ))}
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
