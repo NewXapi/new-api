@@ -307,6 +307,7 @@ body[data-app-background='true'] [data-slot='app-background'] [data-app-backgrou
 body[data-theme-card-blur='true'] .auth-card,
 body[data-theme-card-blur='true'] [data-card-surface='true'],
 body[data-theme-card-blur='true'] [data-slot='card'] {
+  background-color: var(--card-surface);
   backdrop-filter: blur(var(--surface-blur)) saturate(150%);
   -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(150%);
 }
@@ -317,6 +318,7 @@ body[data-theme-background-blur='true'] [data-slot='section-page-header'],
 body[data-theme-background-blur='true'] [data-slot='section-page-footer'],
 body[data-theme-background-blur='true'] [data-slot='app-header'],
 body[data-theme-background-blur='true'] [data-slot='sidebar-inner'] {
+  background-color: var(--header-surface);
   backdrop-filter: blur(var(--surface-blur)) saturate(150%);
   -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(150%);
 }

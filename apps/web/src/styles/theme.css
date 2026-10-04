@@ -125,7 +125,7 @@ body,
   --surface-opacity: 82%;
   --surface-blur: 18px;
   /* Overlay scrim used by modal surfaces; keep the 82% surface opacity separate. */
-  --background-scrim: oklch(0 0 0 / 18%);
+  --background-scrim: oklch(0 0 0 / 28%);
   /* Static build-channel fallback consumed when JS hasn't booted yet. */
   --app-rev: '2k6e8r7p';
   /* Currently active body font. The font axis swaps this between
