@@ -37,6 +37,7 @@ import {
   User,
   Users,
   Wallet,
+  Wrench,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
@@ -117,6 +118,11 @@ export function useSidebarData(): SidebarData {
                 },
               ]
             : []),
+          {
+            title: t('资源广场'),
+            url: '/marketplace',
+            icon: Coins,
+          },
         ],
       },
       {
@@ -196,6 +202,12 @@ export function useSidebarData(): SidebarData {
             title: t('OAuth Clients'),
             url: '/oauth2-clients',
             icon: LockKeyhole,
+            requiredRole: ROLE.ADMIN,
+          },
+          {
+            title: t('市场管理'),
+            url: '/marketplace-admin',
+            icon: Wrench,
             requiredRole: ROLE.ADMIN,
           },
           ...getSystemSettingsThemeNavItems(t),
