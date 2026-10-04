@@ -31,7 +31,7 @@ export function AdminHeader() {
     <Header>
       <SystemBrand variant='inline' />
       <div className='ms-auto flex items-center gap-2'>
-        <Button render={<Link to='/' />} variant='ghost' size='sm'>
+        <Button render={<Link to='/dashboard' />} variant='ghost' size='sm'>
           <ArrowLeft />
           {t('Back to user app')}
         </Button>

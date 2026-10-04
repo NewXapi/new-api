@@ -19,6 +19,7 @@ For commercial licensing, please contact support@quantumnous.com
 import { ArrowLeft, Moon, Sun } from 'lucide-react'
 import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from '@tanstack/react-router'
 
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { Button } from '@/components/ui/button'
@@ -65,13 +66,13 @@ export function AuthLayout({ children }: AuthLayoutProps) {
             {children}
           </div>
           <div className='bg-card/80 text-card-foreground flex flex-wrap items-center justify-between gap-3 rounded-2xl px-3 py-2 text-sm'>
-            <a
-              href='/'
+            <Link
+              to='/'
               className='text-muted-foreground hover:text-primary inline-flex items-center gap-2 rounded-full px-2 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
             >
               <ArrowLeft className='size-4' aria-hidden='true' />
               <span>{t('Back to Home')}</span>
-            </a>
+            </Link>
             <div className='flex items-center gap-3'>
               <label htmlFor={blurId} className='inline-flex cursor-pointer items-center gap-2'>
                 <span>{t('Blur')}</span>

@@ -47,13 +47,13 @@ export function AdminSidebar() {
         ...group,
         items: group.items.map((item) => ({
           ...item,
-          url: item.url.replace('/system-settings', '/admin/system-settings') as never,
+          url: item.url?.replace('/system-settings', '/admin/system-settings') as never,
           activeUrls: item.activeUrls?.map((url) =>
-            url.replace('/system-settings', '/admin/system-settings')
+            url?.replace('/system-settings', '/admin/system-settings')
           ),
         })),
         activeUrls: group.activeUrls?.map((url) =>
-          url.replace('/system-settings', '/admin/system-settings')
+          url?.replace('/system-settings', '/admin/system-settings')
         ),
       }))
     : []
@@ -77,7 +77,7 @@ export function AdminSidebar() {
                       render={
                         <Link
                           to={item.to as never}
-                          params={item.id === 'models' ? { section: 'metadata' } : undefined}
+                          params={item.params}
                         />
                       }
                       isActive={isActive}

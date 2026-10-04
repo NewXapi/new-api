@@ -36,6 +36,7 @@ export type AdminNavigationItem = {
   id: string
   labelKey: `admin.${string}`
   to: string
+  params?: Record<string, string>
   icon: React.ElementType
   requiredRole?: number
   requiredCapability?: {
@@ -47,7 +48,7 @@ export type AdminNavigationItem = {
 export const ADMIN_NAVIGATION: readonly AdminNavigationItem[] = [
   { id: 'overview', labelKey: 'admin.overview', to: '/admin', icon: LayoutDashboard },
   { id: 'channels', labelKey: 'admin.channels', to: '/admin/channels', icon: Radio },
-  { id: 'models', labelKey: 'admin.models', to: '/admin/models/$section', icon: Box },
+  { id: 'models', labelKey: 'admin.models', to: '/admin/models/$section', params: { section: 'metadata' }, icon: Box },
   { id: 'users', labelKey: 'admin.users', to: '/admin/users', icon: Users },
   { id: 'insights', labelKey: 'admin.insights', to: '/admin/user-insights', icon: ScanSearch },
   { id: 'redemptions', labelKey: 'admin.redemptions', to: '/admin/redemption-codes', icon: Ticket },
