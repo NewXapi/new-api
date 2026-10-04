@@ -17,6 +17,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useLocation, useNavigate } from '@tanstack/react-router'
+import { motion, useReducedMotion } from 'motion/react'
 import { ArrowUpRight, LogOut, Palette, Store, User, Wallet } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -49,6 +50,7 @@ export function ProfileDropdown() {
   const [themeOpen, setThemeOpen] = useState(false)
   const themeTriggerRef = useRef<HTMLButtonElement>(null)
   const user = useAuthStore((state) => state.auth.user)
+  const prefersReducedMotion = useReducedMotion()
   const isAdminWorkspace = useLocation({ select: (location) => location.pathname.startsWith('/admin') })
   const { displayName, roleLabel } = useUserDisplay(user)
   const isAdmin = (user?.role ?? ROLE.GUEST) >= ROLE.ADMIN
@@ -74,14 +76,20 @@ export function ProfileDropdown() {
             />
           }
         >
-          <Avatar className='size-6'>
-            <AvatarFallback
-              className={`${avatarFallbackClassName} text-[11px]`}
-              style={avatarFallbackStyle}
-            >
-              {avatarFallback}
-            </AvatarFallback>
-          </Avatar>
+          <motion.span
+            className='inline-flex'
+            whileHover={prefersReducedMotion ? undefined : { scale: 1.08 }}
+            transition={{ duration: 0.16 }}
+          >
+            <Avatar className='size-6'>
+              <AvatarFallback
+                className={`${avatarFallbackClassName} text-[11px]`}
+                style={avatarFallbackStyle}
+              >
+                {avatarFallback}
+              </AvatarFallback>
+            </Avatar>
+          </motion.span>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' sideOffset={8} className='w-56'>
           <div className='flex items-center gap-2 px-1.5 py-1.5'>
