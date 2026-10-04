@@ -18,6 +18,8 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { ArrowLeft } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+
+import { ProfileDropdown } from '@/components/profile-dropdown'
 import { Link } from '@tanstack/react-router'
 
 import { Button } from '@/components/ui/button'
@@ -29,7 +31,10 @@ export function AdminHeader() {
 
   return (
     <Header>
-      <SystemBrand variant='inline' />
+      <div className='flex items-center gap-2'>
+        <ProfileDropdown />
+        <SystemBrand variant='inline' />
+      </div>
       <div className='ms-auto flex items-center gap-2'>
         <Button render={<Link to='/dashboard' />} variant='ghost' size='sm'>
           <ArrowLeft />

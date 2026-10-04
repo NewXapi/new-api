@@ -6043,6 +6043,7 @@
     "admin.subscriptions": "Subscriptions",
     "admin.proxy": "Proxy Config",
     "admin.systemInfo": "System Info",
-    "admin.systemSettings": "System Settings"
+    "admin.systemSettings": "System Settings",
+    "admin.auditLog": "Audit Log"
   }
 }

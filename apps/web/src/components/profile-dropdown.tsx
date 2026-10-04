@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { useNavigate } from '@tanstack/react-router'
+import { useLocation, useNavigate } from '@tanstack/react-router'
 import { ArrowUpRight, LogOut, Palette, Store, User, Wallet } from 'lucide-react'
 import { useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -49,6 +49,7 @@ export function ProfileDropdown() {
   const [themeOpen, setThemeOpen] = useState(false)
   const themeTriggerRef = useRef<HTMLButtonElement>(null)
   const user = useAuthStore((state) => state.auth.user)
+  const isAdminWorkspace = useLocation({ select: (location) => location.pathname.startsWith('/admin') })
   const { displayName, roleLabel } = useUserDisplay(user)
   const isAdmin = (user?.role ?? ROLE.GUEST) >= ROLE.ADMIN
   const isSuperAdmin = user?.role === ROLE.SUPER_ADMIN
@@ -138,10 +139,17 @@ export function ProfileDropdown() {
             </DropdownMenuItem>
           )}
 
-          {isAdmin && (
+          {isAdmin && !isAdminWorkspace && (
             <DropdownMenuItem onClick={() => navigate({ to: '/admin' })}>
               <ArrowUpRight className='size-4' />
               {t('Admin')}
+            </DropdownMenuItem>
+          )}
+
+          {isAdminWorkspace && (
+            <DropdownMenuItem onClick={() => navigate({ to: '/dashboard' })}>
+              <ArrowUpRight className='size-4' />
+              {t('Back to user app')}
             </DropdownMenuItem>
           )}
 

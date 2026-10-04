@@ -24,6 +24,7 @@ import {
   Radio,
   ScanSearch,
   ServerCog,
+  ScrollText,
   Settings,
   Ticket,
   Users,
@@ -51,6 +52,7 @@ export const ADMIN_NAVIGATION: readonly AdminNavigationItem[] = [
   { id: 'models', labelKey: 'admin.models', to: '/admin/models/$section', params: { section: 'metadata' }, icon: Box },
   { id: 'users', labelKey: 'admin.users', to: '/admin/users', icon: Users },
   { id: 'insights', labelKey: 'admin.insights', to: '/admin/user-insights', icon: ScanSearch },
+  { id: 'audit-log', labelKey: 'admin.auditLog', to: '/admin/audit-log', icon: ScrollText },
   { id: 'redemptions', labelKey: 'admin.redemptions', to: '/admin/redemption-codes', icon: Ticket },
   { id: 'subscriptions', labelKey: 'admin.subscriptions', to: '/admin/subscriptions', icon: CreditCard },
   {

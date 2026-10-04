@@ -6043,6 +6043,7 @@
     "admin.subscriptions": "订阅",
     "admin.proxy": "代理配置",
     "admin.systemInfo": "系统信息",
-    "admin.systemSettings": "系统设置"
+    "admin.systemSettings": "系统设置",
+    "admin.auditLog": "操作日志"
   }
 }

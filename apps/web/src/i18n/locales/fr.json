@@ -6043,6 +6043,7 @@
     "admin.subscriptions": "Abonnements",
     "admin.proxy": "Configuration du proxy",
     "admin.systemInfo": "Infos système",
-    "admin.systemSettings": "Paramètres système"
+    "admin.systemSettings": "Paramètres système",
+    "admin.auditLog": "Journal des opérations"
   }
 }

@@ -6043,6 +6043,7 @@
     "admin.subscriptions": "Gói đăng ký",
     "admin.proxy": "Cấu hình proxy",
     "admin.systemInfo": "Thông tin hệ thống",
-    "admin.systemSettings": "Cài đặt hệ thống"
+    "admin.systemSettings": "Cài đặt hệ thống",
+    "admin.auditLog": "Nhật ký thao tác"
   }
 }
