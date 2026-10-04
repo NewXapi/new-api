@@ -38,6 +38,7 @@ export type AdminNavigationItem = {
   labelKey: `admin.${string}`
   to: string
   params?: Record<string, string>
+  search?: Record<string, unknown>
   icon: React.ElementType
   requiredRole?: number
   requiredCapability?: {
@@ -52,7 +53,13 @@ export const ADMIN_NAVIGATION: readonly AdminNavigationItem[] = [
   { id: 'models', labelKey: 'admin.models', to: '/admin/models/$section', params: { section: 'metadata' }, icon: Box },
   { id: 'users', labelKey: 'admin.users', to: '/admin/users', icon: Users },
   { id: 'insights', labelKey: 'admin.insights', to: '/admin/user-insights', icon: ScanSearch },
-  { id: 'audit-log', labelKey: 'admin.auditLog', to: '/admin/audit-log', icon: ScrollText },
+  {
+    id: 'audit-log',
+    labelKey: 'admin.auditLog',
+    to: '/usage-logs/common',
+    search: { type: ['3'], scope: 'all' },
+    icon: ScrollText,
+  },
   { id: 'redemptions', labelKey: 'admin.redemptions', to: '/admin/redemption-codes', icon: Ticket },
   { id: 'subscriptions', labelKey: 'admin.subscriptions', to: '/admin/subscriptions', icon: CreditCard },
   {

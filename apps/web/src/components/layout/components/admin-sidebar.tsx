@@ -80,6 +80,7 @@ export function AdminSidebar() {
                         <Link
                           to={item.to as never}
                           params={item.params as never}
+                          search={item.search as never}
                         />
                       }
                       isActive={isActive}
