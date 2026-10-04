@@ -37,8 +37,6 @@ const usageLogsSearchSchema = z.object({
   page: z.number().optional().catch(1),
   pageSize: z.number().optional().catch(undefined),
   type: logTypeSearchSchema.optional(),
-  scope: z.enum(['all', 'self']).optional().catch('self'),
-  audit: z.literal('admin').optional(),
   filter: z.string().optional().catch(''),
   model: z.string().optional().catch(''),
   token: z.string().optional().catch(''),

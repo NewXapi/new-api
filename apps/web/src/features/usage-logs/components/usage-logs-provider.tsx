@@ -51,15 +51,7 @@ export function UsageLogsProvider({ children }: { children: ReactNode }) {
     useState<ChannelAffinityInfo | null>(null)
   const [affinityDialogOpen, setAffinityDialogOpen] = useState(false)
   const [sensitiveVisible, setSensitiveVisible] = useState(true)
-  const [viewScope, setViewScope] = useState<LogsViewScope>(() => {
-    if (typeof window !== 'undefined') {
-      const search = new URLSearchParams(window.location.search)
-      return search.get('audit') === 'admin' && search.get('scope') === 'all'
-        ? 'all'
-        : 'self'
-    }
-    return 'self'
-  })
+  const [viewScope, setViewScope] = useState<LogsViewScope>('all')
 
   return (
     <UsageLogsContext.Provider
@@ -100,10 +92,7 @@ export function useUsageLogsContext() {
  * mine" is treated exactly like a regular user for that view.
  */
 export function useLogsViewScope() {
-  const canManageScope =
-    useIsAdmin() &&
-    typeof window !== 'undefined' &&
-    new URLSearchParams(window.location.search).get('audit') === 'admin'
+  const canManageScope = useIsAdmin()
   const { viewScope, setViewScope } = useUsageLogsContext()
 
   return {
