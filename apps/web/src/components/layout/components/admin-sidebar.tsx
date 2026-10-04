@@ -77,7 +77,7 @@ export function AdminSidebar() {
                       render={
                         <Link
                           to={item.to as never}
-                          params={item.params}
+                          params={item.params as never}
                         />
                       }
                       isActive={isActive}

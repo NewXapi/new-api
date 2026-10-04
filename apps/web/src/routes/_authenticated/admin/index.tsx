@@ -51,7 +51,7 @@ function AdminEntry() {
           <Link
             key={item.id}
             to={item.to as never}
-            params={item.params}
+            params={item.params as never}
             className='bg-card hover:bg-accent rounded-lg border p-4 transition-colors'
           >
             <span className='font-medium'>{t(item.labelKey)}</span>
