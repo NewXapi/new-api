@@ -38,7 +38,7 @@ export function AdminHeader() {
       <div className='ms-auto flex items-center gap-2'>
         <Button render={<Link to='/dashboard' />} variant='ghost' size='sm'>
           <ArrowLeft />
-          {t('Back to user app')}
+          {t('admin.header.backToUserApp')}
         </Button>
       </div>
     </Header>
