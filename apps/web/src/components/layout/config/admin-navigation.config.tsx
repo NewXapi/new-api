@@ -56,8 +56,7 @@ export const ADMIN_NAVIGATION: readonly AdminNavigationItem[] = [
   {
     id: 'audit-log',
     labelKey: 'admin.auditLog',
-    to: '/usage-logs/common',
-    search: { type: ['3'], scope: 'all' },
+    to: '/admin/audit-log',
     icon: ScrollText,
   },
   { id: 'redemptions', labelKey: 'admin.redemptions', to: '/admin/redemption-codes', icon: Ticket },

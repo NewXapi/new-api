@@ -53,7 +53,8 @@ export function UsageLogsProvider({ children }: { children: ReactNode }) {
   const [sensitiveVisible, setSensitiveVisible] = useState(true)
   const [viewScope, setViewScope] = useState<LogsViewScope>(() => {
     if (typeof window !== 'undefined') {
-      return new URLSearchParams(window.location.search).get('scope') === 'all'
+      const search = new URLSearchParams(window.location.search)
+      return search.get('audit') === 'admin' && search.get('scope') === 'all'
         ? 'all'
         : 'self'
     }
@@ -99,7 +100,10 @@ export function useUsageLogsContext() {
  * mine" is treated exactly like a regular user for that view.
  */
 export function useLogsViewScope() {
-  const canManageScope = useIsAdmin()
+  const canManageScope =
+    useIsAdmin() &&
+    typeof window !== 'undefined' &&
+    new URLSearchParams(window.location.search).get('audit') === 'admin'
   const { viewScope, setViewScope } = useUsageLogsContext()
 
   return {
