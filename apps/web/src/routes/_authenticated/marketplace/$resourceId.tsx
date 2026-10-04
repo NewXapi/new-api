@@ -47,24 +47,37 @@ function ResourceDetailPage() {
   const [resource, setResource] = useState<ResourceInfo | null>(null)
   const [version, setVersion] = useState<VersionInfo | null>(null)
   const [mobileFields, setMobileFields] = useState<Record<string, string> | null>(null)
+  const [needsAcquire, setNeedsAcquire] = useState(false)
   const [error, setError] = useState('')
   const [actionError, setActionError] = useState('')
   const [busy, setBusy] = useState(false)
 
   async function load() {
     setError('')
+    setActionError('')
     try {
+      const meta = await api.get<{ success: boolean; data?: ResourceInfo; message?: string }>(
+        `/api/marketplace/resources/${encodeURIComponent(resourceId)}`,
+      )
+      if (!meta.data.success || !meta.data.data) {
+        setError(meta.data.message ?? t('无法加载资源'))
+        return
+      }
+      setResource(meta.data.data)
       const response = await api.get<{
         success: boolean
         data?: { resource: ResourceInfo; version: VersionInfo; mobile_fields?: Record<string, string> | null }
         message?: string
       }>(`/api/marketplace/resources/${encodeURIComponent(resourceId)}/content`)
       if (response.data.success && response.data.data) {
-        setResource(response.data.data.resource)
         setVersion(response.data.data.version)
         setMobileFields(response.data.data.mobile_fields ?? null)
+        setNeedsAcquire(false)
       } else {
-        setError(response.data.message ?? t('无法加载资源'))
+        // Metadata is readable but content is gated behind claim/purchase.
+        setVersion(null)
+        setMobileFields(null)
+        setNeedsAcquire(true)
       }
     } catch {
       setError(t('无法加载资源'))
@@ -124,13 +137,12 @@ function ResourceDetailPage() {
     return (
       <main className='mx-auto max-w-3xl space-y-4 p-8'>
         <p className='text-destructive'>{error}</p>
-        {(error.includes('权限') || error.includes('购买') || error.includes('审核')) && null}
         <Button variant='outline' onClick={() => window.history.back()}>{t('返回')}</Button>
       </main>
     )
   }
 
-  if (!resource || !version) {
+  if (!resource) {
     return <main className='mx-auto max-w-3xl p-8'>{t('加载中…')}</main>
   }
 
@@ -155,21 +167,34 @@ function ResourceDetailPage() {
 
       {actionError && <p className='text-destructive'>{actionError}</p>}
 
+      {needsAcquire && (
+        <section className='space-y-3 rounded-lg border p-5'>
+          <p>{t('你需要领取或购买后才能查看此资源的内容。')}</p>
+          <div className='flex flex-wrap gap-2'>
+            {resource.price === 0 && (
+              <Button disabled={busy} onClick={() => void acquire('claim')}>
+                {t('免费领取')}
+              </Button>
+            )}
+            {resource.price > 0 && (
+              <Button disabled={busy} onClick={() => void acquire('purchase')}>
+                {t('立即购买')}
+              </Button>
+            )}
+          </div>
+        </section>
+      )}
+
       <div className='flex flex-wrap gap-2'>
-        <Button onClick={() => void download()}>{t('下载')}</Button>
-        {resource.price === 0 && (
+        {!needsAcquire && <Button onClick={() => void download()}>{t('下载')}</Button>}
+        {!needsAcquire && resource.price === 0 && (
           <Button variant='outline' disabled={busy} onClick={() => void acquire('claim')}>
             {t('领取到我的资源')}
           </Button>
         )}
-        {resource.price > 0 && (
-          <Button variant='outline' disabled={busy} onClick={() => void acquire('purchase')}>
-            {t('购买')}
-          </Button>
-        )}
       </div>
 
-      {isCharacterCard && mobileFields && (
+      {!needsAcquire && isCharacterCard && mobileFields && (
         <section className='space-y-3'>
           <h2 className='font-medium'>{t('角色卡字段（小手机逐项复制）')}</h2>
           {Object.entries(mobileFields).map(([key, value]) => (
@@ -184,7 +209,7 @@ function ResourceDetailPage() {
         </section>
       )}
 
-      {resource.type === 'tutorial' && version.content && (
+      {!needsAcquire && resource.type === 'tutorial' && version?.content && (
         <section className='space-y-3'>
           <h2 className='font-medium'>{t('教程正文')}</h2>
           <div className='rounded-lg border p-4'>
@@ -193,7 +218,7 @@ function ResourceDetailPage() {
         </section>
       )}
 
-      {isCharacterCard && version.normalized_json && (
+      {!needsAcquire && isCharacterCard && version?.normalized_json && (
         <section className='space-y-3'>
           <h2 className='font-medium'>{t('角色卡完整数据')}</h2>
           <pre className='max-h-96 overflow-auto rounded-lg border p-4 text-xs'>
