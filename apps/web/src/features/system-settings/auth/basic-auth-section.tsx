@@ -125,7 +125,10 @@ export function BasicAuthSection({ defaultValues }: BasicAuthSectionProps) {
   return (
     <SettingsSection title={t('Basic Authentication')}>
       <Form {...form}>
-        <SettingsForm onSubmit={form.handleSubmit(onSubmit)}>
+        <SettingsForm
+          onSubmit={form.handleSubmit(onSubmit)}
+          className='rounded-xl bg-card-surface p-4 backdrop-blur-[var(--surface-blur)]'
+        >
           <SettingsPageFormActions
             onSave={form.handleSubmit(onSubmit)}
             isSaving={updateOption.isPending}

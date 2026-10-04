@@ -202,7 +202,10 @@ export function HeaderNavigationSection({
   return (
     <SettingsSection title={t('Header navigation')}>
       <Form {...form}>
-        <SettingsForm onSubmit={form.handleSubmit(onSubmit)}>
+        <SettingsForm
+          onSubmit={form.handleSubmit(onSubmit)}
+          className='rounded-xl bg-card-surface p-4 backdrop-blur-[var(--surface-blur)]'
+        >
           <SettingsPageFormActions
             onSave={form.handleSubmit(onSubmit)}
             onReset={resetToDefault}
@@ -237,7 +240,10 @@ export function HeaderNavigationSection({
 
           <div className='grid gap-4 lg:grid-cols-2'>
             {accessModules.map((module) => (
-              <SettingsControlGroup key={module.enabledKey}>
+              <SettingsControlGroup
+                key={module.enabledKey}
+                className='bg-card-surface backdrop-blur-[var(--surface-blur)]'
+              >
                 <FormField
                   control={form.control}
                   name={module.enabledKey}

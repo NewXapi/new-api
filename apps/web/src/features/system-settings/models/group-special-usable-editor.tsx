@@ -52,7 +52,7 @@ import {
 
 const sectionCardClassName =
   'relative shadow-sm ring-0 before:pointer-events-none before:absolute before:inset-0 before:rounded-xl before:border before:border-border/90'
-const sectionHeaderClassName = 'border-b bg-muted/20'
+const sectionHeaderClassName = 'bg-card-surface border-b backdrop-blur-[var(--surface-blur)]'
 
 type Rule = {
   _id: string

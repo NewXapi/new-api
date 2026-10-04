@@ -118,7 +118,7 @@ export function UserInsights() {
                   isLoading={summaryQuery.isLoading}
                 />
               </div>
-              <Card className='min-h-0 flex-1 gap-0 py-0'>
+              <Card className='bg-card-surface min-h-0 flex-1 gap-0 py-0 backdrop-blur-[var(--surface-blur)]'>
                 <CardContent className='flex min-h-0 flex-1 flex-col p-3 sm:p-4'>
                   <InsightsTable
                     onViewEvidence={setEvidenceUser}

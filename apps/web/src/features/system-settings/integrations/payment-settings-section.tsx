@@ -865,7 +865,7 @@ export function PaymentSettingsSection({
         <SettingsForm
           onSubmit={form.handleSubmit(onSubmit)}
           className={cn(
-            'gap-y-8',
+            'gap-y-8 rounded-xl bg-card-surface p-4 backdrop-blur-[var(--surface-blur)]',
             !complianceConfirmed && 'pointer-events-none opacity-40'
           )}
           data-no-autosubmit='true'

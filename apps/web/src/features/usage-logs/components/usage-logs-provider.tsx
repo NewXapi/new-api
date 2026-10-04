@@ -51,7 +51,14 @@ export function UsageLogsProvider({ children }: { children: ReactNode }) {
     useState<ChannelAffinityInfo | null>(null)
   const [affinityDialogOpen, setAffinityDialogOpen] = useState(false)
   const [sensitiveVisible, setSensitiveVisible] = useState(true)
-  const [viewScope, setViewScope] = useState<LogsViewScope>('all')
+  const [viewScope, setViewScope] = useState<LogsViewScope>(() => {
+    if (typeof window !== 'undefined') {
+      return new URLSearchParams(window.location.search).get('scope') === 'all'
+        ? 'all'
+        : 'self'
+    }
+    return 'self'
+  })
 
   return (
     <UsageLogsContext.Provider

@@ -129,7 +129,10 @@ export function SystemInfoSection({ defaultValues }: SystemInfoSectionProps) {
 
       <SettingsSection title={t('System Information')}>
         <Form {...form}>
-          <SettingsForm onSubmit={handleSubmit}>
+          <SettingsForm
+            onSubmit={handleSubmit}
+            className='rounded-xl bg-card-surface p-4 backdrop-blur-[var(--surface-blur)]'
+          >
             <SettingsPageFormActions
               onSave={handleSubmit}
               onReset={handleReset}

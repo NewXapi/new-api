@@ -75,7 +75,10 @@ export function NoticeSection({ defaultValue }: NoticeSectionProps) {
   return (
     <SettingsSection title={t('System Notice')}>
       <Form {...form}>
-        <SettingsForm onSubmit={form.handleSubmit(onSubmit)}>
+        <SettingsForm
+          onSubmit={form.handleSubmit(onSubmit)}
+          className='rounded-xl bg-card-surface p-4 backdrop-blur-[var(--surface-blur)]'
+        >
           <SettingsPageFormActions
             onSave={form.handleSubmit(onSubmit)}
             isSaving={updateOption.isPending}

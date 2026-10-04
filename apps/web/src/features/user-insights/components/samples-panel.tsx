@@ -103,7 +103,7 @@ export function SamplesPanel() {
   return (
     <div className='space-y-4'>
       {quota && (
-        <div className='space-y-2 rounded-md border p-4'>
+        <div className='bg-card-surface space-y-2 rounded-md border p-4 backdrop-blur-[var(--surface-blur)]'>
           <div className='flex flex-wrap items-center justify-between gap-2'>
             <div className='flex items-center gap-2'>
               <h3 className='text-sm font-medium'>
@@ -256,7 +256,7 @@ export function SamplesPanel() {
             {items.map((group) => (
               <div
                 key={group.user_id}
-                className='space-y-3 rounded-lg border p-3'
+                className='bg-card-surface space-y-3 rounded-lg border p-3 backdrop-blur-[var(--surface-blur)]'
               >
                 <div className='flex items-start justify-between gap-2'>
                   <div className='flex min-w-0 flex-col'>

@@ -29,7 +29,7 @@ export const Route = createFileRoute('/_authenticated/admin/audit-log')({
     }
 
     throw redirect({
-      href: `/usage-logs/common?type=3${location.hash}`,
+      href: `/usage-logs/common?type=3&scope=all${location.hash}`,
       replace: true,
     })
   },

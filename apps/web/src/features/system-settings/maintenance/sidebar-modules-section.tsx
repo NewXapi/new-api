@@ -187,7 +187,10 @@ export function SidebarModulesSection({
   return (
     <SettingsSection title={t('Sidebar modules')}>
       <Form {...form}>
-        <SettingsForm onSubmit={form.handleSubmit(onSubmit)}>
+        <SettingsForm
+          onSubmit={form.handleSubmit(onSubmit)}
+          className='rounded-xl bg-card-surface p-4 backdrop-blur-[var(--surface-blur)]'
+        >
           <SettingsPageFormActions
             onSave={form.handleSubmit(onSubmit)}
             onReset={resetToDefault}
@@ -205,7 +208,10 @@ export function SidebarModulesSection({
             )
 
             return (
-              <SettingsControlGroup key={sectionKey}>
+              <SettingsControlGroup
+                key={sectionKey}
+                className='bg-card-surface backdrop-blur-[var(--surface-blur)]'
+              >
                 <FormField
                   control={form.control}
                   // eslint-disable-next-line @typescript-eslint/no-explicit-any
