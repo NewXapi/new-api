@@ -6044,6 +6044,8 @@
     "admin.proxy": "Configuration du proxy",
     "admin.systemInfo": "Infos système",
     "admin.systemSettings": "Paramètres système",
-    "admin.auditLog": "Journal des opérations"
+    "admin.auditLog": "Journal des opérations",
+    "Enable card blur": "Activer le flou des cartes",
+    "Enable background blur": "Activer le flou de l’arrière-plan"
   }
 }

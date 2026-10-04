@@ -737,23 +737,40 @@ function ContentLayoutPreview(props: { centered: boolean }) {
 
 function BlurConfig() {
   const { t } = useTranslation()
-  const { defaults, customization, setBlur } = useThemeCustomization()
+  const { defaults, customization, setCardBlur, setBackgroundBlur } =
+    useThemeCustomization()
+  const hasBlurChanges =
+    customization.cardBlur !== defaults.cardBlur ||
+    customization.backgroundBlur !== defaults.backgroundBlur
 
   return (
     <div>
       <SectionTitle
         title={t('Blur')}
-        showReset={customization.blur !== defaults.blur}
-        onReset={() => setBlur(defaults.blur)}
+        showReset={hasBlurChanges}
+        onReset={() => {
+          setCardBlur(defaults.cardBlur)
+          setBackgroundBlur(defaults.backgroundBlur)
+        }}
       />
-      <label className='flex items-center justify-between gap-3 rounded-lg border p-3 text-sm'>
-        <span>{t('Enable surface blur')}</span>
-        <Switch
-          checked={customization.blur}
-          onCheckedChange={setBlur}
-          aria-label={t('Enable surface blur')}
-        />
-      </label>
+      <div className='space-y-2'>
+        <label className='flex items-center justify-between gap-3 rounded-lg border p-3 text-sm'>
+          <span>{t('Enable card blur')}</span>
+          <Switch
+            checked={customization.cardBlur}
+            onCheckedChange={setCardBlur}
+            aria-label={t('Enable card blur')}
+          />
+        </label>
+        <label className='flex items-center justify-between gap-3 rounded-lg border p-3 text-sm'>
+          <span>{t('Enable background blur')}</span>
+          <Switch
+            checked={customization.backgroundBlur}
+            onCheckedChange={setBackgroundBlur}
+            aria-label={t('Enable background blur')}
+          />
+        </label>
+      </div>
     </div>
   )
 }

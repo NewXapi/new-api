@@ -6044,6 +6044,8 @@
     "admin.proxy": "代理配置",
     "admin.systemInfo": "系统信息",
     "admin.systemSettings": "系统设置",
-    "admin.auditLog": "操作日志"
+    "admin.auditLog": "操作日志",
+    "Enable card blur": "启用卡片模糊",
+    "Enable background blur": "启用背景模糊"
   }
 }

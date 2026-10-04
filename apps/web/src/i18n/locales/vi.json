@@ -6044,6 +6044,8 @@
     "admin.proxy": "Cấu hình proxy",
     "admin.systemInfo": "Thông tin hệ thống",
     "admin.systemSettings": "Cài đặt hệ thống",
-    "admin.auditLog": "Nhật ký thao tác"
+    "admin.auditLog": "Nhật ký thao tác",
+    "Enable card blur": "Bật làm mờ thẻ",
+    "Enable background blur": "Bật làm mờ nền"
   }
 }

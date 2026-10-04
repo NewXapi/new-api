@@ -128,6 +128,8 @@ export type ThemeCustomization = {
   scale: ThemeScale
   contentLayout: ContentLayout
   blur: boolean
+  cardBlur: boolean
+  backgroundBlur: boolean
 }
 
 export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
@@ -137,6 +139,8 @@ export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
   scale: 'default',
   contentLayout: 'full',
   blur: false,
+  cardBlur: false,
+  backgroundBlur: false,
 }
 
 export const THEME_PRESET_VALUES = new Set(
@@ -177,6 +181,8 @@ export const THEME_COOKIE_KEYS = {
   scale: 'theme_scale',
   contentLayout: 'theme_content_layout',
   blur: 'theme_blur',
+  cardBlur: 'theme_card_blur',
+  backgroundBlur: 'theme_background_blur',
 } as const
 
 /**

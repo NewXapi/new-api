@@ -302,25 +302,36 @@ body[data-app-background='true'] [data-slot='app-background'] [data-app-backgrou
   background-color: var(--card-surface);
 }
 
-/* Blur only: surface opacity never depends on the preference. Portals
- * inherit body theme tokens and retain their own opaque popover surface. */
-body[data-theme-blur='true'] .auth-card,
-body[data-theme-blur='true'] [data-slot='card'],
-body[data-theme-blur='true'] [data-slot='app-main'],
-body[data-theme-blur='true'] [data-slot='public-layout'],
-body[data-theme-blur='true'] [data-slot='section-page-header'],
-body[data-theme-blur='true'] [data-slot='section-page-footer'],
-body[data-theme-blur='true'] [data-slot='popover-content'],
-body[data-theme-blur='true'] [data-slot='dialog-content'],
-body[data-theme-blur='true'] [data-slot='sheet-content'],
-body[data-theme-blur='true'] [data-slot='app-header'],
-body[data-theme-blur='true'] [data-slot='sidebar-inner'],
-body[data-theme-blur='true'] [data-slot='dialog-overlay'],
-body[data-theme-blur='true'] [data-slot='alert-dialog-overlay'],
-body[data-theme-blur='true'] [data-slot='sheet-overlay'],
-body[data-theme-blur='true'] [data-slot='drawer-overlay'] {
+/* Card and background blur are independent preferences. Keep portals,
+ * inputs, tables, editors, and overlays out of the card surface selector. */
+body[data-theme-card-blur='true'] .auth-card,
+body[data-theme-card-blur='true'] [data-card-surface='true'],
+body[data-theme-card-blur='true'] [data-slot='card'] {
   backdrop-filter: blur(var(--surface-blur)) saturate(150%);
   -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(150%);
+}
+
+body[data-theme-background-blur='true'] [data-slot='app-main'],
+body[data-theme-background-blur='true'] [data-slot='public-layout'],
+body[data-theme-background-blur='true'] [data-slot='section-page-header'],
+body[data-theme-background-blur='true'] [data-slot='section-page-footer'],
+body[data-theme-background-blur='true'] [data-slot='app-header'],
+body[data-theme-background-blur='true'] [data-slot='sidebar-inner'] {
+  backdrop-filter: blur(var(--surface-blur)) saturate(150%);
+  -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(150%);
+}
+
+body:not([data-theme-card-blur='true']) .auth-card,
+body:not([data-theme-card-blur='true']) [data-card-surface='true'],
+body:not([data-theme-card-blur='true']) [data-slot='card'],
+body:not([data-theme-background-blur='true']) [data-slot='app-main'],
+body:not([data-theme-background-blur='true']) [data-slot='public-layout'],
+body:not([data-theme-background-blur='true']) [data-slot='section-page-header'],
+body:not([data-theme-background-blur='true']) [data-slot='section-page-footer'],
+body:not([data-theme-background-blur='true']) [data-slot='app-header'],
+body:not([data-theme-background-blur='true']) [data-slot='sidebar-inner'] {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 /* TextShimmer: background-position sweep from right to left */

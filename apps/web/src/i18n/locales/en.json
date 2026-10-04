@@ -6044,6 +6044,8 @@
     "admin.proxy": "Proxy Config",
     "admin.systemInfo": "System Info",
     "admin.systemSettings": "System Settings",
-    "admin.auditLog": "Audit Log"
+    "admin.auditLog": "Audit Log",
+    "Enable card blur": "Enable card blur",
+    "Enable background blur": "Enable background blur"
   }
 }

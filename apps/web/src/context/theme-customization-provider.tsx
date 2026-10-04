@@ -82,6 +82,10 @@ type ThemeCustomizationContextType = {
   setContentLayout: (contentLayout: ContentLayout) => void
   blur: boolean
   setBlur: (blur: boolean) => void
+  cardBlur: boolean
+  setCardBlur: (blur: boolean) => void
+  backgroundBlur: boolean
+  setBackgroundBlur: (blur: boolean) => void
   resetCustomization: () => void
 }
 
@@ -99,6 +103,10 @@ const FALLBACK_CONTEXT: ThemeCustomizationContextType = {
   setContentLayout: () => {},
   blur: false,
   setBlur: () => {},
+  cardBlur: false,
+  setCardBlur: () => {},
+  backgroundBlur: false,
+  setBackgroundBlur: () => {},
   resetCustomization: () => {},
 }
 
@@ -146,6 +154,24 @@ export function ThemeCustomizationProvider(props: {
   const [blur, _setBlur] = useState(() =>
     readBooleanCookie(THEME_COOKIE_KEYS.blur, DEFAULT_THEME_CUSTOMIZATION.blur)
   )
+  const [cardBlur, _setCardBlur] = useState(() =>
+    readBooleanCookie(
+      THEME_COOKIE_KEYS.cardBlur,
+      readBooleanCookie(
+        THEME_COOKIE_KEYS.blur,
+        DEFAULT_THEME_CUSTOMIZATION.cardBlur
+      )
+    )
+  )
+  const [backgroundBlur, _setBackgroundBlur] = useState(() =>
+    readBooleanCookie(
+      THEME_COOKIE_KEYS.backgroundBlur,
+      readBooleanCookie(
+        THEME_COOKIE_KEYS.blur,
+        DEFAULT_THEME_CUSTOMIZATION.backgroundBlur
+      )
+    )
+  )
 
   // Mirror state to the <body> via data-* attributes so theme-presets.css can
   // override CSS variables at the right cascade layer.
@@ -187,6 +213,14 @@ export function ThemeCustomizationProvider(props: {
   useEffect(() => {
     applyAttribute('data-theme-blur', blur ? 'true' : null)
   }, [blur])
+
+  useEffect(() => {
+    applyAttribute('data-theme-card-blur', cardBlur ? 'true' : null)
+  }, [cardBlur])
+
+  useEffect(() => {
+    applyAttribute('data-theme-background-blur', backgroundBlur ? 'true' : null)
+  }, [backgroundBlur])
 
   const setPreset = useCallback((value: ThemePreset) => {
     _setPreset(value)
@@ -242,6 +276,17 @@ export function ThemeCustomizationProvider(props: {
     }
   }, [])
 
+  // Persist false as well so an explicit choice overrides the legacy cookie.
+  const setCardBlur = useCallback((value: boolean) => {
+    _setCardBlur(value)
+    setCookie(THEME_COOKIE_KEYS.cardBlur, String(value), COOKIE_MAX_AGE)
+  }, [])
+
+  const setBackgroundBlur = useCallback((value: boolean) => {
+    _setBackgroundBlur(value)
+    setCookie(THEME_COOKIE_KEYS.backgroundBlur, String(value), COOKIE_MAX_AGE)
+  }, [])
+
   const resetCustomization = useCallback(() => {
     setPreset(DEFAULT_THEME_CUSTOMIZATION.preset)
     setFont(DEFAULT_THEME_CUSTOMIZATION.font)
@@ -249,14 +294,40 @@ export function ThemeCustomizationProvider(props: {
     setScale(DEFAULT_THEME_CUSTOMIZATION.scale)
     setContentLayout(DEFAULT_THEME_CUSTOMIZATION.contentLayout)
     setBlur(DEFAULT_THEME_CUSTOMIZATION.blur)
-  }, [setPreset, setFont, setRadius, setScale, setContentLayout, setBlur])
+    setCardBlur(DEFAULT_THEME_CUSTOMIZATION.cardBlur)
+    setBackgroundBlur(DEFAULT_THEME_CUSTOMIZATION.backgroundBlur)
+    removeCookie(THEME_COOKIE_KEYS.cardBlur)
+    removeCookie(THEME_COOKIE_KEYS.backgroundBlur)
+  }, [
+    setPreset,
+    setFont,
+    setRadius,
+    setScale,
+    setContentLayout,
+    setBlur,
+    setCardBlur,
+    setBackgroundBlur,
+  ])
 
   const value = useMemo<ThemeCustomizationContextType>(
     () => ({
       defaults: DEFAULT_THEME_CUSTOMIZATION,
-      customization: { preset, font, radius, scale, contentLayout, blur },
+      customization: {
+        preset,
+        font,
+        radius,
+        scale,
+        contentLayout,
+        blur,
+        cardBlur,
+        backgroundBlur,
+      },
       blur,
       setBlur,
+      cardBlur,
+      setCardBlur,
+      backgroundBlur,
+      setBackgroundBlur,
       setPreset,
       setFont,
       setRadius,
@@ -271,8 +342,12 @@ export function ThemeCustomizationProvider(props: {
       scale,
       contentLayout,
       blur,
+      cardBlur,
+      backgroundBlur,
       setPreset,
       setBlur,
+      setCardBlur,
+      setBackgroundBlur,
       setFont,
       setRadius,
       setScale,

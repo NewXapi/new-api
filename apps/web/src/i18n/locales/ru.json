@@ -6044,6 +6044,8 @@
     "admin.proxy": "Конфигурация прокси",
     "admin.systemInfo": "Информация о системе",
     "admin.systemSettings": "Настройки системы",
-    "admin.auditLog": "Журнал операций"
+    "admin.auditLog": "Журнал операций",
+    "Enable card blur": "Включить размытие карточек",
+    "Enable background blur": "Включить размытие фона"
   }
 }

@@ -6044,6 +6044,8 @@
     "admin.proxy": "プロキシ設定",
     "admin.systemInfo": "システム情報",
     "admin.systemSettings": "システム設定",
-    "admin.auditLog": "操作ログ"
+    "admin.auditLog": "操作ログ",
+    "Enable card blur": "カードのぼかしを有効化",
+    "Enable background blur": "背景のぼかしを有効化"
   }
 }
