@@ -11,7 +11,7 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react'
-import { useReducedMotion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -106,7 +106,13 @@ function AdminDashboard() {
   const refresh = () => void Promise.all([usageQuery.refetch(), rpmQuery.refetch(), flowQuery.refetch(), usersQuery.refetch(), performanceQuery.refetch(), uptimeQuery.refetch(), trendQuery.refetch()])
 
   return <div className='space-y-4'>
-    <div className='flex flex-wrap items-start justify-between gap-3'><div><h1 className='text-2xl font-semibold tracking-tight'>{t('Admin dashboard')}</h1><p className='text-muted-foreground mt-1 text-sm'>{t('Real platform activity and service health.')}</p></div><div className='flex items-center gap-2'><div className='bg-muted flex rounded-md p-1'>{RANGE_OPTIONS.map((option) => <Button key={option} variant={days === option ? 'secondary' : 'ghost'} size='sm' onClick={() => setDays(option)}>{option} {t('days')}</Button>)}</div><Button variant='outline' size='icon' onClick={refresh} disabled={loading} aria-label={t('Refresh')}><RefreshCw className={loading ? 'animate-spin' : ''} /></Button></div></div>
+    <div className='flex flex-wrap items-start justify-between gap-3'><div><h1 className='text-2xl font-semibold tracking-tight'>{t('Admin dashboard')}</h1><p className='text-muted-foreground mt-1 text-sm'>{t('Real platform activity and service health.')}</p></div><div className='flex items-center gap-2'><div className='bg-muted flex rounded-md p-1'>{RANGE_OPTIONS.map((option) => <Button key={option} variant={days === option ? 'secondary' : 'ghost'} size='sm' onClick={() => setDays(option)}>{option} {t('days')}</Button>)}</div><Button variant='outline' size='icon' onClick={refresh} disabled={loading} aria-label={t('Refresh')}><motion.span
+          animate={loading && !reducedMotion ? { rotate: 360 } : { rotate: 0 }}
+          transition={loading ? { duration: 0.8, repeat: Infinity, ease: 'linear' } : { duration: 0.15 }}
+          className='inline-flex'
+        >
+          <RefreshCw />
+        </motion.span></Button></div></div>
     <div className='grid min-w-0 grid-cols-2 gap-3 lg:grid-cols-4'>{metrics.map((metric) => <MetricCard key={metric.label} metric={metric} loading={loading} />)}</div>
     <div className='grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(20rem,1fr)]'><Panel title={t('Business trend')} icon={Gauge}>{trendQuery.isLoading ? <Skeleton className='m-4 h-64' /> : trendQuery.isError ? <StateMessage error /> : trendQuery.data?.data.groups[0]?.series.length ? <div className='h-64 p-2'><VChart spec={buildTrendSpec(trendQuery.data.data.groups[0].series, Boolean(reducedMotion))} /></div> : <StateMessage empty />}</Panel><Panel title={t('Service status')} icon={Server}>{uptimeQuery.isLoading ? <Skeleton className='m-4 h-32' /> : uptimeQuery.isError ? <StateMessage error /> : serviceCount ? <div className='p-4 text-sm'><div className='flex justify-between'><span>{t('Healthy services')}</span><span className='font-mono'>{healthyServices}/{serviceCount}</span></div><div className='mt-3 space-y-2'>{uptime.flatMap((group) => group.monitors ?? []).slice(0, 5).map((monitor) => <div className='flex justify-between gap-3' key={monitor.name}><span className='truncate'>{monitor.name}</span><span className={monitor.status === 1 ? 'text-success' : 'text-warning'}>{monitor.status === 1 ? t('Healthy') : t('Degraded')}</span></div>)}</div></div> : <StateMessage empty />}</Panel></div>
     <Panel title={t('Requests and tokens, selected period')} icon={Activity}>{rpmTpm.length ? <div className='grid gap-2 p-4 sm:grid-cols-2'>{rpmTpm.slice(-6).map((point) => <div className='bg-muted/35 rounded-md border px-3 py-2 text-xs' key={point.time}><div className='text-muted-foreground'>{point.time}</div><div className='mt-1 font-mono'>RPM {formatNumber(point.rpm)} · TPM {formatCompactNumber(point.tpm)}</div></div>)}</div> : <StateMessage empty />}</Panel>

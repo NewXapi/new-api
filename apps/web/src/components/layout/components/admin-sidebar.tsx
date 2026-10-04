@@ -16,6 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
+import { motion, useReducedMotion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from '@tanstack/react-router'
 
@@ -39,6 +40,7 @@ import { useAuthStore } from '@/stores/auth-store'
 export function AdminSidebar() {
   const { t } = useTranslation()
   const pathname = useLocation({ select: (location) => location.pathname })
+  const prefersReducedMotion = useReducedMotion()
   const user = useAuthStore((state) => state.auth.user)
   const visibleItems = getVisibleAdminNavigation(user, hasPermission)
   const systemSettingsItem = visibleItems.find((item) => item.id === 'system-settings')
@@ -83,7 +85,17 @@ export function AdminSidebar() {
                       isActive={isActive}
                       tooltip={t(item.labelKey)}
                     >
-                      <item.icon />
+                      <motion.span
+                        animate={
+                          isActive && !prefersReducedMotion
+                            ? { scale: 1.08, rotate: 2 }
+                            : { scale: 1, rotate: 0 }
+                        }
+                        transition={{ duration: 0.18 }}
+                        className='inline-flex'
+                      >
+                        <item.icon />
+                      </motion.span>
                       <span>{t(item.labelKey)}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
