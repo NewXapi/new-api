@@ -21,8 +21,7 @@ import { ArrowRight, Sparkles } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { Button } from '@/components/ui/button'
-
-import { CheeseArt } from '../cheese-art'
+import { useSystemConfig } from '@/hooks/use-system-config'
 
 interface HeroProps {
   className?: string
@@ -31,25 +30,25 @@ interface HeroProps {
 
 export function Hero(props: HeroProps) {
   const { t } = useTranslation()
+  const { systemName } = useSystemConfig()
+  const displayName = systemName || 'New API'
 
   return (
     <section className='relative z-10 overflow-hidden px-6 pt-24 pb-16 md:pt-32 md:pb-24 lg:pt-36 lg:pb-28'>
-      {/* Warm ambient wash — the palette's gold/crust pair. */}
       <div
         aria-hidden
-        className='cheese-aurora pointer-events-none absolute inset-0 -z-10 opacity-30 dark:opacity-20'
+        className='pointer-events-none absolute inset-0 -z-10 opacity-30 dark:opacity-20'
         style={{
           background: [
-            'radial-gradient(ellipse 60% 50% at 25% 20%, oklch(0.87 0.15 85 / 80%) 0%, transparent 70%)',
-            'radial-gradient(ellipse 50% 40% at 75% 12%, oklch(0.83 0.16 65 / 55%) 0%, transparent 70%)',
-            'radial-gradient(ellipse 40% 35% at 50% 90%, oklch(0.85 0.12 95 / 40%) 0%, transparent 70%)',
+            'radial-gradient(ellipse 60% 50% at 25% 20%, oklch(0.72 0.16 275 / 45%) 0%, transparent 70%)',
+            'radial-gradient(ellipse 50% 40% at 75% 12%, oklch(0.72 0.13 190 / 35%) 0%, transparent 70%)',
           ].join(', '),
         }}
       />
       {/* Dotted grid, masked to a soft ellipse. */}
       <div
         aria-hidden
-        className='absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,var(--border)_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_65%_55%_at_50%_35%,black_20%,transparent_100%)] bg-[size:2.25rem_2.25rem] opacity-[0.09]'
+        className='absolute inset-0 -z-10 bg-[radial-gradient(circle_at_center,var(--border)_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_65%_55%_at_50%_35%,black_20%,transparent_100%)] bg-[size:2rem_2rem] opacity-[0.14] dark:opacity-[0.11]'
       />
 
       <div className='mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-8'>
@@ -59,7 +58,7 @@ export function Hero(props: HeroProps) {
             style={{ animationDelay: '0ms' }}
           >
             <Sparkles className='size-3.5' />
-            <span>{t('home.hero.badge')}</span>
+            <span>{displayName} · {t('home.hero.badge')}</span>
           </div>
 
           <h1
@@ -142,7 +141,23 @@ export function Hero(props: HeroProps) {
           className='landing-animate-fade-up flex w-full justify-center opacity-0 lg:col-span-6'
           style={{ animationDelay: '320ms' }}
         >
-          <CheeseArt className='mt-6 lg:mt-0' />
+          <div className='border-border/60 bg-card/70 w-full max-w-[420px] rounded-2xl border p-4 shadow-lg backdrop-blur-sm'>
+            <div className='text-muted-foreground mb-3 flex items-center justify-between text-xs'>
+              <span>{displayName} / API 概览</span>
+              <span className='text-success'>● 运行正常</span>
+            </div>
+            <div className='grid grid-cols-3 gap-2'>
+              <div className='bg-muted/50 rounded-lg p-3'><span className='text-muted-foreground text-[10px]'>近30天请求</span><strong className='mt-1 block text-lg'>—</strong></div>
+              <div className='bg-muted/50 rounded-lg p-3'><span className='text-muted-foreground text-[10px]'>成功率</span><strong className='text-success mt-1 block text-lg'>—</strong></div>
+              <div className='bg-muted/50 rounded-lg p-3'><span className='text-muted-foreground text-[10px]'>失败率</span><strong className='text-destructive mt-1 block text-lg'>—</strong></div>
+            </div>
+            <div className='bg-muted/35 mt-3 h-28 rounded-lg border p-3'>
+              <div className='text-muted-foreground text-[10px]'>从请求到成本，一切清晰可见</div>
+              <div className='mt-8 flex items-end gap-1'>
+                {[28, 42, 35, 58, 46, 72, 63, 80, 54, 68, 76, 88].map((height, index) => <span key={index} className='bg-primary/60 block flex-1 rounded-t' style={{ height: `${height}%` }} />)}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

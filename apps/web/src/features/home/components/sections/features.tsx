@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { CalendarCheck, HandHeart, Layers, ShieldCheck } from 'lucide-react'
+import { Activity, GitBranch, Network } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 interface FeaturesProps {
@@ -27,34 +27,9 @@ export function Features(_props: FeaturesProps) {
   const { t } = useTranslation()
 
   const items = [
-    {
-      key: 'free',
-      icon: HandHeart,
-      title: t('home.feature.free.title'),
-      desc: t('home.feature.free.desc'),
-      tone: 'text-primary border-primary/25 bg-primary/10',
-    },
-    {
-      key: 'checkin',
-      icon: CalendarCheck,
-      title: t('home.feature.checkin.title'),
-      desc: t('home.feature.checkin.desc'),
-      tone: 'text-warning border-warning/25 bg-warning/10',
-    },
-    {
-      key: 'models',
-      icon: Layers,
-      title: t('home.feature.models.title'),
-      desc: t('home.feature.models.desc'),
-      tone: 'text-chart-4 border-chart-4/25 bg-chart-4/10',
-    },
-    {
-      key: 'stable',
-      icon: ShieldCheck,
-      title: t('home.feature.stable.title'),
-      desc: t('home.feature.stable.desc'),
-      tone: 'text-success border-success/25 bg-success/10',
-    },
+    { key: 'access', icon: Network, title: t('home.feature.access.title'), desc: t('home.feature.access.desc'), tone: 'text-primary border-primary/25 bg-primary/10' },
+    { key: 'routing', icon: GitBranch, title: t('home.feature.routing.title'), desc: t('home.feature.routing.desc'), tone: 'text-info border-info/25 bg-info/10' },
+    { key: 'observability', icon: Activity, title: t('home.feature.observability.title'), desc: t('home.feature.observability.desc'), tone: 'text-warning border-warning/25 bg-warning/10' },
   ]
 
   return (
@@ -69,7 +44,7 @@ export function Features(_props: FeaturesProps) {
           </p>
         </div>
 
-        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+        <div className='grid gap-4 sm:grid-cols-3'>
           {items.map((item) => {
             const Icon = item.icon
             return (
