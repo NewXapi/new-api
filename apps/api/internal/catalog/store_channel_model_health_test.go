@@ -14,14 +14,22 @@ import (
 )
 
 // withRouteHealthDB gives each test its own database and a clean process cache,
-// so isolation state written by one case cannot leak into the next.
+// so isolation state written by one case cannot leak into the next. It migrates
+// the routing tables too because RecoverRoute restores the recovered model into
+// the routable set (abilities + route rows) inside one gateway revision, not
+// just the health row.
 func withRouteHealthDB(t *testing.T) {
 	t.Helper()
 	previousDB := dbx.DB
 	db, err := gorm.Open(sqlite.Open("file:"+t.Name()+"?mode=memory&cache=shared"), &gorm.Config{})
 	require.NoError(t, err)
-	require.NoError(t, db.AutoMigrate(&ChannelModelHealth{}))
+	require.NoError(t, db.AutoMigrate(
+		&ChannelModelHealth{},
+		&Channel{}, &Ability{}, &ChannelModelRoute{},
+		&GatewayConfigRevision{}, &GatewayConfigOutbox{},
+	))
 	dbx.DB = db
+	require.NoError(t, InitializeGatewayConfigRevision())
 	ClearRouteHealthCache()
 	t.Cleanup(func() {
 		dbx.DB = previousDB
@@ -195,8 +203,12 @@ func TestDormantExpiryDisableThreshold(t *testing.T) {
 		require.NoError(t, dbx.DB.Where("channel_id = ?", key.ChannelId).First(&row).Error)
 		assert.Equal(t, HealthDisabled, row.State)
 		assert.Equal(t, 1, row.DormantDisableCount)
-		assert.Nil(t, row.Until, "a disabled route has no expiry; only an admin restores it")
-		assert.False(t, IsRouteHealthy(key, now.Add(24*time.Hour)), "disabled never self-heals")
+		// The auto-disable carries a window instead of until=nil: a transient
+		// upstream outage must not retire a model permanently.
+		require.NotNil(t, row.Until, "an auto-disable must carry an expiry window")
+		assert.False(t, IsRouteHealthy(key, now), "the route stays out inside its window")
+		assert.True(t, IsRouteHealthy(key, now.Add(24*time.Hour)),
+			"an auto-disabled route must self-heal once its window lapses")
 	})
 
 	t.Run("threshold zero never disables", func(t *testing.T) {
@@ -413,8 +425,10 @@ func TestDormantMultiCycleThresholdAndSibling(t *testing.T) {
 		require.NoError(t, dbx.DB.Where("channel_id = ?", key.ChannelId).First(&row3).Error)
 		assert.Equal(t, 3, row3.DormantDisableCount)
 		assert.Equal(t, HealthDisabled, row3.State, "threshold 3 reached → disabled")
-		assert.Nil(t, row3.Until, "disabled has no expiry")
-		assert.False(t, IsRouteHealthy(key, now.Add(365*24*time.Hour)), "disabled never self-heals")
+		require.NotNil(t, row3.Until, "an auto-disable carries an expiry window, not until=nil")
+		assert.False(t, IsRouteHealthy(key, now.Add(3*time.Hour)), "the route stays out inside its window")
+		assert.True(t, IsRouteHealthy(key, now.Add(365*24*time.Hour)),
+			"an auto-disabled route self-heals once its window lapses")
 		assert.True(t, IsRouteHealthy(sibling, now), "sibling unaffected even after disable")
 	})
 
@@ -697,7 +711,12 @@ func TestRouteWeightMultiplierCalmAndDormant(t *testing.T) {
 	cfg.DormantWeightScale = 10
 	withHealthSetting(t, cfg)
 
+	// The read path compares the isolation window against the package clock,
+	// so a test that seeds windows at a fixed timestamp must pin that clock too
+	// — otherwise every window reads as long expired.
 	now := time.Unix(1_700_000_000, 0)
+	withCooldownTestClock(t, &now)
+
 	healthy := RouteKey{ChannelId: 9130, KeyIndex: 0, Model: "wm-healthy"}
 	calm := RouteKey{ChannelId: 9131, KeyIndex: 0, Model: "wm-calm"}
 	dormant := RouteKey{ChannelId: 9132, KeyIndex: 0, Model: "wm-dormant"}
@@ -737,7 +756,11 @@ func TestSoftDepressionKeepsCalmRouteSelectable(t *testing.T) {
 	cfg.CalmWeightScale = 100
 	withHealthSetting(t, cfg)
 
+	// Pin the clock for the same reason as TestRouteWeightMultiplierCalmAndDormant:
+	// the seeded window must read as live, not as long expired.
 	now := time.Unix(1_700_000_000, 0)
+	withCooldownTestClock(t, &now)
+
 	key := RouteKey{ChannelId: 9140, KeyIndex: 0, Model: "soft-calm"}
 
 	// Escalate to calm (level 1).
