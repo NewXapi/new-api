@@ -16,7 +16,7 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { Monitor, Sun, MoonStar } from 'lucide-react'
+import { Sun, MoonStar } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 
@@ -57,18 +57,6 @@ export function ThemeQuickSwitcher() {
           aria-labelledby='theme-switcher-label'
           className='border-muted/50 bg-muted/40 inline-flex w-auto items-center gap-1.5 rounded-lg border px-1.5 py-1'
         >
-          <Button
-            variant='ghost'
-            size='icon'
-            role='radio'
-            aria-label={t('Gray')}
-            aria-checked={theme === 'gray'}
-            onClick={() => setTheme('gray')}
-            className={cn('relative size-7', theme === 'gray' && 'text-accent-foreground')}
-          >
-            {theme === 'gray' && <ActiveIndicator prefersReduced={prefersReduced} />}
-            <Monitor className='relative z-10 size-[0.95rem]' />
-          </Button>
           <Button
             variant='ghost'
             size='icon'

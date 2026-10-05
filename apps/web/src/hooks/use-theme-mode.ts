@@ -19,20 +19,13 @@ For commercial licensing, please contact support@quantumnous.com
 import { useThemeCustomization } from '@/context/theme-customization-provider'
 import { useTheme } from '@/context/theme-provider'
 
-export type ThemeMode = 'light' | 'dark' | 'gray'
+export type ThemeMode = 'light' | 'dark'
 
 export function useThemeMode() {
   const { resolvedTheme, setTheme } = useTheme()
-  const { customization, setPreset } = useThemeCustomization()
-  const mode: ThemeMode = customization.preset === 'neutral-gray' ? 'gray' : resolvedTheme
+  const mode: ThemeMode = resolvedTheme
 
   const setMode = (value: ThemeMode) => {
-    if (value === 'gray') {
-      setPreset('neutral-gray')
-      setTheme('light')
-      return
-    }
-    if (customization.preset === 'neutral-gray') setPreset('default')
     setTheme(value)
   }
 

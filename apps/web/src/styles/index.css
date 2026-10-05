@@ -312,12 +312,12 @@ body[data-theme-card-blur='true'] [data-slot='card'] {
   -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(150%);
 }
 
-body[data-theme-background-blur='true'] [data-slot='app-main'],
-body[data-theme-background-blur='true'] [data-slot='public-layout'],
-body[data-theme-background-blur='true'] [data-slot='section-page-header'],
-body[data-theme-background-blur='true'] [data-slot='section-page-footer'],
-body[data-theme-background-blur='true'] [data-slot='app-header'],
-body[data-theme-background-blur='true'] [data-slot='sidebar-inner'] {
+[data-slot='app-main'],
+[data-slot='public-layout'],
+[data-slot='section-page-header'],
+[data-slot='section-page-footer'],
+[data-slot='app-header'],
+[data-slot='sidebar-inner'] {
   background-color: var(--header-surface);
   backdrop-filter: blur(var(--surface-blur)) saturate(150%);
   -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(150%);
@@ -325,13 +325,7 @@ body[data-theme-background-blur='true'] [data-slot='sidebar-inner'] {
 
 body:not([data-theme-card-blur='true']) .auth-card,
 body:not([data-theme-card-blur='true']) [data-card-surface='true'],
-body:not([data-theme-card-blur='true']) [data-slot='card'],
-body:not([data-theme-background-blur='true']) [data-slot='app-main'],
-body:not([data-theme-background-blur='true']) [data-slot='public-layout'],
-body:not([data-theme-background-blur='true']) [data-slot='section-page-header'],
-body:not([data-theme-background-blur='true']) [data-slot='section-page-footer'],
-body:not([data-theme-background-blur='true']) [data-slot='app-header'],
-body:not([data-theme-background-blur='true']) [data-slot='sidebar-inner'] {
+body:not([data-theme-card-blur='true']) [data-slot='card'] {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }

@@ -52,11 +52,6 @@ export const THEME_PRESETS = [
     swatches: ['oklch(0.15 0 0)', 'oklch(0.99 0 0)'],
   },
   {
-    value: 'neutral-gray',
-    name: 'Neutral Gray',
-    swatches: ['oklch(0.97 0 0)', 'oklch(0.18 0 0)'],
-  },
-  {
     value: 'underground',
     name: 'Underground',
     swatches: ['oklch(0.5315 0.0694 156.19)', 'oklch(0.5748 0.0862 336.52)'],
@@ -129,7 +124,6 @@ export type ThemeCustomization = {
   contentLayout: ContentLayout
   blur: boolean
   cardBlur: boolean
-  backgroundBlur: boolean
 }
 
 export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
@@ -140,7 +134,6 @@ export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
   contentLayout: 'full',
   blur: false,
   cardBlur: false,
-  backgroundBlur: false,
 }
 
 export const THEME_PRESET_VALUES = new Set(
@@ -182,7 +175,6 @@ export const THEME_COOKIE_KEYS = {
   contentLayout: 'theme_content_layout',
   blur: 'theme_blur',
   cardBlur: 'theme_card_blur',
-  backgroundBlur: 'theme_background_blur',
 } as const
 
 /**

@@ -57,13 +57,6 @@ export function ThemeSwitch() {
             className={cn('ms-auto', mode !== 'dark' && 'hidden')}
           />
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => selectTheme('gray')}>
-          {t('Gray')}
-          <Check
-            size={14}
-            className={cn('ms-auto', mode !== 'gray' && 'hidden')}
-          />
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

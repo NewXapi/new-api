@@ -244,34 +244,29 @@ function ThemeConfig() {
   const { t } = useTranslation()
   const { defaultTheme, resetTheme } = useTheme()
   const { mode, setMode: selectTheme } = useThemeMode()
-  const { customization, setPreset } = useThemeCustomization()
   return (
     <div>
       <SectionTitle
         title={t('Theme')}
-        showReset={mode === 'gray' || mode !== defaultTheme}
-        onReset={() => {
-          if (customization.preset === 'neutral-gray') setPreset('default')
-          resetTheme()
-        }}
+        showReset={mode !== defaultTheme}
+        onReset={resetTheme}
       />
       <Radio
         value={mode}
         onValueChange={selectTheme}
-        className='grid w-full max-w-md grid-cols-3 gap-4'
+        className='grid w-full max-w-md grid-cols-2 gap-4'
         aria-label={t('Select theme preference')}
         aria-describedby='theme-description'
       >
         {[
           { value: 'light', label: t('Light'), icon: IconThemeLight },
           { value: 'dark', label: t('Dark'), icon: IconThemeDark },
-          { value: 'gray', label: t('Gray'), icon: IconThemeLight },
         ].map((item) => (
           <RadioGroupItem key={item.value} item={item} isTheme />
         ))}
       </Radio>
       <div id='theme-description' className='sr-only'>
-        {t('Choose light, dark, or gray theme')}
+        {t('Choose light or dark theme')}
       </div>
     </div>
   )
@@ -737,11 +732,8 @@ function ContentLayoutPreview(props: { centered: boolean }) {
 
 function BlurConfig() {
   const { t } = useTranslation()
-  const { defaults, customization, setCardBlur, setBackgroundBlur } =
-    useThemeCustomization()
-  const hasBlurChanges =
-    customization.cardBlur !== defaults.cardBlur ||
-    customization.backgroundBlur !== defaults.backgroundBlur
+  const { defaults, customization, setCardBlur } = useThemeCustomization()
+  const hasBlurChanges = customization.cardBlur !== defaults.cardBlur
 
   return (
     <div>
@@ -750,7 +742,6 @@ function BlurConfig() {
         showReset={hasBlurChanges}
         onReset={() => {
           setCardBlur(defaults.cardBlur)
-          setBackgroundBlur(defaults.backgroundBlur)
         }}
       />
       <div className='space-y-2'>
@@ -760,14 +751,6 @@ function BlurConfig() {
             checked={customization.cardBlur}
             onCheckedChange={setCardBlur}
             aria-label={t('Enable card blur')}
-          />
-        </label>
-        <label className='flex items-center justify-between gap-3 rounded-lg border p-3 text-sm'>
-          <span>{t('Enable background blur')}</span>
-          <Switch
-            checked={customization.backgroundBlur}
-            onCheckedChange={setBackgroundBlur}
-            aria-label={t('Enable background blur')}
           />
         </label>
       </div>

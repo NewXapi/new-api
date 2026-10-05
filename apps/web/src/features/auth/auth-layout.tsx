@@ -25,7 +25,6 @@ import { ConfigDrawer } from '@/components/config-drawer'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { Button } from '@/components/ui/button'
 import { useTheme } from '@/context/theme-provider'
-import { useThemeCustomization } from '@/context/theme-customization-provider'
 
 type AuthLayoutProps = {
   children: React.ReactNode
@@ -34,7 +33,6 @@ type AuthLayoutProps = {
 export function AuthLayout({ children }: AuthLayoutProps) {
   const { t } = useTranslation()
   const { resolvedTheme, setTheme } = useTheme()
-  const { customization, setPreset } = useThemeCustomization()
   const [configOpen, setConfigOpen] = useState(false)
   const configTriggerRef = useRef<HTMLButtonElement>(null)
   const nextTheme = resolvedTheme === 'dark' ? 'light' : 'dark'
@@ -53,10 +51,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
                 variant='ghost'
                 size='icon'
                 aria-label={t(nextTheme === 'dark' ? 'Switch to dark mode' : 'Switch to light mode')}
-                onClick={() => {
-                  if (customization.preset === 'neutral-gray') setPreset('default')
-                  setTheme(nextTheme)
-                }}
+                onClick={() => setTheme(nextTheme)}
                 className='size-9'
               >
                 <span className='relative size-4'>

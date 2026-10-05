@@ -133,12 +133,12 @@ body,
    * in theme-presets.css. Default mirrors `--font-sans` so behavior is
    * identical when no font preference is set. */
   --font-body: var(--font-sans);
-  --background: oklch(0.985 0 0);
-  --foreground: oklch(0.321 0 0);
-  --card: oklch(0.995 0 0);
-  --card-foreground: oklch(0.321 0 0);
-  --popover: oklch(0.995 0 0);
-  --popover-foreground: oklch(0.321 0 0);
+  --background: oklch(0.94 0.008 260);
+  --foreground: oklch(0.25 0.012 260);
+  --card: oklch(0.965 0.006 260);
+  --card-foreground: oklch(0.25 0.012 260);
+  --popover: oklch(0.975 0.005 260);
+  --popover-foreground: oklch(0.25 0.012 260);
   --primary: oklch(0.614 0.207 262);
   --primary-foreground: oklch(1 0 0);
   --secondary: color-mix(in oklch, var(--primary) 12%, var(--background));
@@ -306,67 +306,4 @@ body,
   --scrim: var(--background-scrim);
   --inverse-surface: oklch(0.907 0 0);
   --inverse-on-surface: oklch(0.321 0 0);
-}
-
-/* The later preset surface bridge derives neutral containers from these
- * achromatic anchors; do not compete with its higher-specificity surfaces. */
-[data-theme-preset='neutral-gray'] {
-  /* Low-luminance charcoal surfaces with high-contrast readable text. */
-  --background: oklch(0.22 0 0);
-  --foreground: oklch(0.92 0 0);
-  --card: oklch(0.28 0 0);
-  --card-foreground: var(--foreground);
-  --popover: oklch(0.32 0 0);
-  --popover-foreground: var(--foreground);
-  --primary: oklch(0.78 0 0);
-  --primary-foreground: oklch(0.18 0 0);
-  --secondary: oklch(0.31 0 0);
-  --secondary-foreground: var(--foreground);
-  --muted: oklch(0.32 0 0);
-  --muted-foreground: oklch(0.74 0 0);
-  --accent: oklch(0.38 0 0);
-  --accent-foreground: var(--foreground);
-  --border: oklch(1 0 0 / 18%);
-  --input: oklch(1 0 0 / 24%);
-  --ring: var(--primary);
-  --sidebar: oklch(0.18 0 0);
-  --sidebar-foreground: var(--foreground);
-  --sidebar-primary: var(--primary);
-  --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: oklch(0.34 0 0);
-  --sidebar-accent-foreground: var(--foreground);
-  --sidebar-border: oklch(1 0 0 / 18%);
-  --sidebar-ring: var(--ring);
-  --skeleton-base: oklch(0.30 0 0);
-  --skeleton-highlight: oklch(0.40 0 0);
-}
-
-.dark [data-theme-preset='neutral-gray'] {
-  /* Keep the dark scheme achromatic while separating canvas, containers,
-   * controls, and muted regions into visible tonal steps. */
-  --background: oklch(0.16 0 0);
-  --foreground: oklch(0.92 0 0);
-  --card: oklch(0.23 0 0);
-  --card-foreground: var(--foreground);
-  --popover: oklch(0.28 0 0);
-  --popover-foreground: var(--foreground);
-  --primary: oklch(0.80 0 0);
-  --primary-foreground: oklch(0.16 0 0);
-  --secondary: oklch(0.27 0 0);
-  --secondary-foreground: var(--foreground);
-  --muted: oklch(0.28 0 0);
-  --muted-foreground: oklch(0.76 0 0);
-  --accent: oklch(0.34 0 0);
-  --accent-foreground: var(--foreground);
-  --border: oklch(1 0 0 / 18%);
-  --input: oklch(1 0 0 / 24%);
-  --sidebar: oklch(0.15 0 0);
-  --sidebar-foreground: var(--foreground);
-  --sidebar-primary: var(--primary);
-  --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: oklch(0.32 0 0);
-  --sidebar-accent-foreground: var(--foreground);
-  --sidebar-border: oklch(1 0 0 / 18%);
-  --skeleton-base: oklch(0.28 0 0);
-  --skeleton-highlight: oklch(0.40 0 0);
 }
