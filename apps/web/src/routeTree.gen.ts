@@ -30,6 +30,7 @@ import { Route as AuthenticatedChat2linkRouteImport } from './routes/_authentica
 import { Route as AuthenticatedOauth2ClientsRouteImport } from './routes/_authenticated/oauth2-clients'
 import { Route as AuthenticatedMarketplaceAdminRouteImport } from './routes/_authenticated/marketplace-admin'
 import { Route as AuthenticatedMarketplaceIncomeRouteImport } from './routes/_authenticated/marketplace-income'
+import { Route as AuthenticatedMarketplaceMineRouteImport } from './routes/_authenticated/marketplace-mine'
 import { Route as AuthenticatedMarketplaceNewRouteImport } from './routes/_authenticated/marketplace/new'
 import { Route as AuthenticatedMarketplaceResourceIdRouteImport } from './routes/_authenticated/marketplace/$resourceId'
 import { Route as AuthenticatedMarketplaceIndexRouteImport } from './routes/_authenticated/marketplace/index'
@@ -169,6 +170,12 @@ const AuthenticatedMarketplaceIncomeRoute =
   AuthenticatedMarketplaceIncomeRouteImport.update({
     id: '/marketplace-income',
     path: '/marketplace-income',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMarketplaceMineRoute =
+  AuthenticatedMarketplaceMineRouteImport.update({
+    id: '/marketplace-mine',
+    path: '/marketplace-mine',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedOauth2ClientsRoute =
@@ -475,6 +482,7 @@ export interface FileRoutesByFullPath {
   '/marketplace/': typeof AuthenticatedMarketplaceIndexRoute
   '/marketplace/$resourceId': typeof AuthenticatedMarketplaceResourceIdRoute
   '/marketplace/new': typeof AuthenticatedMarketplaceNewRoute
+  '/marketplace-mine': typeof AuthenticatedMarketplaceMineRoute
   '/about/': typeof AboutIndexRoute
   '/pricing/': typeof PricingIndexRoute
   '/rankings/': typeof RankingsIndexRoute
@@ -541,6 +549,7 @@ export interface FileRoutesByTo {
   '/marketplace/': typeof AuthenticatedMarketplaceIndexRoute
   '/marketplace/$resourceId': typeof AuthenticatedMarketplaceResourceIdRoute
   '/marketplace/new': typeof AuthenticatedMarketplaceNewRoute
+  '/marketplace-mine': typeof AuthenticatedMarketplaceMineRoute
   '/about': typeof AboutIndexRoute
   '/pricing': typeof PricingIndexRoute
   '/rankings': typeof RankingsIndexRoute
@@ -608,6 +617,7 @@ export interface FileRoutesById {
   '/_authenticated/marketplace/': typeof AuthenticatedMarketplaceIndexRoute
   '/_authenticated/marketplace/$resourceId': typeof AuthenticatedMarketplaceResourceIdRoute
   '/_authenticated/marketplace/new': typeof AuthenticatedMarketplaceNewRoute
+  '/_authenticated/marketplace-mine': typeof AuthenticatedMarketplaceMineRoute
   '/_authenticated/proxy': typeof AuthenticatedProxyRoute
   '/oauth/$provider': typeof OauthProviderRoute
   '/oauth2/consent': typeof Oauth2ConsentRoute
@@ -680,6 +690,7 @@ export interface FileRouteTypes {
     | '/marketplace/'
     | '/marketplace/$resourceId'
     | '/marketplace/new'
+    | '/marketplace-mine'
     | '/about/'
     | '/pricing/'
     | '/rankings/'
@@ -746,6 +757,7 @@ export interface FileRouteTypes {
     | '/marketplace/'
     | '/marketplace/$resourceId'
     | '/marketplace/new'
+    | '/marketplace-mine'
     | '/about'
     | '/pricing'
     | '/rankings'
@@ -815,6 +827,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketplace/'
     | '/_authenticated/marketplace/$resourceId'
     | '/_authenticated/marketplace/new'
+    | '/_authenticated/marketplace-mine'
     | '/about/'
     | '/pricing/'
     | '/rankings/'
@@ -1051,6 +1064,13 @@ declare module '@tanstack/react-router' {
       path: '/marketplace/new'
       fullPath: '/marketplace/new'
       preLoaderRoute: typeof AuthenticatedMarketplaceNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/marketplace-mine': {
+      id: '/_authenticated/marketplace-mine'
+      path: '/marketplace-mine'
+      fullPath: '/marketplace-mine'
+      preLoaderRoute: typeof AuthenticatedMarketplaceMineRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/system-settings': {
@@ -1439,6 +1459,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProxyRoute: typeof AuthenticatedProxyRoute
   AuthenticatedOauth2ClientsRoute: typeof AuthenticatedOauth2ClientsRoute
   AuthenticatedMarketplaceIncomeRoute: typeof AuthenticatedMarketplaceIncomeRoute
+  AuthenticatedMarketplaceMineRoute: typeof AuthenticatedMarketplaceMineRoute
   AuthenticatedMarketplaceAdminRoute: typeof AuthenticatedMarketplaceAdminRoute
   AuthenticatedMarketplaceIndexRoute: typeof AuthenticatedMarketplaceIndexRoute
   AuthenticatedMarketplaceNewRoute: typeof AuthenticatedMarketplaceNewRoute
@@ -1469,6 +1490,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChat2linkRoute: AuthenticatedChat2linkRoute,
   AuthenticatedOauth2ClientsRoute: AuthenticatedOauth2ClientsRoute,
   AuthenticatedMarketplaceIncomeRoute: AuthenticatedMarketplaceIncomeRoute,
+  AuthenticatedMarketplaceMineRoute: AuthenticatedMarketplaceMineRoute,
   AuthenticatedMarketplaceAdminRoute: AuthenticatedMarketplaceAdminRoute,
   AuthenticatedMarketplaceIndexRoute: AuthenticatedMarketplaceIndexRoute,
   AuthenticatedMarketplaceNewRoute: AuthenticatedMarketplaceNewRoute,

@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { api } from '@/lib/api'
+import { buttonVariants } from '@/components/ui/button'
 
 interface ResourceItem {
   id: number
@@ -60,9 +61,9 @@ function MarketplacePage() {
     <main className='mx-auto max-w-6xl space-y-6 p-8'>
       <header className='flex flex-wrap items-center justify-between gap-3'>
         <h1 className='text-2xl font-semibold'>{t('资源广场')}</h1>
-        <Button asChild>
-          <Link to='/marketplace/new'>{t('发布资源')}</Link>
-        </Button>
+        <Link className={buttonVariants({})} to='/marketplace/new'>
+          {t('发布资源')}
+        </Link>
       </header>
 
       <div className='flex flex-wrap gap-2'>
