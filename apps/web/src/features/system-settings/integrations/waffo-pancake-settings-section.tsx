@@ -500,21 +500,21 @@ export function WaffoPancakeSettingsSection({
           {/* Create section — first, since creating auto-fills the pick-existing dropdowns below. */}
           <div className='space-y-1.5'>
             <Label>{t('Payment return URL')}</Label>
-            <div className='flex gap-2'>
+            <div className='flex flex-col gap-2 sm:flex-row'>
               <Input
                 placeholder='https://example.com/wallet'
                 value={returnURL}
                 onChange={(event) =>
                   onValueChange('WaffoPancakeReturnURL', event.target.value)
                 }
-                className='flex-1'
+                className='min-w-0 flex-1'
               />
               <Button
                 type='button'
                 variant='outline'
                 onClick={handleCreatePair}
                 disabled={creatingPair || verifying || !credsReady}
-                className='shrink-0'
+                className='w-full shrink-0 sm:w-auto'
               >
                 {creatingPair
                   ? t('Creating...')
@@ -538,8 +538,8 @@ export function WaffoPancakeSettingsSection({
                 <div className='flex-1 border-t' />
               </div>
 
-              <div className='grid grid-cols-2 gap-3'>
-                <div className='grid gap-1.5'>
+              <div className='grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2'>
+                <div className='grid min-w-0 gap-1.5'>
                   <Label>{t('Store')}</Label>
                   <Select
                     items={storeSelectItems}
@@ -552,7 +552,7 @@ export function WaffoPancakeSettingsSection({
                       })
                     }}
                   >
-                    <SelectTrigger className='w-full'>
+                    <SelectTrigger className='w-full min-w-0 [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:truncate'>
                       <SelectValue placeholder={t('Select a store')} />
                     </SelectTrigger>
                     <SelectContent>
@@ -565,7 +565,7 @@ export function WaffoPancakeSettingsSection({
                   </Select>
                 </div>
 
-                <div className='grid gap-1.5'>
+                <div className='grid min-w-0 gap-1.5'>
                   <Label>{t('Product')}</Label>
                   <Select
                     items={productSelectItems}
@@ -578,7 +578,7 @@ export function WaffoPancakeSettingsSection({
                     }
                     disabled={!chosenStoreID || productSelectItems.length === 0}
                   >
-                    <SelectTrigger className='w-full'>
+                    <SelectTrigger className='w-full min-w-0 [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:truncate'>
                       <SelectValue placeholder={t('Select a product')} />
                     </SelectTrigger>
                     <SelectContent>
