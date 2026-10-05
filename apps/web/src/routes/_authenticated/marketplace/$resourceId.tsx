@@ -121,6 +121,11 @@ function ResourceDetailPage() {
         `/api/marketplace/resources/${encodeURIComponent(resourceId)}/download`,
         { responseType: 'blob' },
       )
+      // 后端失败时返回 application/json 错误壳；下载成功是 image/png 或文本
+      if (String(response.data.type).includes('json')) {
+        setActionError(t('下载失败，可能尚未获得访问权限'))
+        return
+      }
       const extension = version?.format === 'character_card_png' ? 'png' : version?.format === 'character_card_json' ? 'json' : 'md'
       const url = URL.createObjectURL(response.data)
       const link = document.createElement('a')

@@ -33,23 +33,28 @@ function ResourceCreatePage() {
     setBusy(true)
     setError('')
     try {
-      const createResponse = await api.post<{ success: boolean; data?: { id: number }; message?: string }>(
-        '/api/marketplace/user/resources',
-        {
-          type,
-          title,
-          summary,
-          visibility,
-          currency: Number(price) > 0 ? currency : 'quota',
-          price: Number(price) > 0 ? Number(price) : 0,
-        },
-      )
-      if (!createResponse.data.success || !createResponse.data.data) {
-        setError(createResponse.data.message ?? t('创建失败'))
-        return
+      // 资源创建与内容提交是两步：创建成功但内容提交失败时，重试只重发
+      // 版本（并补齐分享），避免重复创建同名资源。
+      let newId = createdId
+      if (!newId) {
+        const createResponse = await api.post<{ success: boolean; data?: { id: number }; message?: string }>(
+          '/api/marketplace/user/resources',
+          {
+            type,
+            title,
+            summary,
+            visibility,
+            currency: Number(price) > 0 ? currency : 'quota',
+            price: Number(price) > 0 ? Number(price) : 0,
+          },
+        )
+        if (!createResponse.data.success || !createResponse.data.data) {
+          setError(createResponse.data.message ?? t('创建失败'))
+          return
+        }
+        newId = createResponse.data.data.id
+        setCreatedId(newId)
       }
-      const newId = createResponse.data.data.id
-      setCreatedId(newId)
 
       if (sharedUserIds.trim() && visibility === 'shared') {
         for (const raw of sharedUserIds.split(/[,\s]+/).filter(Boolean)) {
@@ -106,7 +111,7 @@ function ResourceCreatePage() {
           <Button onClick={() => void navigate({ to: '/marketplace-mine' })}>{t('前往我的资源')}</Button>
         </div>
       )}
-      {!createdId && (
+      {!(createdId && uploaded) && (
         <section className='space-y-4 rounded-lg border p-5'>
           <div className='space-y-1'>
             <Label>{t('类型')}</Label>
