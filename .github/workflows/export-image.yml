@@ -1,0 +1,50 @@
+name: Export image artifact
+
+# 一次性运维 workflow：把 ghcr 上已发布的 amd64 镜像导出为构建产物，
+# 供无认证环境（生产服务器 docker-auths 为空）离线 docker load。
+# 触发：手动 dispatch，输入 ghcr 镜像 tag（不含 -amd64 后缀）。
+# 用完可删。
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "ghcr 镜像 tag（例如 sha-633a2ae69bd4，不含 -amd64）"
+        required: true
+        type: string
+
+concurrency:
+  group: export-image
+
+jobs:
+  export:
+    name: Export amd64 image
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Resolve lowercase repo
+        run: echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@c99871dec2022cc055c062a10cc1a1310835ceb4 # v4.3.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Pull image
+        run: docker pull "ghcr.io/${REPO_LC}:${{ inputs.image_tag }}-amd64"
+
+      - name: Save image
+        run: docker save "ghcr.io/${REPO_LC}:${{ inputs.image_tag }}-amd64" | gzip > "image-${{ inputs.image_tag }}-amd64.tar.gz"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: "image-${{ inputs.image_tag }}-amd64"
+          path: "image-${{ inputs.image_tag }}-amd64.tar.gz"
+          retention-days: 3
+          compression-level: 0

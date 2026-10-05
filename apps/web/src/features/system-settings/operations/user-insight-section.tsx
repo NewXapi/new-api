@@ -450,7 +450,7 @@ export function UserInsightSection({
               <FormItem data-settings-form-span='full'>
                 <FormLabel>{t('Blocked clients (site-wide)')}</FormLabel>
                 <FormControl>
-                  <BlockedClientsPicker
+                  <ClientChecklistPicker
                     value={field.value ?? []}
                     onChange={field.onChange}
                   />
@@ -458,6 +458,29 @@ export function UserInsightSection({
                 <FormDescription>
                   {t(
                     'Pick which request-header clients are banned for every user. Banned only while the switch above is on; single users can be treated differently from the dashboard.'
+                  )}
+                </FormDescription>
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name='user_insight_setting.skip_jailbreak_clients'
+            render={({ field }) => (
+              <FormItem data-settings-form-span='full'>
+                <FormLabel>
+                  {t('Skip jailbreak detection for clients')}
+                </FormLabel>
+                <FormControl>
+                  <ClientChecklistPicker
+                    value={field.value ?? []}
+                    onChange={field.onChange}
+                  />
+                </FormControl>
+                <FormDescription>
+                  {t(
+                    'Selected clients (e.g. SillyTavern) skip jailbreak scoring entirely, so their traffic cannot trigger the jailbreak + coding auto-ban. Usage profiles and the dashboard still record them.'
                   )}
                 </FormDescription>
               </FormItem>
@@ -483,13 +506,13 @@ const CLIENT_KIND_GROUPS = [
 ] as const
 
 /**
- * 全站封禁客户端的勾选选择器。
+ * 客户端勾选选择器（封禁名单与破甲跳过名单共用）。
  *
  * 选项来自后端识别规则目录（/api/user-insight/client-catalog），
  * 按"编程 harness / 手机端 / 聊天界面 / 浏览器 / SDK"分组勾选，
  * 规则增删后自动跟上，不存在前端静态镜像的漂移。
  */
-function BlockedClientsPicker({
+function ClientChecklistPicker({
   value,
   onChange,
 }: {

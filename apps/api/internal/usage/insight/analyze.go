@@ -21,6 +21,12 @@ const maxScanMessages = 12
 type Options struct {
 	// GenderInference 关闭后不做角色扮演性别倾向推断。
 	GenderInference bool
+	// SkipJailbreakClients 是跳过破甲检测的客户端 ID 列表（与识别规则
+	// ID 一致）。命中的请求不做破甲评分：运营方已认定该客户端无害
+	// （典型如 SillyTavern），其请求不应给"破甲 + 写代码"自动封禁
+	// 供破甲弹药。用途分类与中转站识别不受影响，观察面保持完整。
+	// 信任模型与客户端封禁一致：识别命中即豁免，伪造 UA 可绕过。
+	SkipJailbreakClients []string
 }
 
 // Analyze 对单次请求做画像分析。body 为原始请求体（可为空），
@@ -62,7 +68,29 @@ func Analyze(header http.Header, body []byte, requestPath string, opts Options) 
 		roleplayBoost += 25
 	}
 
-	usage := classifyUsage(lowerAll, rawAll, hasTools, roleplayBoost)
+	// 破甲检测在用途分类之前执行：其结论（Jailbreak）要参与 classifyUsage
+	// 的伪代码裁决——含破甲预设的"代码形态"请求与伪代码人设卡同源
+	// （都是酒馆生态），必须先拿到破甲证据才能在分类时收回 code 判定。
+	// 跳过名单命中的客户端（运营方已认定的无害酒馆客户端）完全不做
+	// 破甲评分，也不触发隐藏字符加分。
+	if !clientSkipsJailbreak(result.Client, opts.SkipJailbreakClients) {
+		result.JailbreakScore, result.JailbreakLevel, result.JailbreakTags, result.JailbreakVector =
+			DetectJailbreakWithClient(lowerAll, lowerSystem, hasPrefill, result.ClientKind)
+		if containsControlObfuscation(system + conversation) {
+			result.JailbreakScore = clampScore(result.JailbreakScore + 20)
+			result.JailbreakTags = dedupeStrings(append(result.JailbreakTags, "hidden_characters"))
+			if result.JailbreakScore >= 45 && result.JailbreakLevel == JailbreakSuspect {
+				result.JailbreakLevel = JailbreakLikely
+			}
+		}
+	} else {
+		// 跳过时归一到 none 而不是留零值空串：下游（样本 risk_level 落库、
+		// 看板分组）假定等级必属 none/suspect/likely/confirmed 四值枚举。
+		result.JailbreakLevel = JailbreakNone
+	}
+	result.Jailbreak = result.JailbreakLevel == JailbreakLikely || result.JailbreakLevel == JailbreakConfirmed
+
+	usage := classifyUsage(lowerAll, rawAll, hasTools, roleplayBoost, result.Jailbreak)
 	result.Category = usage.Category
 	result.CategoryScore = usage.CategoryScore
 	result.CodeScore = usage.Code
@@ -102,21 +130,22 @@ func Analyze(header http.Header, body []byte, requestPath string, opts Options) 
 		result.RoleplayStyle = inferRoleplayStyle(lowerAll, turns)
 	}
 
-	result.JailbreakScore, result.JailbreakLevel, result.JailbreakTags, result.JailbreakVector =
-		DetectJailbreakWithClient(lowerAll, lowerSystem, hasPrefill, result.ClientKind)
-	if containsControlObfuscation(system + conversation) {
-		result.JailbreakScore = clampScore(result.JailbreakScore + 20)
-		result.JailbreakTags = dedupeStrings(append(result.JailbreakTags, "hidden_characters"))
-		if result.JailbreakScore >= 45 && result.JailbreakLevel == JailbreakSuspect {
-			result.JailbreakLevel = JailbreakLikely
-		}
-	}
-	result.Jailbreak = result.JailbreakLevel == JailbreakLikely || result.JailbreakLevel == JailbreakConfirmed
-
 	// 保留提示词引用，供上层在需要留证时二次扫描出命中原句。
 	result.SetPromptText(system, conversation)
 
 	return result
+}
+
+// clientSkipsJailbreak 判断请求客户端是否在破甲检测跳过名单中。
+// 名单为运营方配置（skip_jailbreak_clients），与客户端封禁同一信任
+// 模型：识别命中（ID 相等）即豁免，含仅提示词命中的场景。
+func clientSkipsJailbreak(client string, skipList []string) bool {
+	for _, skipped := range skipList {
+		if skipped == client {
+			return true
+		}
+	}
+	return false
 }
 
 // extractPrompt 从请求体中抽取 system 段与对话正文。

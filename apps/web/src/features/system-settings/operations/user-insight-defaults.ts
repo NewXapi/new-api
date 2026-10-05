@@ -45,6 +45,8 @@ export const insightSchema = z.object({
     client_ban_enabled: z.boolean(),
     // 勾选集合：与识别规则 ID 对应，保存时序列化成 JSON 数组字符串。
     blocked_clients: z.array(z.string()),
+    // 破甲检测跳过名单：命中的客户端不做破甲评分（放过已知酒馆客户端）。
+    skip_jailbreak_clients: z.array(z.string()),
   }),
 })
 
@@ -69,6 +71,7 @@ export type InsightFlatDefaults = {
   'user_insight_setting.client_ban_enabled': boolean
   // 线格式为 JSON 数组字符串（与 Go 侧 []string 的序列化一致），如 ["claude_code","cursor"]。
   'user_insight_setting.blocked_clients': string
+  'user_insight_setting.skip_jailbreak_clients': string
 }
 
 export const DEFAULT_INSIGHT_VALUES: InsightFlatDefaults = {
@@ -88,6 +91,7 @@ export const DEFAULT_INSIGHT_VALUES: InsightFlatDefaults = {
   'user_insight_setting.auto_ban_code_min_requests': 10,
   'user_insight_setting.client_ban_enabled': false,
   'user_insight_setting.blocked_clients': '[]',
+  'user_insight_setting.skip_jailbreak_clients': '[]',
 }
 
 /** 解析服务端的 JSON 数组字符串为客户端 ID 列表，解析失败回落到空数组。 */
@@ -131,6 +135,9 @@ export const buildInsightFormDefaults = (
     blocked_clients: parseBlockedClients(
       defaults['user_insight_setting.blocked_clients']
     ),
+    skip_jailbreak_clients: parseBlockedClients(
+      defaults['user_insight_setting.skip_jailbreak_clients']
+    ),
   },
 })
 
@@ -169,5 +176,8 @@ export const normalizeInsightFormValues = (
     values.user_insight_setting.client_ban_enabled,
   'user_insight_setting.blocked_clients': JSON.stringify(
     values.user_insight_setting.blocked_clients ?? []
+  ),
+  'user_insight_setting.skip_jailbreak_clients': JSON.stringify(
+    values.user_insight_setting.skip_jailbreak_clients ?? []
   ),
 })

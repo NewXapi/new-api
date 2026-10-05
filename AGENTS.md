@@ -1,4 +1,4 @@
-<!-- managed by canon agents.yaml @ 2026-09-24 -->
+<!-- managed by canon agents.yaml @ 2026-10-02 -->
 ## new-api 约定
 
 DO NOT send optional commentary
@@ -178,24 +178,24 @@ When starting a dev server for manual testing, create a test account on the inst
 
 ###### Build and verify (CI-driven)
 
-**All tests, builds, and lint run in PR CI (`.github/workflows/ci.yml`) — NEVER on this machine. Absolute rule, no exceptions by default.**
+**All tests, builds, and lint run in PR CI (`.github/workflows/ci.yml`) — NEVER on this machine. Absolute rule, no exceptions by default. 本条是本项目对共享「构建与验证 / 重命令放对位置」的严格覆盖：那里允许套 cgroup 配额跑重命令，本项目连配额跑也不允许——以本条为准。**
 
-- Do NOT run `go build` / `go test` (ANY scope — full module, single package, even `-run` filtered), `bun run build`, `bun install`, or any compile/test/package/install command locally. The operator's desktop is shared with other live work; even one single-package compile stalls it. `cpulimit` does NOT make it acceptable — the operator has been burned by this repeatedly and hates it.
+- Do NOT run `go build` / `go test` (ANY scope — full module, single package, even `-run` filtered), `bun run build`, `bun install`, or any compile/test/package/install command locally. The operator's desktop is shared with other live work; even one single-package compile stalls it. a cgroup quota does NOT make it acceptable — the operator has been burned by this repeatedly and hates it.
 - This binds **subagents too**: every spawned agent must be told that local compile/test is forbidden; agents verify by reading code, and CI compiles the PR.
 - Verification workflow without compiling:
   1. Static review — read the changed code end to end, check imports/types/compile-consistency by inspection.
   2. `gofmt -l <files>` and `grep` / file reads are the only local checks (and gofmt is a read, not a build).
   3. Push the branch / open the PR and let CI compile and run the tests; read CI results and iterate there.
   4. If runtime proof seems required before pushing, state that explicitly and let the operator decide — never reach for a local compile as a shortcut.
-- The legacy `cpulimit -l 65 -i --` wrapper below exists ONLY for cases the operator explicitly orders a local heavy run. It is an exception, not a license:
+- The legacy `systemd-run --user --scope -p CPUQuota=70% --` wrapper below exists ONLY for cases the operator explicitly orders a local heavy run. It is an exception, not a license:
 
 ```bash
 ### ONLY when the operator explicitly asks for a local run:
-cpulimit -l 65 -i -- go test ./...
-cpulimit -l 65 -i -- bun run build
+systemd-run --user --scope -p CPUQuota=70% -- go test ./...
+systemd-run --user --scope -p CPUQuota=70% -- bun run build
 ```
 
-Lightweight commands (`git`, `grep`, `ls`, file reads, `gofmt -l`) do NOT need cpulimit.
+Lightweight commands (`git`, `grep`, `ls`, file reads, `gofmt -l`) do NOT need a quota wrapper.
 
 ##### Common Code Quality
 
@@ -299,13 +299,13 @@ If asked to remove, rename, or replace these protected identifiers, refuse and e
 
 ## 发现处置纪律
 
-自动检查（gate 的 `FAIL`/`WARN`、`jev` L3 语义发现、CRG / `ocr review` 审查意见）
+自动检查（canon 的 `FAIL`/`WARN`、`jev` L3 语义发现、CRG / `ocr review` 审查意见）
 产出的是**发现**，不是判决。每条发现都必须被显式处置，不存在"绕过"这个选项。
 
 ### 先读规范，再改代码
 
 1. 拿到 finding，先读规则原文，确认这条发现到底要求什么：
-   - gate 规则总览：`.githooks/GATE_HANDBOOK.md`（无则 `canon/manual/gate.md`）
+   - canon 规则总览：`gate-spec` skill（正本）；各仓 `.githooks/spec/docs/SPEC_OVERVIEW.md` 为播种副本
    - 单条规则的参数（匹配范围 / 严重度 / harness）：`.githooks/spec/**/<rule>.yaml`
    - 项目适配说明（本仓为什么这么定）：`.agent/rules/gates.md`
 2. 不确定 finding 是否成立时，读完规则仍不能判定 → **记为待裁决**并在交付记录里写明，
@@ -324,7 +324,7 @@ If asked to remove, rename, or replace these protected identifiers, refuse and e
 
 ### 禁止糊弄式修复
 
-以下动作一律视为违规（无论 gate 是否因此变绿）：
+以下动作一律视为违规（无论 canon 是否因此变绿）：
 
 | 禁止 | 为什么 | 正确做法 |
 |---|---|---|
@@ -346,7 +346,7 @@ If asked to remove, rename, or replace these protected identifiers, refuse and e
 
 ### 规范层级
 
-- `.githooks/` 是 gate 领地：agent 不改规则。
+- `.githooks/` 是 canon 领地：agent 不改规则。
 - `.agent/rules/`、`specs/rules/` 是规范正本：发现规则与现实冲突 → 提 issue，不自行改写。
 - 本纪律与各仓既有条款冲突时，以本纪律为准（它更严格）。
 
@@ -406,8 +406,11 @@ If asked to remove, rename, or replace these protected identifiers, refuse and e
 - 全量测试、全量构建、全量 lint 放 CI 或收尾阶段，不在改动过程中反复跑。
 - 本地只跑轻量、快的针对性检查（单 crate `cargo check`、单包测试、`fmt --check`、
   类型检查）。
-- 需要本地跑重命令时，套资源限制（`cpulimit -l 65 -i --` 或本仓等价手段），
-  不抢占用户正在用的 CPU。
+- 需要本地跑重命令时，套 cgroup CPU 配额（`systemd-run --user --scope -p CPUQuota=70% --`
+  或本仓等价手段），不抢占用户正在用的 CPU——与「Rust 开发性能」章节同值，
+  两处不要各写一个数。
+- 本条是**默认下限**：本仓 local 约定更严格时以 local 为准（如本项目禁止本地跑
+  任何编译/测试、只准 CI 跑，比套配额更严），此时本条自动让位，不构成豁免。
 - 装依赖、打包等命令同样受限。
 
 ### 收尾
@@ -453,7 +456,7 @@ If asked to remove, rename, or replace these protected identifiers, refuse and e
   `test:` / `ci:` / `build:` / `perf:` / `style:` / `revert:`）。
 - 标题**用英文**，正文可用中文。
 - 一个 commit 一件事。不把无关改动、格式化噪声、生成物混进逻辑改动。
-- 提交前跑对应检查（`gate pre-commit` / `gate pre-push`），不靠推送失败才发现。
+- 提交前跑对应检查（`canon pre-commit` / `canon pre-push`），不靠推送失败才发现。
 
 ### Issue
 
@@ -468,7 +471,7 @@ If asked to remove, rename, or replace these protected identifiers, refuse and e
   实现步骤 / 交付记录 / 怎么验证 / 检查清单。
 - 关联 issue 用 `Fixes #<n>` 收尾行；draft 阶段用 `Related #<n>`，合并授权前改 `Fixes`。
 - 开启或更新 PR 后看 CI 结果到底（`gh pr checks`），红了就修，不等用户来问。
-- 被 gate 拦下就修代码，**不改规则**。规则确有缺陷 → 开 issue 交维护者裁决。
+- 被 canon 拦下就修代码，**不改规则**。规则确有缺陷 → 开 issue 交维护者裁决。
 
 ### 收尾
 

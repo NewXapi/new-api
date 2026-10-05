@@ -99,7 +99,8 @@ func newGeoGateRouter(t *testing.T) (contract.Engine, *fiber.App) {
 	for _, path := range []string{
 		"/pricing",               // blocked web page
 		"/sign-in",               // sign-in shell stays reachable
-		"/404",                   // block landing page stays reachable
+		"/403",                   // block landing page stays reachable
+		"/404",                   // ordinary not-found page stays reachable
 		"/assets/app.js",         // SPA bundle stays reachable
 		"/api/status",            // public bootstrap config
 		"/api/user/self",         // blocked data API
@@ -108,6 +109,8 @@ func newGeoGateRouter(t *testing.T) (contract.Engine, *fiber.App) {
 		server.GET(path, ok)
 	}
 	server.POST("/api/user/login", ok)
+	server.POST("/api/qqbot/webhook", ok)
+	server.POST("/api/qqbot/webhook/*", ok)
 
 	return server, captureEngineApp(t, server)
 }
@@ -123,30 +126,49 @@ func geoGateRequest(t *testing.T, app *fiber.App, method, path, authorization st
 }
 
 // TestGeoBlockRejectsBlockedRegionForAnonymous covers the visitor contract: the
-// web surface lands on the site's 404 page, the API surface answers 404 JSON,
-// and the sign-in / 404 shell remains reachable so an administrator can log in.
+// web surface lands on the site's 403 page, the API surface answers 403 JSON,
+// and the sign-in / block-landing shell remains reachable so an administrator
+// can log in.
 func TestGeoBlockRejectsBlockedRegionForAnonymous(t *testing.T) {
 	withGeoGateEnv(t)
 	_, app := newGeoGateRouter(t)
 
 	webPage := geoGateRequest(t, app, http.MethodGet, "/pricing", "")
-	assert.Equal(t, http.StatusFound, webPage.StatusCode, "web pages redirect to the 404 route")
-	assert.Equal(t, "/404", webPage.Header.Get("Location"))
+	assert.Equal(t, http.StatusFound, webPage.StatusCode, "web pages redirect to the 403 route")
+	assert.Equal(t, "/403", webPage.Header.Get("Location"))
 
 	api := geoGateRequest(t, app, http.MethodGet, "/api/user/self", "")
-	assert.Equal(t, http.StatusNotFound, api.StatusCode)
-	assert.Contains(t, responseBody(t, api), "page not found")
+	assert.Equal(t, http.StatusForbidden, api.StatusCode)
+	assert.Contains(t, responseBody(t, api), "access forbidden")
 
 	relay := geoGateRequest(t, app, http.MethodGet, "/v1/chat/completions", "")
-	assert.Equal(t, http.StatusNotFound, relay.StatusCode, "relay endpoints answer 404 JSON")
-	assert.Contains(t, responseBody(t, relay), "page not found")
+	assert.Equal(t, http.StatusForbidden, relay.StatusCode, "relay endpoints answer 403 JSON")
+	assert.Contains(t, responseBody(t, relay), "access forbidden")
 
-	for _, path := range []string{"/sign-in", "/404", "/assets/app.js", "/api/status"} {
+	for _, path := range []string{"/sign-in", "/403", "/404", "/assets/app.js", "/api/status"} {
 		response := geoGateRequest(t, app, http.MethodGet, path, "")
 		assert.Equal(t, http.StatusOK, response.StatusCode, "%s must stay reachable for sign-in", path)
 	}
 	login := geoGateRequest(t, app, http.MethodPost, "/api/user/login", "")
 	assert.Equal(t, http.StatusOK, login.StatusCode, "the login flow must stay reachable")
+}
+
+// TestGeoBlockQQBotWebhookStaysReachable covers the server-to-server callback
+// contract: QQ open-platform events arrive from Tencent's own servers inside
+// mainland China, so the webhook must pass the gate even when CN is blocked.
+// Both the legacy path and the optional WebhookPathToken suffix must stay
+// reachable; without this exemption the bot goes deaf to every event.
+func TestGeoBlockQQBotWebhookStaysReachable(t *testing.T) {
+	withGeoGateEnv(t)
+	_, app := newGeoGateRouter(t)
+
+	webhook := geoGateRequest(t, app, http.MethodPost, "/api/qqbot/webhook", "")
+	assert.Equal(t, http.StatusOK, webhook.StatusCode,
+		"the signed webhook must stay reachable from blocked regions")
+
+	tokened := geoGateRequest(t, app, http.MethodPost, "/api/qqbot/webhook/token-suffix", "")
+	assert.Equal(t, http.StatusOK, tokened.StatusCode,
+		"the tokenized webhook path must stay reachable from blocked regions")
 }
 
 // TestGeoBlockAdminExemption covers the operator contract: an admin credential
@@ -162,14 +184,14 @@ func TestGeoBlockAdminExemption(t *testing.T) {
 	assert.Equal(t, http.StatusOK, admin.StatusCode, "an administrator keeps full access")
 
 	regular := geoGateRequest(t, app, http.MethodGet, "/api/user/self", "Bearer user-token")
-	assert.Equal(t, http.StatusNotFound, regular.StatusCode, "a regular user is still blocked")
+	assert.Equal(t, http.StatusForbidden, regular.StatusCode, "a regular user is still blocked")
 
 	invalid := geoGateRequest(t, app, http.MethodGet, "/api/user/self", "Bearer not-a-real-token")
-	assert.Equal(t, http.StatusNotFound, invalid.StatusCode, "an unknown credential is blocked, not errored")
+	assert.Equal(t, http.StatusForbidden, invalid.StatusCode, "an unknown credential is blocked, not errored")
 
 	require.NoError(t, dbinfra.UpdateOption("geo_block_setting.allow_admin", "false"))
 	adminOff := geoGateRequest(t, app, http.MethodGet, "/api/user/self", "Bearer admin-token")
-	require.Equal(t, http.StatusNotFound, adminOff.StatusCode,
+	require.Equal(t, http.StatusForbidden, adminOff.StatusCode,
 		"allow_admin=false blocks administrators too")
 }
 
