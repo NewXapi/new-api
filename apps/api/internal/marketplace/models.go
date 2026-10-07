@@ -15,7 +15,13 @@ func (tags ResourceTags) Value() (driver.Value, error) {
 	if tags == nil {
 		return "[]", nil
 	}
-	return common.Marshal(tags)
+	// Must return string, not []byte: []byte binds as a BLOB and SQLite's
+	// LIKE never matches BLOB values, which would silently break tag filters.
+	data, err := common.Marshal(tags)
+	if err != nil {
+		return nil, err
+	}
+	return string(data), nil
 }
 
 func (tags *ResourceTags) Scan(value any) error {
