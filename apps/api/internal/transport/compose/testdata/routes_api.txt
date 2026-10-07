@@ -71,6 +71,7 @@ GET /api/log/stat
 GET /api/log/token
 GET /api/marketplace/admin/agreements
 GET /api/marketplace/admin/orders
+GET /api/marketplace/admin/resources
 GET /api/marketplace/admin/reviews
 GET /api/marketplace/admin/settings
 GET /api/marketplace/resources
@@ -78,8 +79,11 @@ GET /api/marketplace/resources/:id
 GET /api/marketplace/resources/:id/content
 GET /api/marketplace/resources/:id/download
 GET /api/marketplace/user/agreements
+GET /api/marketplace/user/library
 GET /api/marketplace/user/orders
 GET /api/marketplace/user/resources
+GET /api/marketplace/user/resources/:id/shares
+GET /api/marketplace/user/resources/:id/versions
 GET /api/marketplace/user/settlements
 GET /api/mj/
 GET /api/mj/self
@@ -199,13 +203,16 @@ POST /api/custom-oauth-provider/
 POST /api/custom-oauth-provider/discovery
 POST /api/geoip/database/update
 POST /api/marketplace/admin/agreements
+POST /api/marketplace/admin/resources/:id/republish
 POST /api/marketplace/admin/resources/:id/unlist
 POST /api/marketplace/admin/versions/:id/review
 POST /api/marketplace/user/agreements/:id/accept
 POST /api/marketplace/user/resources
 POST /api/marketplace/user/resources/:id/claim
 POST /api/marketplace/user/resources/:id/purchase
+POST /api/marketplace/user/resources/:id/republish
 POST /api/marketplace/user/resources/:id/share
+POST /api/marketplace/user/resources/:id/unlist
 POST /api/marketplace/user/resources/:id/versions
 POST /api/marketplace/user/settlements/exchange
 POST /api/models/
@@ -303,7 +310,9 @@ PUT /api/channel/
 PUT /api/channel/route_unit/:id
 PUT /api/channel/tag
 PUT /api/custom-oauth-provider/:id
+PUT /api/marketplace/admin/agreements/:id/enabled
 PUT /api/marketplace/admin/settings
+PUT /api/marketplace/user/resources/:id
 PUT /api/models/
 PUT /api/option/
 PUT /api/prefill_group/

@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { api } from '@/lib/api'
 import { useAuthStore } from '@/stores/auth-store'
@@ -30,6 +31,7 @@ export const Route = createFileRoute('/oauth2/consent')({
 })
 
 function OAuthConsentPage() {
+  const { t } = useTranslation()
   const { request } = Route.useSearch()
   const [consent, setConsent] = useState<ConsentData | null>(null)
   const [error, setError] = useState('')
@@ -42,12 +44,12 @@ function OAuthConsentPage() {
     ).then((response) => {
       if (!active) return
       if (response.data.success && response.data.data) setConsent(response.data.data)
-      else setError(response.data.message || 'Unable to load authorization request')
+      else setError(response.data.message || t('Unable to load authorization request'))
     }).catch(() => {
-      if (active) setError('Unable to load authorization request')
+      if (active) setError(t('Unable to load authorization request'))
     })
     return () => { active = false }
-  }, [request])
+  }, [request, t])
 
   async function finish(approve: boolean) {
     setSubmitting(true)
@@ -58,29 +60,29 @@ function OAuthConsentPage() {
       )
       const target = response.data.data?.redirect_uri
       if (target) window.location.assign(target)
-      else setError(response.data.message || 'Authorization was not completed')
+      else setError(response.data.message || t('Authorization was not completed'))
     } catch {
-      setError('Authorization was not completed')
+      setError(t('Authorization was not completed'))
     } finally {
       setSubmitting(false)
     }
   }
 
-  if (error) return <main className='mx-auto max-w-lg p-8'><h1 className='text-xl font-semibold'>Authorization failed</h1><p className='mt-3'>{error}</p></main>
-  if (!consent) return <main className='mx-auto max-w-lg p-8'>Loading authorization request...</main>
+  if (error) return <main className='mx-auto max-w-lg p-8'><h1 className='text-xl font-semibold'>{t('Authorization failed')}</h1><p className='mt-3'>{error}</p></main>
+  if (!consent) return <main className='mx-auto max-w-lg p-8'>{t('Loading authorization request...')}</main>
 
   return (
     <main className='mx-auto mt-12 max-w-lg space-y-6 rounded-lg border p-8'>
       <div>
-        <h1 className='text-2xl font-semibold'>Authorize {consent.client_name}</h1>
-        <p className='text-muted-foreground mt-2 text-sm'>This application is requesting access to your New API account.</p>
+        <h1 className='text-2xl font-semibold'>{t('Authorize {{client}}', { client: consent.client_name })}</h1>
+        <p className='text-muted-foreground mt-2 text-sm'>{t('This application is requesting access to your New API account.')}</p>
       </div>
       <ul className='space-y-2 text-sm'>
         {consent.scope.map((scope) => <li key={scope} className='rounded border px-3 py-2'>{scope}</li>)}
       </ul>
       <div className='flex gap-3'>
-        <button className='border px-4 py-2' disabled={submitting} onClick={() => void finish(false)}>Deny</button>
-        <button className='bg-primary text-primary-foreground px-4 py-2' disabled={submitting} onClick={() => void finish(true)}>Allow</button>
+        <button className='border px-4 py-2' disabled={submitting} onClick={() => void finish(false)}>{t('Deny')}</button>
+        <button className='bg-primary text-primary-foreground px-4 py-2' disabled={submitting} onClick={() => void finish(true)}>{t('Allow')}</button>
       </div>
     </main>
   )
