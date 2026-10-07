@@ -1,14 +1,14 @@
 # Checklist 检查清单 — 用户使用指南
 
-`.githooks/spec/checklist_*.yaml` 是项目级 LLM 检查清单的入口。每份 yaml = 一条检查，gate 会按字典序全部跑（可改名加前缀控顺序：`00_`、`10_`、`99_`）。
+`.githooks/spec/quality/checklist_*.yaml` 是项目级 LLM 检查清单的入口。每份 yaml = 一条检查，gate 按**目录内**文件名字典序全部跑（可改名加前缀控顺序：`00_`、`10_`、`99_`）；规则只有落在 `quality|code|cleanup|workspace|github` 子目录里才会被 catalog 路由，spec 根层的 yaml 不生效。
 
 ## 三步上手
 
 ### 1. 复制 demo
 
 ```bash
-cp .githooks/spec/checklist_no_debug_log_demo.yaml \
-   .githooks/spec/checklist_my_rule.yaml
+cp .githooks/spec/quality/checklist_no_debug_log_demo.yaml \
+   .githooks/spec/quality/checklist_my_rule.yaml
 ```
 
 ### 2. 改 harness 段
@@ -75,7 +75,7 @@ harness stdout **必须**是 JSON 数组（即使一条）：
 # 设预制 findings：
 export CHECKLIST_DEMO_FINDINGS='[{"id":"X-01","severity":"WARN","line":1,"message":"mock finding"}]'
 # 跑 gate：
-gate pre-commit
+canon pre-commit
 # 或直接试 mock：
 ./.githooks/spec/CHECKLIST_DEMO_MOCK.sh
 ```
@@ -85,17 +85,17 @@ gate pre-commit
 ## 在新项目启用
 
 ```bash
-# 1. 复制 omenic 的 .githooks 整目录
-cp -r ~/projects/omenic/.githooks ~/projects/<your-project>/
+# 1. 复制 kymido 的 .githooks 整目录
+cp -r ~/projects/kymido/.githooks ~/projects/<your-project>/
 
 # 2. 装 gate 二进制 + 初始化
 cd ~/projects/<your-project>
-gate init
+canon init
 # 3. 调整 checklist_*.yaml（删 demo，改 prompt 适配你的项目）
 # 4. 验证
-gate pre-commit   # 当前 staged
-gate pre-push     # 当前 push
-gate merge OWNER/REPO 123   # 手动合并前
+canon pre-commit   # 当前 staged
+canon pre-push     # 当前 push
+canon merge OWNER/REPO 123   # 手动合并前
 ```
 
 ## 详细规范

@@ -5,9 +5,9 @@
 ```
 .githooks/
 ├── hooks/                     # git hooks 入口（core.hooksPath = .githooks/hooks）
-│   ├── pre-commit            # bash 包装 → exec gate pre-commit（CM-01/02/03 + workspace + code + checklist）
-│   ├── pre-push              # bash 包装 → exec gate pre-push（workspace + code + checklist）
-│   └── merge                 # bash 包装 → exec gate merge（PR + reviews + cleanup + CRG + ocr + checklist）
+│   ├── pre-commit            # bash 包装 → exec canon pre-commit（CM-01/02/03 + workspace + code + checklist）
+│   ├── pre-push              # bash 包装 → exec canon pre-push（workspace + code + checklist）
+│   └── merge                 # bash 包装 → exec canon merge（PR + reviews + cleanup + checklist）
 ├── spec/                      # 规则配置（改规则只改这里，不改脚本）
 │   ├── SPEC_OVERVIEW.md      # 本文件（规范总览）
 │   ├── dispatch.yaml         # 钩子→主题映射（哪个钩子跑哪些检查）
@@ -23,17 +23,24 @@
 │   ├── CHECKLIST_SPEC.md      # Checklist 详细规范（yaml schema + harness 协议）
 │   └── CHECKLIST_DEMO_README.md # Checklist 用户使用指南
 ├── GITHUB_ISSUE_PR.md         # Issue/PR 创建指南（含关联机制）
-├── PR_DEV_WORKFLOW.md         # PR 开发工作流指南（含 CRG + ocr 审查流程）
+├── PR_DEV_WORKFLOW.md         # PR 开发工作流指南
 └── WORKFLOW.md                # 工作隔离规范（.wt/ worktree 分支目录）
 
 ```
 
 ### 外部工具依赖
 
-- `code-review-graph`（CRG）：结构分析/变更影响检测（`detect-changes --brief --base main`）
-- `ocr`（OpenCodeReview CLI）：AI 代码审查（`review --format json --audience agent`）
 - `gh`（GitHub CLI）：所有 GitHub API 操作入口
+
+已退役：`code-review-graph`（CRG）与 `ocr`（OpenCodeReview CLI）不再安装也不再调用。
+原由二者承担的语义层由 jev 驱动的 `ocr_rust` / `ocr_go` / `ocr_javascript` /
+`ocr_default` checklist 承接（yv8 与 open-code-review 的规则文档移植，非 ocr 二进制）。
 - 任意 LLM CLI（`claude` / `codex` / `ollama` 等，被 checklist harness 调用；非必须，缺失按 `optional` 处理）
+- `cargo-machete`：未使用依赖检测（`dep_hygiene` 的执行器）
+- `upx`：二进制压缩（canon 部署产物，构建期使用）
+- 缺失的工具按 yaml 的 `optional` 处理（默认 WARN 跳过）
+
+> 后三行来自各成员仓根层 `SPEC_OVERVIEW.md`（ferrite / gugu / silverq / deskctl / kime）的外部工具依赖清单。
 
 ## 本文档用途
 
@@ -42,7 +49,9 @@
 - 规则**只**在 `.githooks/spec/*.yaml`（参数）和 Rust 校验器（逻辑）两处，改规则只改 spec
 - **新增/修改规则后必须更新本文档**
 - 规则编号采用**主题前缀 + 连续编号**（IS/PR/RV/GT/WS/CD/CL/CM/CK）
-- commit 标题规则 CM-01/02/03 实现在 `gate pre-commit`，语义与 PR-01/PR-02 对齐
+- commit 标题规则 CM-01/02/03 实现在 `canon pre-commit`，语义与 PR-01/PR-02 对齐
+- 各成员仓根层还留有旧的 `.githooks/spec/SPEC_OVERVIEW.md`；其中**项目侧独有**的规则行
+  已并入本文档（见「项目侧 checklist」小节，行尾标注来源项目），正本是唯一总览
 
 ## 主题一：GitHub 规则（IS/PR/RV）
 
@@ -71,7 +80,7 @@
 - PR-02 Conventional Commit 格式 — WARN
 - PR-03 必填 body 段完整性 — FAIL
 - PR-04 heading 英文、What 段中文 — FAIL/WARN
-- PR-05 一个 PR 一个主 issue（Fixes 数量）— WARN
+- PR-05 issue 关联可选（缺省 INFO；`fixes_linkage_mode` 可升 WARN/FAIL；多个 Fixes 恒 WARN）
 - PR-06 label 存在性 + type label — FAIL
 - PR-07 Construction plan/Checklist 至少 2 个 checkbox — FAIL
 - PR-08 分支前缀合法 — FAIL
@@ -79,13 +88,12 @@
 - PR-11 合并前 PR 内 checkbox 全勾（merge 时检查）— FAIL
 - PR-12 合并留言理由（merge 时必须 --body）— FAIL
 
-### Review 规则（RV-01 ~ RV-06）
+### Review 规则（RV-01 ~ RV-06，RV-05 已随 CRG 退役）
 
 - RV-01 禁 checkbox — FAIL
 - RV-02 reply 用词合法（Fix/Block/Resolve/Note/Withdraw/Supersede）— WARN
 - RV-03 reply 详细程度 — WARN
-- RV-04 CRG/Inline Review 前缀格式 — FAIL
-- RV-05 CRG Review 存在 — FAIL
+- RV-04 Inline Review 前缀格式 — FAIL
 - RV-06 inline findings 有回复 — WARN
 
 ## 主题二：拦截门（GT-01 ~ GT-07）
@@ -98,18 +106,18 @@
 - GT-04 issue close 前只查 Done when 段 checkbox 全勾 + 必须 --comment 理由（Implementation Order 进度格不拦）— FAIL 拒（开关 `close_done_when_gate`/`close_requires_comment`，严重度可经 severity_overrides 降级）— 触发：gh issue close
 - GT-04b issue close 前 PR 关联检查：epic 豁免（完成信号是 GT-06 sub 全关）；非 epic 无关联仅提示不阻塞 — WARN — 触发：gh issue close
 - GT-05 pr merge 前 checkbox 全勾 + 关联 Fixes issue Done when 全勾（epic 目标豁免，由 GT-06 保障）+ --body 理由 + squash 标题 CM-01/CM-02 — FAIL 拒（开关 `merge_checkbox_gate`/`merge_fixes_gate`/`merge_requires_body`/`merge_title_gate`）— 触发：gh pr merge
+- GT-METHOD 只允许 squash merge：无 `--squash` 或出现 `--merge`/`--rebase`/`--auto`/`--ff-only`/`--no-squash`（含 `-m`/`-r`/`-F` 短形式）即拒 — FAIL（开关 `merge_requires_squash`）— 触发：gh pr merge
 - GT-06 epic close/merge 前所有 sub-issues 已关闭（开关 `epic_sub_issue_gate`；sub 查询失败仍 fail-closed 硬拒，不可配）— FAIL 拒 — 触发：gh issue close / gh pr merge
 - GT-07 merge 后自动在 PR 留言 + 删除本地 head 分支（安全模式）— 行为（无拦截）— 触发：gh pr merge
-- RV-07 有文件改动的 PR merge 前必须 CRG + ocr 审查 — FAIL 阻塞（`github_reviews.yaml merge_review.required: false` 关；`ocr_timeout_secs` 调超时）— 触发：gate merge
 
 参数剥离：`gh_args()` 剥 `--parent`/`--repo`/`-R`；`arg_repo()` 提取 `--repo` 值（issue close 从 --repo 或 cwd 取仓库）。
 
-## 主题三：钩子调度（gate pre-commit / pre-push / merge）
+## 主题三：钩子调度（canon pre-commit / pre-push / merge）
 
-- `gate init` 部署：复制二进制到 `~/.local/bin/gate`（+ 同二进制为 `~/.local/bin/gh`）、设置 `core.hooksPath=.githooks/hooks`、写 hook 模板
+- `canon init` 部署：复制二进制到 `~/.local/bin/canon`（+ 同二进制为 `~/.local/bin/gh`）、设置 `core.hooksPath=.githooks/hooks`、写 hook 模板
 - pre-commit：CM-01/CM-02/CM-03（commit 标题格式/CJK/与 PR type 一致）+ workspace（WS-*）+ code（CD-*）
 - pre-push：workspace + code（cargo 不传 target、ruff 排除 .githooks、file_placement 忽略 .githooks/）
-- merge（手动 `gate merge <owner/repo> <pr_number> [--dry-run]`）：PR + reviews + cleanup + RV-07（CRG + ocr）
+- merge（手动 `canon merge <owner/repo> <pr_number> [--dry-run]`）：PR + reviews + cleanup + checklist（含 L2 语义层）
 
 ### Commit 标题规则（CM-01 ~ CM-03）
 
@@ -136,34 +144,53 @@
 
 ## 主题六：Cleanup（CL-01 ~ CL-03，Rust cleanup validators）
 
-- CL-01 branch_cleanup：merged/orphan/temp 分支清理，dry-run 默认（gate merge 调用）；配置 `spec/cleanup_branch_cleanup.yaml` — WARN
-- CL-02 tests_check：四语言测试命名/断言数/必需 helper（配置 `spec/cleanup_tests_{rust,go,javascript,bash}.yaml`，gate merge 调用）— WARN
-- CL-03 docs_hygiene：全角括号/死链/遗留标记（TODO/FIXME/XXX）/空文件/CRLF/尾随空白（配置 `spec/cleanup_docs_hygiene.yaml`，gate merge 调用）— WARN/INFO
+- CL-01 branch_cleanup：merged/orphan/temp 分支清理，dry-run 默认（canon merge 调用）；配置 `spec/cleanup_branch_cleanup.yaml` — WARN
+- CL-02 tests_check：四语言测试命名/断言数/必需 helper（配置 `spec/cleanup_tests_{rust,go,javascript,bash}.yaml`，canon merge 调用）— WARN
+- CL-03 docs_hygiene：全角括号/死链/遗留标记（TODO/FIXME/XXX）/空文件/CRLF/尾随空白（配置 `spec/cleanup_docs_hygiene.yaml`，canon merge 调用）— WARN/INFO
 
-## 主题七：本地审查（RV-07，gate review）
+## 主题七：语义审查（jev checklist）
 
-`gate review [--post|--post-inline] [--pr N]`：
+`canon review` 命令与 CRG/ocr 两个外部二进制已退役。语义层改由 L2 checklist 承接，
+在 merge 钩子里自动跑：
 
-1. CRG 结构分析：`code-review-graph detect-changes --brief --base main` → 影响文件/风险分
-2. ocr AI 审查：`ocr review --format json --audience agent` → findings（path/start_line/severity/category/content）
-3. 输出：终端（默认）/ PR conversation（--post）/ Files changed inline（--post-inline）
-4. 审查闭环：findings 留言（有行号）→ 修复 → `Agent 🤖 - Fix:` 逐条回复 → RV-06 校验
-5. `[ocr]` 前缀的错误/超时字符串不当 findings（ocr_has_findings 排除），空输出视为审查不可信（fail-closed）
+1. `ocr_rust` / `ocr_go` / `ocr_javascript` / `ocr_default`：移植 open-code-review 的规则文档，
+   判决由 `jev_rule.py` 给（意图 + 各类缺陷 noul + 总分 + 反误报 guardrail）
+2. `review_chain`：jev → 小模型 → 无模型三档降级
+3. 本地按需触发：`canon check <name> --sla l2`
 
 ## 主题八：Checklist（CK-01，gate checklist，**已实现**）
 
-- `.githooks/spec/checklist_*.yaml`：项目级 LLM 检查清单；glob 自动发现，按字典序跑
+- `.githooks/spec/quality/checklist_*.yaml`：项目级 LLM 检查清单；catalog 只扫
+  `quality|code|cleanup|workspace|github` 五个子目录（spec 根层与 `custom/` 不加载），
+  目录内按字典序跑
 - `mode: diff`（默认）传 `git diff <scope>` 给 harness；`mode: file` 每个变更文件单独传全文
 - harness = 任意可执行文件，stdout 必须是 finding JSON 数组（与 code/ocr/CRG 同协议）
 - 严重度合并：harness 报的与 yaml `fail_severity` **就高取大**（harness FAIL 永远阻断）
 - `optional: true`（默认）harness 缺失 → WARN 跳过；`false` → FAIL
-- 实现：`crates/spec/src/tools/checklist.rs`（CK-01 dispatcher） + `gate pre-commit/pre-push/merge` 调度
+- 实现：`src/engine.rs`（CK-01 dispatcher） + `canon pre-commit/pre-push/merge` 调度
 - 详见 [CHECKLIST_SPEC.md](./CHECKLIST_SPEC.md) 与 [CHECKLIST_DEMO_README.md](./CHECKLIST_DEMO_README.md)
 
 - CK-01 yaml 字段：`enabled` / `hooks` / `match.{paths_include,paths_exclude}` / `mode` / `harness.{command,args}` / `timeout` / `optional` / `fail_severity` — FAIL/WARN/INFO
 - CK-02 diff 范围:pre-commit=`git diff --cached`,pre-push=`git diff HEAD`,merge=`git diff origin/main...HEAD`(unified=3)
 - CK-03 finding 兼容:单 object / 数组 / "text + [...JSON...]" 末尾数组三种都能解析
 - CK-04 `mode: grep`:harness 收空 stdin,跑任意静态检查(grep/find/自定义脚本),finding 自身带 path/line. 适合铁律类规则(禁路径模式、必放位置) — 零 LLM token,毫秒级
+
+## 路径无关性（重要）
+
+> 项目侧规则（ferrite / gugu / silverq / mono 根层 SPEC_OVERVIEW「路径无关性」小节）。
+
+harness 一律扫仓库根加 `--exclude-dir`，**不假设 crate 嵌套深度**。
+
+ferrite 是两层布局（`crates/<domain>/<crate>/src`），而规则原先写死一层的 `crates/*/src/`，导致 45 个 crate 里只有 1 个被扫到——其余 44 个的代码从未被检查，gate 却报 `ALL PASS`。静默失效比直接报错更危险，所以新增规则不得再写死目录层级。
+
+## 明确不做的（项目侧约定：不写规范、不检查）
+
+> 项目侧规则（ferrite / gugu / silverq / mono 根层 SPEC_OVERVIEW「明确不做的」小节，Dioxus 前端仓约定）。
+
+- class：不抽文件、不抽 const，直接写 rsx（改动频繁，就近维护）
+- i18n：单语言阶段不上 fluent / rust-i18n
+- rsx 语法：编译器通过即可
+- constants crate：不建独立 crate，文案按共享范围就近 const
 
 
 ## 触发式（lazy）规则映射
@@ -177,13 +204,25 @@
 - git push → WS-01、WS-02、CD-01~06、checklist（同上）
 > 清单更新顺序：按文件名字典序（加 `00_`/`10_` 前缀可强制提前）。
 
-## 主题十：手动运行检查（gate check）
+## 审计命令（canon audit）
 
-`gate check [names...]` — 按名字或列出所有 checklist，强制忽略 yaml 的 `hooks:` 过滤，用于调试/CI/按需跑：
+> 项目侧章节（deskctl / new-api / kime 根层 SPEC_OVERVIEW「每日合规检查」）。
 
-- `gate check` → 列出当前 SLA 层级（默认 l1）下的检查项
-- `gate check clippy` → 只跑 clippy
-- `gate check --sla l2` / `l3` → 解锁更高 SLA 层
+- `canon audit [owner/repo] [--issues=N,M] [--recent=N] [--limit=N] [--workers=N]`：
+  用 Rust issue/PR 规则 + gh API 扫描**存量** issue/PR 的 checkbox 与规则合规，
+  与钩子解耦，可按 `--recent` 时间窗跑（实现 `crates/gate/src/tools/audit.rs`）。
+- 触发：CI 每日 → 最近 1 天创建的 issue/PR 全规则。deskctl / new-api / kime 曾配
+  `.github/workflows/daily_audit.yml`（UTC 0:30 跑 `gate audit --recent=1`，
+  旧文档记载 FAIL 会自动建 issue 记录、支持 workflow_dispatch）；
+  **当前成员仓均未部署该 workflow**，需要的仓自行配置。
+
+## 主题十：手动运行检查（canon check）
+
+`canon check [names...]` — 按名字或列出所有 checklist，强制忽略 yaml 的 `hooks:` 过滤，用于调试/CI/按需跑：
+
+- `canon check` → 列出当前 SLA 层级（默认 l1）下的检查项
+- `canon check clippy` → 只跑 clippy
+- `canon check --sla l2` / `l3` → 解锁更高 SLA 层
 
 每次加/删 checklist yaml，清单自动更新；新规则只需 `cp spec/xxx.yaml .githooks/spec/` 即可。
 
@@ -210,17 +249,46 @@
 
 close 路径另有 `done_when_judge`（`github_issues.yaml`）：GT-04 机械门过后，Done when 每条过同一套三档模型评审（问题集 `harness/jev_questions_done_when.json`，`default_fail: 0.85`），p(未达标)≥0.85 FAIL 硬拦；任何基础设施失败降 `DWJ-SKIPPED` INFO 不阻断。
 
+### 项目侧 checklist（成员仓自带，未收录进 canon `specs/quality/`）
+
+> 来源：ferrite / gugu / silverq / mono 根层 `.githooks/spec/SPEC_OVERVIEW.md` 的规则清单。
+> 严重度与触发以各仓 `.githooks/spec/quality/checklist_*.yaml` 的 `hooks:` / `fail_severity` 为准
+> （与旧文档不一致处已在行内注明）。`doc_sync` 一行已随该规则 2026-10-06 整条删除，不再列出
+> （见 `todo/problem/gate-doc-sync-readme-drift.md`）。
+
+| 名字 | SLA | 触发 | 严重度 | 检测内容 |
+|---|---|---|---|---|
+| `structure_check` | l1 | pre-commit, pre-push, merge | FAIL | crate 分层与数据边界（面板禁直接 `use mock::`，禁旧嵌套路径）— ferrite/gugu/mono |
+| `shared_components_check` | l1 | pre-commit, pre-push, merge | FAIL | ≥2 个 page 共用的组件必须放共享 crate，page 内禁 `src/ui.rs` — ferrite/gugu/silverq/mono |
+| `no_nested_types` | l1 | pre-commit, pre-push, merge | FAIL | 禁止在 `fn` 体内定义 `struct` / `enum` — ferrite/gugu/silverq/mono/algorchemy |
+| `no_nested_worktree` | l1 | pre-commit, pre-push, merge | FAIL | 禁止 `.wt/` 下嵌套 worktree（历史事故：13 层嵌套 + 321G 产物）— ferrite/gugu/silverq/mono/algorchemy |
+| `tests_check` | l1 | pre-commit, pre-push, merge | WARN | 测试代码划分与命名 — ferrite/gugu/silverq/mono |
+| `copy_constants_check` | l1 | pre-push, merge | WARN | 文案常量：同一中文字面量复用 2+ 次要抽 const；慢检查不进 pre-commit（旧文档写三个钩子，以 yaml 为准）— ferrite/gugu/silverq/mono/algorchemy |
+| `pr_labels` | l1 | merge | FAIL | PR 至少挂 1 个 type label（bug/feature/chore/refactor/tests/documentation/epic）；标题命中域关键词但缺域 label 时给建议（gh api 取数，取数失败输出「跳过、请人工核对」）— ferrite/gugu/silverq/mono |
+| `pr_crg_review` | l1 | merge | FAIL | PR 讨论区需留结构层审查结论；记录提到问题/风险时须附修复/回应记录（Fix/采纳/驳回 + commit 或验证结论），只统计 PR 创建后的评论（CRG 二进制已退役，yaml 的标记词仍接受 `结构层`/`ocr` 等文案）— ferrite/gugu/silverq/mono |
+| `code_doc` | l1 | merge | WARN | 公共 API 缺 `///` rust doc、模块头缺 `//!`（只查本次 PR diff 触碰的 `.rs`，不追责存量；旧文档写三个钩子，以 yaml 为准）— ferrite/gugu/silverq/mono/algorchemy |
+| `notes_open_markers` | l1 | pre-commit, pre-push, merge | FAIL | 未完成批注不得进提交：diff 新增 `TODO(...)` / `ASK(...)` 即 FAIL（`TODO(#123)` 豁免，由 `rust_todo_needs_issue` 管）— ferrite/mono |
+| `diff_scope` | l1 | pre-commit, pre-push, merge | WARN | 本 diff 文件按 scope（src/proxy、src/dataplane…）归类，跨 ≥2 个 scope 的单改动给 WARN，确认拆分或在 PR 里写清耦合 — silverq |
+
+> 「生效仓」列按各仓 `.githooks/spec/quality/` 的实际 yaml 列出（2026-10-06 核对）。
+> 漂移备注：mono 的根层 11 个 checklist 已于 2026-10-06 归位进 `quality/`，文档与 yaml 一致；
+> silverq 的根层文档列了 `structure_check` 但其 `quality/` 无该 yaml；algorchemy 从未有根层
+> SPEC_OVERVIEW，却实际持有表中 4 条 —— 以 yaml 为准，不以旧文档为准。
+
 ### SLA 分层
 
 - **l1 结构层**：零 token，毫秒～分钟级（grep / clippy / 静态分析）。FAIL 硬门槛。
 - **l2 语义层**：轻量，秒级（影响面 / 重复检测）。FAIL 硬门槛。
-- **l3 LLM 层**：按需，秒~分钟级（`review_chain` 三档降级：jev → 小模型 → 无；`ferrite_oversize` wildtoken `fast-l`）。INFO/score/confidence，不阻断；per-question fail 阈值命中时 FAIL。深度审查自行 `ocr review --format json --audience agent`。
+- **l3 LLM 层**：按需，秒~分钟级（`review_chain` 三档降级：jev → 小模型 → 无；`ferrite_oversize` wildtoken `fast-l`）。INFO/score/confidence，不阻断；per-question fail 阈值命中时 FAIL。深度语义审查由 L2/L3 checklist 承接。
 
-`gate check` 默认只跑 l1；`--sla l2` 或 `l3` 解锁更高层。
-l3 默认 hooks: [merge]，本地用 `gate check <l3-name> --sla l3` 触发。
+重规则（`clippy` / `dep_hygiene` / `duplication` / `crg_impact`）设 `hooks: [merge]`，不拖慢日常提交
+（来源：ferrite / gugu / silverq / mono 根层 SPEC_OVERVIEW 的 SLA 分层说明；与各仓 yaml 一致）。
+
+`canon check` 默认只跑 l1；`--sla l2` 或 `l3` 解锁更高层。
+l3 默认 hooks: [merge]，本地用 `canon check <l3-name> --sla l3` 触发。
 
 ## 更新与校验
 
 - 新增/修改规则：只改 `.githooks/spec/*.yaml` 参数 + 相应校验器逻辑，更新本文档
-- gate 改动后：`cargo build --release -p gate-bin` → `upx --best --lzma target/release/gate` → `gate init` 重部署 + `install` 复制为 `~/.local/bin/gh`
+- gate 改动后：`cargo build --release -p gate-bin` → `upx --best --lzma target/release/gate` → `canon init` 重部署 + `install` 复制为 `~/.local/bin/gh`
 - 触发式按上表 lazy 执行，不全局扫描

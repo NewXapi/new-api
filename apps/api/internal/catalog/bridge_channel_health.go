@@ -12,7 +12,7 @@ import (
 type HealthBridge struct {
 	ClassifyOutcome        func(err *types.NewAPIError, channelID int) ChannelOutcome
 	RecordChannelOutcome   func(channelID int, outcome ChannelOutcome)
-	RecordRequestAttempts  func(attempts []ChannelAttempt, winnerID int, succeeded bool)
+	RecordRequestAttempts  func(attempts []ChannelAttempt, winnerID int, winnerModel string, succeeded bool)
 	RecordOutcome          func(channelID int, success bool)
 	EffectiveWeight        func(channelID int, baseWeight uint) float64
 	RoutingWeight          func(channelID int, baseWeight uint, bypassCooldown bool) float64
@@ -58,7 +58,8 @@ type ChannelHealthState struct {
 	UnauthorizedRun int            // consecutive 401s for escalation classification
 	RampExited      bool           // slow-start warm-up abandoned after a real failure
 	RampPending     bool           // post-cooldown first selection starts at the ramp floor
-	FailureStreak   int            // consecutive fatal/throttled outcomes
+	FailureStreak   int            // consecutive fatal/throttled outcomes (channel scope)
+	ModelFailures   map[string]int // consecutive fatal outcomes attributed to each model
 	CooldownStreak  int            // number of successive cooldown activations
 	CooldownUntil   time.Time      // lazy expiry deadline; zero means "not cooling"
 	ModelCooldowns  map[string]int // cooldown activations attributed to each model
@@ -103,6 +104,52 @@ const (
 )
 
 type channelHealthState = ChannelHealthState
+
+// countModelFailure records one fatal outcome against modelName. The run is
+// tracked per model rather than on the channel-level FailureStreak because a
+// healthy sibling's successes reset that streak: a dead model sharing a channel
+// would otherwise never accumulate enough failures to be retired, and whichever
+// model happened to be in flight when the channel tripped took the blame.
+// Throttled outcomes are deliberately not counted here — a 429 is a busy
+// upstream, not evidence that this model is gone.
+func countModelFailure(state *ChannelHealthState, modelName string) {
+	if modelName == "" {
+		return
+	}
+	if state.ModelFailures == nil {
+		state.ModelFailures = make(map[string]int, 1)
+	}
+	state.ModelFailures[modelName]++
+}
+
+// clearModelFailures ends one model's failure run. Only that model's run ends:
+// a sibling's request says nothing about this model.
+func clearModelFailures(state *ChannelHealthState, modelName string) {
+	if modelName == "" || state.ModelFailures == nil {
+		return
+	}
+	delete(state.ModelFailures, modelName)
+}
+
+// decayModelCooldown pays down one model's accumulated cooldown count after a
+// successful request through that pair. The escalation count exists to detect
+// sustained trouble, so it has to fall as well as rise: when only the disable
+// itself ever clears the entry, the count is a lifetime total and cooldowns
+// spread over months retire a model that has served fine ever since.
+func decayModelCooldown(state *ChannelHealthState, modelName string) {
+	if modelName == "" || state.ModelCooldowns == nil {
+		return
+	}
+	count, ok := state.ModelCooldowns[modelName]
+	if !ok {
+		return
+	}
+	if count <= 1 {
+		delete(state.ModelCooldowns, modelName)
+		return
+	}
+	state.ModelCooldowns[modelName] = count - 1
+}
 
 // ChannelModelDisabler disables one model on one channel once its cooldowns
 // saturate. It is a package var so tests can capture the call instead of
@@ -228,11 +275,11 @@ func (m *ChannelHealthManager) RecordChannelOutcome(channelID int, outcome Chann
 
 // RecordRequestAttempts applies health accounting once for a whole client
 // request, rather than once per failed try.
-func (m *ChannelHealthManager) RecordRequestAttempts(attempts []ChannelAttempt, winnerID int, succeeded bool) {
+func (m *ChannelHealthManager) RecordRequestAttempts(attempts []ChannelAttempt, winnerID int, winnerModel string, succeeded bool) {
 	if healthBridge != nil && healthBridge.RecordRequestAttempts != nil {
-		healthBridge.RecordRequestAttempts(attempts, winnerID, succeeded)
+		healthBridge.RecordRequestAttempts(attempts, winnerID, winnerModel, succeeded)
 	} else if m.fallback != nil {
-		m.fallback.recordRequestAttempts(attempts, winnerID, succeeded)
+		m.fallback.recordRequestAttempts(attempts, winnerID, winnerModel, succeeded)
 	}
 }
 
