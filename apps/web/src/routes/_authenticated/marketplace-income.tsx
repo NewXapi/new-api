@@ -75,7 +75,7 @@ function MarketplaceIncomePage() {
   const hasThawed = settlements.some((s) => !s.exchanged_at && new Date(s.thaw_at).getTime() <= now)
 
   return (
-    <main className='mx-auto max-w-4xl space-y-8 p-8'>
+    <main className='mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col space-y-8 overflow-y-auto p-8'>
       <header className='flex items-center justify-between'>
         <div>
           <h1 className='text-2xl font-semibold'>Marketplace Income</h1>

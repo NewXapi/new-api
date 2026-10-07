@@ -1,11 +1,43 @@
 package marketplace
 
 import (
+	"database/sql/driver"
 	"time"
 
+	"github.com/QuantumNous/new-api/internal/common"
 	"github.com/QuantumNous/new-api/internal/common/dbx"
 	"gorm.io/gorm"
 )
+
+type ResourceTags []string
+
+func (tags ResourceTags) Value() (driver.Value, error) {
+	if tags == nil {
+		return "[]", nil
+	}
+	return common.Marshal(tags)
+}
+
+func (tags *ResourceTags) Scan(value any) error {
+	if value == nil {
+		*tags = nil
+		return nil
+	}
+	var data []byte
+	switch v := value.(type) {
+	case []byte:
+		data = append([]byte(nil), v...)
+	case string:
+		data = []byte(v)
+	default:
+		encoded, err := common.Marshal(v)
+		if err != nil {
+			return err
+		}
+		data = encoded
+	}
+	return common.Unmarshal(data, tags)
+}
 
 const (
 	ResourceTypeCharacterCard = "character_card"
@@ -53,6 +85,7 @@ type Resource struct {
 	Type             string         `gorm:"size:32;not null;index" json:"type"`
 	Title            string         `gorm:"size:200;not null" json:"title"`
 	Summary          string         `gorm:"type:text" json:"summary"`
+	Tags             ResourceTags   `gorm:"type:text" json:"tags"`
 	Visibility       string         `gorm:"size:16;not null;index" json:"visibility"`
 	Status           string         `gorm:"size:16;not null;index" json:"status"`
 	Price            int64          `gorm:"not null;default:0" json:"price"`

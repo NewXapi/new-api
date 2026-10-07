@@ -14,12 +14,13 @@ import (
 )
 
 type createResourceRequest struct {
-	Type       string `json:"type"`
-	Title      string `json:"title"`
-	Summary    string `json:"summary"`
-	Visibility string `json:"visibility"`
-	Currency   string `json:"currency"`
-	Price      int64  `json:"price"`
+	Type       string   `json:"type"`
+	Title      string   `json:"title"`
+	Summary    string   `json:"summary"`
+	Tags       []string `json:"tags"`
+	Visibility string   `json:"visibility"`
+	Currency   string   `json:"currency"`
+	Price      int64    `json:"price"`
 }
 
 type addVersionRequest struct {
@@ -39,6 +40,10 @@ type reviewRequest struct {
 
 func SetApiRouter(apiRouter contract.Routes) {
 	market := apiRouter.Group("/marketplace")
+	// TryUserAuth keeps these endpoints anonymous-friendly while giving the
+	// handlers the viewer id, without which purchased/granted content would
+	// stay locked even after a successful purchase.
+	market.Use(security.TryUserAuth())
 	market.GET("/resources", ListResources)
 	market.GET("/resources/:id", GetResourceMetadataHandler)
 	market.GET("/resources/:id/content", GetResourceContentHandler)
@@ -48,16 +53,22 @@ func SetApiRouter(apiRouter contract.Routes) {
 	user.Use(security.UserAuth())
 	{
 		user.GET("/resources", GetMyResourcesHandler)
+		user.GET("/library", GetMyLibraryHandler)
 		user.GET("/orders", GetMyOrdersHandler)
 		user.GET("/settlements", GetMySettlementsHandler)
 		user.POST("/settlements/exchange", middleware.CriticalRateLimit(), ExchangeSettlementsHandler)
 		user.GET("/agreements", ListActiveAgreementsHandler)
 		user.POST("/agreements/:id/accept", AcceptAgreementHandler)
 		user.POST("/resources", CreateResourceHandler)
+		user.PUT("/resources/:id", UpdateResourceHandler)
+		user.GET("/resources/:id/shares", ListMyResourceSharesHandler)
+		user.GET("/resources/:id/versions", ListMyResourceVersionsHandler)
 		user.POST("/resources/:id/versions", AddVersionHandler)
 		user.POST("/resources/:id/claim", ClaimResourceHandler)
 		user.POST("/resources/:id/purchase", PurchaseResourceHandler)
 		user.POST("/resources/:id/share", ShareResourceHandler)
+		user.POST("/resources/:id/unlist", UnlistOwnResourceHandler)
+		user.POST("/resources/:id/republish", RepublishOwnResourceHandler)
 		user.DELETE("/resources/:id/share/:user_id", RevokeShareHandler)
 	}
 
@@ -66,18 +77,21 @@ func SetApiRouter(apiRouter contract.Routes) {
 	{
 		admin.GET("/reviews", security.RequirePermission(policy.MarketplaceReview), ListReviewsHandler)
 		admin.POST("/versions/:id/review", security.RequirePermission(policy.MarketplaceReview), ReviewVersionHandler)
+		admin.GET("/resources", security.RequirePermission(policy.MarketplaceUnlist), AdminListResourcesHandler)
 		admin.POST("/resources/:id/unlist", security.RequirePermission(policy.MarketplaceUnlist), UnlistResourceHandler)
+		admin.POST("/resources/:id/republish", security.RequirePermission(policy.MarketplaceUnlist), RepublishResourceHandler)
 		admin.GET("/settings", security.RequirePermission(policy.MarketplaceConfiguration), GetMarketplaceSettingsHandler)
 		admin.PUT("/settings", security.RequirePermission(policy.MarketplaceConfiguration), UpdateMarketplaceSettingsHandler)
 		admin.GET("/agreements", security.RequirePermission(policy.MarketplaceAgreement), ListAgreementsHandler)
 		admin.POST("/agreements", security.RequirePermission(policy.MarketplaceAgreement), CreateAgreementHandler)
+		admin.PUT("/agreements/:id/enabled", security.RequirePermission(policy.MarketplaceAgreement), SetAgreementEnabledHandler)
 		admin.GET("/orders", security.RequirePermission(policy.MarketplaceTrade), ListOrdersHandler)
 	}
 }
 
 func ListResources(c contract.Context) {
 	page := common.GetPageQuery(c)
-	items, total, err := ListPublicResources(dbx.DB, c.Query("type"), c.Query("keyword"), page.GetStartIdx(), page.GetPageSize())
+	items, total, err := ListPublicResources(dbx.DB, c.Query("type"), c.Query("keyword"), c.Query("tag"), c.Query("sort"), page.GetStartIdx(), page.GetPageSize())
 	if err != nil {
 		common.CtxApiError(c, err)
 		return
@@ -96,7 +110,7 @@ func CreateResourceHandler(c contract.Context) {
 	var resource *Resource
 	err := dbx.DB.Transaction(func(tx *gorm.DB) error {
 		var err error
-		resource, err = CreateResource(tx, c.GetInt("id"), req.Type, req.Title, req.Summary, req.Visibility, req.Currency, req.Price)
+		resource, err = CreateResource(tx, c.GetInt("id"), req.Type, req.Title, req.Summary, req.Visibility, req.Currency, req.Price, req.Tags)
 		return err
 	})
 	if err != nil {
@@ -245,4 +259,166 @@ func UnlistResourceHandler(c contract.Context) {
 		return
 	}
 	common.CtxApiSuccess(c, nil)
+}
+
+func AdminListResourcesHandler(c contract.Context) {
+	page := common.GetPageQuery(c)
+	items, total, err := AdminListResources(dbx.DB, c.Query("status"), c.Query("keyword"), page.GetStartIdx(), page.GetPageSize())
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	page.SetTotal(int(total))
+	page.SetItems(items)
+	common.CtxApiSuccess(c, page)
+}
+
+func RepublishResourceHandler(c contract.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	var resource *Resource
+	err = dbx.DB.Transaction(func(tx *gorm.DB) error {
+		var txErr error
+		resource, txErr = RepublishResource(tx, id, 0)
+		return txErr
+	})
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	common.CtxApiSuccess(c, resource)
+}
+
+func UnlistOwnResourceHandler(c contract.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	result := dbx.DB.Model(&Resource{}).Where("id = ? AND author_id = ?", id, c.GetInt("id")).Update("status", ResourceStatusUnlisted)
+	if result.Error != nil {
+		common.CtxApiError(c, result.Error)
+		return
+	}
+	if result.RowsAffected == 0 {
+		common.CtxApiError(c, ErrResourceNotFound)
+		return
+	}
+	common.CtxApiSuccess(c, nil)
+}
+
+func RepublishOwnResourceHandler(c contract.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	var resource *Resource
+	err = dbx.DB.Transaction(func(tx *gorm.DB) error {
+		var txErr error
+		resource, txErr = RepublishResource(tx, id, c.GetInt("id"))
+		return txErr
+	})
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	common.CtxApiSuccess(c, resource)
+}
+
+func ListMyResourceSharesHandler(c contract.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	items, err := ListResourceShares(dbx.DB, id, c.GetInt("id"))
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	common.CtxApiSuccess(c, items)
+}
+
+func UpdateResourceHandler(c contract.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	// createResourceRequest carries the same fields; Type is ignored here.
+	var req createResourceRequest
+	if err := c.BindJSON(&req); err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	var resource *Resource
+	err = dbx.DB.Transaction(func(tx *gorm.DB) error {
+		var txErr error
+		resource, txErr = UpdateResourceMetadata(tx, id, c.GetInt("id"), req.Title, req.Summary, req.Visibility, req.Currency, req.Price, req.Tags)
+		return txErr
+	})
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	common.CtxApiSuccess(c, resource)
+}
+
+func GetMyLibraryHandler(c contract.Context) {
+	page := common.GetPageQuery(c)
+	items, total, err := ListUserAcquiredResources(dbx.DB, c.GetInt("id"), page.GetStartIdx(), page.GetPageSize())
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	page.SetTotal(int(total))
+	page.SetItems(items)
+	common.CtxApiSuccess(c, page)
+}
+
+func ListMyResourceVersionsHandler(c contract.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	page := common.GetPageQuery(c)
+	items, total, err := ListResourceVersionsForAuthor(dbx.DB, id, c.GetInt("id"), page.GetStartIdx(), page.GetPageSize())
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	page.SetTotal(int(total))
+	page.SetItems(items)
+	common.CtxApiSuccess(c, page)
+}
+
+func SetAgreementEnabledHandler(c contract.Context) {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	var req struct {
+		Enabled bool `json:"enabled"`
+	}
+	if err := c.BindJSON(&req); err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	var agreement *RevenueAgreement
+	err = dbx.DB.Transaction(func(tx *gorm.DB) error {
+		var txErr error
+		agreement, txErr = SetRevenueAgreementEnabled(tx, id, req.Enabled)
+		return txErr
+	})
+	if err != nil {
+		common.CtxApiError(c, err)
+		return
+	}
+	common.CtxApiSuccess(c, agreement)
 }

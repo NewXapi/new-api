@@ -1,12 +1,22 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { TagInput } from '@/components/tag-input'
+import { Markdown } from '@/components/ui/markdown'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { api } from '@/lib/api'
+
+interface ActiveAgreement {
+  id: number
+  name: string
+  version: string
+  body: string
+  share_ratio: number
+}
 
 export const Route = createFileRoute('/_authenticated/marketplace/new')({
   component: ResourceCreatePage,
@@ -18,6 +28,7 @@ function ResourceCreatePage() {
   const [type, setType] = useState<'character_card' | 'tutorial'>('tutorial')
   const [title, setTitle] = useState('')
   const [summary, setSummary] = useState('')
+  const [tags, setTags] = useState<string[]>([])
   const [visibility, setVisibility] = useState<'private' | 'shared' | 'public'>('public')
   const [sharedUserIds, setSharedUserIds] = useState('')
   const [price, setPrice] = useState('0')
@@ -28,24 +39,69 @@ function ResourceCreatePage() {
   const [busy, setBusy] = useState(false)
   const [createdId, setCreatedId] = useState<number | null>(null)
   const [uploaded, setUploaded] = useState(false)
+  const [agreements, setAgreements] = useState<ActiveAgreement[]>([])
+  const [agreementsLoaded, setAgreementsLoaded] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadAgreements() {
+      try {
+        const response = await api.get<{ success: boolean; data?: ActiveAgreement[]; message?: string }>(
+          '/api/marketplace/user/agreements',
+        )
+        if (!cancelled && response.data.success) {
+          setAgreements(response.data.data ?? [])
+        }
+      } catch {
+        // Agreement load failure surfaces at submit time via accept failures.
+      } finally {
+        if (!cancelled) setAgreementsLoaded(true)
+      }
+    }
+    void loadAgreements()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   async function submit() {
     setBusy(true)
     setError('')
     try {
       // 资源创建与内容提交是两步：创建成功但内容提交失败时，重试只重发
-      // 版本（并补齐分享），避免重复创建同名资源。
+      // 版本（并补齐分享），避免重复创建同名资源。协议接受发生在创建之前，
+      // 失败则中止，保证不存在未记录协议的投稿。
       let newId = createdId
       if (!newId) {
+        for (const agreement of agreements) {
+          const acceptResponse = await api.post<{ success: boolean; message?: string }>(
+            `/api/marketplace/user/agreements/${agreement.id}/accept`,
+            {},
+          )
+          if (!acceptResponse.data.success) {
+            setError(acceptResponse.data.message ?? t('接受分成协议失败'))
+            return
+          }
+        }
+
+        // 菌种在数据库按 1/10 存储；表单按个输入，提交前换算为内部单位。
+        const numericPrice = Number(price)
+        const internalPrice =
+          numericPrice > 0
+            ? currency === 'spore'
+              ? Math.round(numericPrice * 10)
+              : Math.round(numericPrice)
+            : 0
         const createResponse = await api.post<{ success: boolean; data?: { id: number }; message?: string }>(
           '/api/marketplace/user/resources',
           {
             type,
             title,
             summary,
+            tags,
             visibility,
-            currency: Number(price) > 0 ? currency : 'quota',
-            price: Number(price) > 0 ? Number(price) : 0,
+            currency: internalPrice > 0 ? currency : 'quota',
+            price: internalPrice,
           },
         )
         if (!createResponse.data.success || !createResponse.data.data) {
@@ -99,10 +155,15 @@ function ResourceCreatePage() {
     }
   }
 
-  const canSubmit = !busy && title.trim() !== '' && summary.trim() !== '' && (type === 'tutorial' ? markdown.trim() !== '' : file !== null)
+  const canSubmit =
+    !busy &&
+    title.trim() !== '' &&
+    summary.trim() !== '' &&
+    agreementsLoaded &&
+    (type === 'tutorial' ? markdown.trim() !== '' : file !== null)
 
   return (
-    <main className='mx-auto max-w-3xl space-y-6 p-8'>
+    <main className='mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col space-y-6 overflow-y-auto p-8'>
       <h1 className='text-2xl font-semibold'>{t('发布资源')}</h1>
       {error && <p className='text-destructive'>{error}</p>}
       {createdId && uploaded && (
@@ -128,6 +189,10 @@ function ResourceCreatePage() {
             <Label>{t('摘要')}</Label>
             <Textarea value={summary} maxLength={4000} rows={2} onChange={(event) => setSummary(event.target.value)} />
           </div>
+          <div className='space-y-1'>
+            <Label>{t('标签（最多 8 个，回车确认）')}</Label>
+            <TagInput value={tags} onChange={setTags} />
+          </div>
           <div className='grid grid-cols-1 gap-3 sm:grid-cols-2'>
             <div className='space-y-1'>
               <Label>{t('可见范围')}</Label>
@@ -139,7 +204,7 @@ function ResourceCreatePage() {
             </div>
             <div className='space-y-1'>
               <Label>{t('价格（0 为免费）')}</Label>
-              <Input type='number' min={0} value={price} onChange={(event) => setPrice(event.target.value)} />
+              <Input type='number' min={0} step={currency === 'spore' ? 0.1 : 1} value={price} onChange={(event) => setPrice(event.target.value)} />
             </div>
           </div>
           {visibility === 'shared' && (
@@ -170,6 +235,21 @@ function ResourceCreatePage() {
                 accept='.json,.png'
                 onChange={(event) => setFile(event.target.files?.[0] ?? null)}
               />
+            </div>
+          )}
+          {agreements.length > 0 && (
+            <div className='space-y-2'>
+              <Label>{t('作者分成协议（提交即视为同意）')}</Label>
+              {agreements.map((agreement) => (
+                <details className='rounded-lg border p-3' key={agreement.id}>
+                  <summary className='cursor-pointer text-sm font-medium'>
+                    {agreement.name} · {t('版本')} {agreement.version} · {t('分成')} {agreement.share_ratio / 100}%
+                  </summary>
+                  <div className='mt-2 max-h-72 overflow-y-auto rounded border p-3'>
+                    <Markdown>{agreement.body}</Markdown>
+                  </div>
+                </details>
+              ))}
             </div>
           )}
           <Button disabled={!canSubmit} onClick={() => void submit()}>

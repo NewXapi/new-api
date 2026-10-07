@@ -6,13 +6,23 @@ import { CopyButton } from '@/components/copy-button'
 import { Markdown } from '@/components/ui/markdown'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { api } from '@/lib/api'
+import { useAuthStore } from '@/stores/auth-store'
 
 interface ResourceInfo {
   id: number
   type: string
   title: string
   summary: string
+  tags?: string[] | null
   price: number
   currency: string
   visibility: string
@@ -51,6 +61,8 @@ function ResourceDetailPage() {
   const [error, setError] = useState('')
   const [actionError, setActionError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [purchaseOpen, setPurchaseOpen] = useState(false)
+  const quotaDisplay = useAuthStore((s) => s.auth.user?.quota_display)
 
   async function load() {
     setError('')
@@ -107,8 +119,9 @@ function ResourceDetailPage() {
       } else {
         setActionError(response.data.message ?? t('操作失败'))
       }
-    } catch {
-      setActionError(t('操作失败'))
+    } catch (caught) {
+      const message = (caught as { response?: { data?: { message?: string } } })?.response?.data?.message
+      setActionError(message ?? t('操作失败'))
     } finally {
       setBusy(false)
     }
@@ -140,7 +153,7 @@ function ResourceDetailPage() {
 
   if (error) {
     return (
-      <main className='mx-auto max-w-3xl space-y-4 p-8'>
+      <main className='mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col space-y-4 overflow-y-auto p-8'>
         <p className='text-destructive'>{error}</p>
         <Button variant='outline' onClick={() => window.history.back()}>{t('返回')}</Button>
       </main>
@@ -148,19 +161,28 @@ function ResourceDetailPage() {
   }
 
   if (!resource) {
-    return <main className='mx-auto max-w-3xl p-8'>{t('加载中…')}</main>
+    return <main className='mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col overflow-y-auto p-8'>{t('加载中…')}</main>
   }
 
   const isCharacterCard = resource.type === 'character_card'
 
   return (
-    <main className='mx-auto max-w-4xl space-y-6 p-8'>
+    <main className='mx-auto flex min-h-0 w-full max-w-4xl flex-1 flex-col space-y-6 overflow-y-auto p-8'>
       <header className='space-y-2'>
         <div className='flex items-center gap-2'>
           <h1 className='text-2xl font-semibold'>{resource.title}</h1>
           <Badge variant='secondary'>{isCharacterCard ? t('角色卡') : t('教程')}</Badge>
         </div>
         {resource.summary && <p className='text-muted-foreground'>{resource.summary}</p>}
+        {(resource.tags?.length ?? 0) > 0 && (
+          <div className='flex flex-wrap gap-1'>
+            {resource.tags!.map((tag) => (
+              <Badge key={tag} variant='outline' className='text-xs'>
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
         <p className='text-sm font-medium'>
           {resource.price === 0
             ? t('免费')
@@ -182,13 +204,53 @@ function ResourceDetailPage() {
               </Button>
             )}
             {resource.price > 0 && (
-              <Button disabled={busy} onClick={() => void acquire('purchase')}>
+              <Button disabled={busy} onClick={() => setPurchaseOpen(true)}>
                 {t('立即购买')}
               </Button>
             )}
           </div>
         </section>
       )}
+
+      <Dialog
+        open={purchaseOpen}
+        onOpenChange={(open) => {
+          if (!busy) setPurchaseOpen(open)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t('确认购买')}</DialogTitle>
+            <DialogDescription>{t('购买将立即从你的余额扣除相应费用，访问权保留，费用不可退还。')}</DialogDescription>
+          </DialogHeader>
+          <div className='space-y-1 text-sm'>
+            <p>
+              {t('价格')}：
+              {resource.currency === 'spore'
+                ? `${resource.price / 10} ${t('菌种')}`
+                : `${resource.price} ${t('额度')}`}
+            </p>
+            {resource.currency === 'quota' && quotaDisplay !== undefined && (
+              <p className='text-muted-foreground'>
+                {t('当前余额')}：{quotaDisplay}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant='outline' disabled={busy} onClick={() => setPurchaseOpen(false)}>
+              {t('取消')}
+            </Button>
+            <Button
+              disabled={busy}
+              onClick={() => {
+                void acquire('purchase').then(() => setPurchaseOpen(false))
+              }}
+            >
+              {busy ? t('购买中…') : t('确认购买')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div className='flex flex-wrap gap-2'>
         {!needsAcquire && <Button onClick={() => void download()}>{t('下载')}</Button>}

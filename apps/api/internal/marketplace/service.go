@@ -27,9 +27,43 @@ const (
 	DefaultMarketplaceShareRatio          int64 = 0
 	DefaultMarketplaceIncomeFreezeMinutes int64 = 60
 	ShareRatioScale                       int64 = 10000
+
+	MaxResourceTags     = 8
+	MaxResourceTagRunes = 24
 )
 
-func CreateResource(tx *gorm.DB, authorID int, resourceType, title, summary, visibility, currency string, price int64) (*Resource, error) {
+// normalizeResourceTags trims, dedupes, and bounds author-supplied tags so a
+// free-form tag input cannot push arbitrary payloads into the listing.
+func normalizeResourceTags(tags []string) (ResourceTags, error) {
+	if len(tags) == 0 {
+		return nil, nil
+	}
+	seen := make(map[string]struct{}, len(tags))
+	result := make(ResourceTags, 0, len(tags))
+	for _, tag := range tags {
+		trimmed := strings.TrimSpace(tag)
+		if trimmed == "" {
+			continue
+		}
+		if len([]rune(trimmed)) > MaxResourceTagRunes {
+			return nil, ErrInvalidResource
+		}
+		if _, exists := seen[trimmed]; exists {
+			continue
+		}
+		seen[trimmed] = struct{}{}
+		result = append(result, trimmed)
+		if len(result) > MaxResourceTags {
+			return nil, ErrInvalidResource
+		}
+	}
+	if len(result) == 0 {
+		return nil, nil
+	}
+	return result, nil
+}
+
+func CreateResource(tx *gorm.DB, authorID int, resourceType, title, summary, visibility, currency string, price int64, tags []string) (*Resource, error) {
 	if authorID <= 0 || strings.TrimSpace(title) == "" || price < 0 {
 		return nil, ErrInvalidResource
 	}
@@ -48,7 +82,11 @@ func CreateResource(tx *gorm.DB, authorID int, resourceType, title, summary, vis
 	if currency != CurrencyQuota && currency != CurrencySpore {
 		return nil, ErrInvalidResource
 	}
-	resource := &Resource{AuthorID: authorID, Type: resourceType, Title: strings.TrimSpace(title), Summary: summary, Visibility: visibility, Status: ResourceStatusDraft, Price: price, Currency: currency}
+	normalizedTags, err := normalizeResourceTags(tags)
+	if err != nil {
+		return nil, err
+	}
+	resource := &Resource{AuthorID: authorID, Type: resourceType, Title: strings.TrimSpace(title), Summary: summary, Tags: normalizedTags, Visibility: visibility, Status: ResourceStatusDraft, Price: price, Currency: currency}
 	if err := tx.Create(resource).Error; err != nil {
 		return nil, err
 	}
@@ -200,7 +238,32 @@ func RejectResourceVersion(tx *gorm.DB, reviewerID int, versionID int64, reason 
 	return tx.Create(&ResourceReview{VersionID: version.ID, ReviewerID: reviewerID, Decision: VersionStatusRejected, Reason: reason, CreatedAt: time.Now()}).Error
 }
 
-func ListPublicResources(tx *gorm.DB, resourceType, keyword string, offset, limit int) ([]Resource, int64, error) {
+// sanitizeTagFilter strips LIKE wildcards and the escape character so a tag
+// filter matches the literal tag text; tags never contain these characters.
+func sanitizeTagFilter(tag string) string {
+	return strings.Map(func(r rune) rune {
+		switch r {
+		case '%', '_', '\\':
+			return -1
+		}
+		return r
+	}, tag)
+}
+
+// publicResourceSort maps the listing sort parameter to an ORDER BY clause;
+// unknown values fall back to the latest-first default.
+func publicResourceSort(sort string) string {
+	switch sort {
+	case "price_asc":
+		return "price asc, id desc"
+	case "price_desc":
+		return "price desc, id desc"
+	default:
+		return "updated_at desc, id desc"
+	}
+}
+
+func ListPublicResources(tx *gorm.DB, resourceType, keyword, tag, sort string, offset, limit int) ([]Resource, int64, error) {
 	query := tx.Model(&Resource{}).Where("visibility = ? AND status = ?", VisibilityPublic, ResourceStatusPublished)
 	if resourceType != "" {
 		query = query.Where("type = ?", resourceType)
@@ -208,12 +271,17 @@ func ListPublicResources(tx *gorm.DB, resourceType, keyword string, offset, limi
 	if keyword = strings.TrimSpace(keyword); keyword != "" {
 		query = query.Where("(title LIKE ? OR summary LIKE ?)", "%"+keyword+"%", "%"+keyword+"%")
 	}
+	// Tags serialize as a JSON string array, so an exact element match is a
+	// quoted-substring LIKE; this works identically on SQLite/MySQL/PostgreSQL.
+	if tag = sanitizeTagFilter(strings.TrimSpace(tag)); tag != "" {
+		query = query.Where("tags LIKE ?", "%\""+tag+"\"%")
+	}
 	var total int64
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 	items := make([]Resource, 0)
-	if err := query.Order("updated_at desc, id desc").Offset(offset).Limit(limit).Find(&items).Error; err != nil {
+	if err := query.Order(publicResourceSort(sort)).Offset(offset).Limit(limit).Find(&items).Error; err != nil {
 		return nil, 0, err
 	}
 	return items, total, nil
@@ -498,4 +566,243 @@ func RevokeResourceShare(tx *gorm.DB, resourceID int64, authorID, userID int) er
 		return err
 	}
 	return tx.Model(&ResourceGrant{}).Where("resource_id = ? AND user_id = ? AND source = ? AND revoked_at IS NULL", resourceID, userID, SourceShare).Update("revoked_at", now).Error
+}
+
+// AdminListResources returns resources of every status so moderators can act
+// on published and unlisted items, not just the pending review queue.
+func AdminListResources(tx *gorm.DB, status, keyword string, offset, limit int) ([]Resource, int64, error) {
+	query := tx.Model(&Resource{})
+	if status != "" {
+		if status != ResourceStatusDraft && status != ResourceStatusPublished && status != ResourceStatusUnlisted && status != ResourceStatusDeleted {
+			return nil, 0, ErrInvalidResource
+		}
+		query = query.Where("status = ?", status)
+	}
+	if keyword = strings.TrimSpace(keyword); keyword != "" {
+		query = query.Where("(title LIKE ? OR summary LIKE ?)", "%"+keyword+"%", "%"+keyword+"%")
+	}
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	items := make([]Resource, 0)
+	if err := query.Order("updated_at desc, id desc").Offset(offset).Limit(limit).Find(&items).Error; err != nil {
+		return nil, 0, err
+	}
+	return items, total, nil
+}
+
+// RepublishResource restores an unlisted resource to the public channel using
+// its latest approved version. Grants held by purchasers, claimers, and share
+// recipients were never touched by unlisting, so no access needs re-granting.
+// ownerID > 0 restricts the operation to that author; 0 allows moderators.
+func RepublishResource(tx *gorm.DB, resourceID int64, ownerID int) (*Resource, error) {
+	var resource Resource
+	if err := tx.First(&resource, resourceID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrResourceNotFound
+		}
+		return nil, err
+	}
+	if ownerID != 0 && resource.AuthorID != ownerID {
+		return nil, ErrResourceForbidden
+	}
+	if resource.Status == ResourceStatusDeleted {
+		return nil, ErrResourceNotFound
+	}
+	if resource.Visibility != VisibilityPublic {
+		return nil, ErrInvalidResource
+	}
+	if resource.Status == ResourceStatusPublished {
+		return &resource, nil
+	}
+	if _, err := currentApprovedVersion(tx, &resource); err != nil {
+		return nil, err
+	}
+	updates := map[string]any{"status": ResourceStatusPublished}
+	if resource.CurrentVersionID != 0 {
+		updates["current_version_id"] = resource.CurrentVersionID
+	} else {
+		var latestApproved ResourceVersion
+		if err := tx.Where("resource_id = ? AND status = ?", resource.ID, VersionStatusApproved).Order("version desc").First(&latestApproved).Error; err != nil {
+			return nil, err
+		}
+		updates["current_version_id"] = latestApproved.ID
+	}
+	if err := tx.Model(&resource).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+	return &resource, nil
+}
+
+// UpdateResourceMetadata lets the author edit title, summary, tags, price, and
+// visibility. Type is intentionally immutable. Moving a non-public resource
+// into the public channel resets its current version to reviewing so the
+// content passes moderation before it lists again.
+func UpdateResourceMetadata(tx *gorm.DB, resourceID int64, authorID int, title, summary, visibility, currency string, price int64, tags []string) (*Resource, error) {
+	if authorID <= 0 || strings.TrimSpace(title) == "" || price < 0 {
+		return nil, ErrInvalidResource
+	}
+	if len(title) > 200 || len(summary) > 4000 {
+		return nil, ErrInvalidResource
+	}
+	if visibility != VisibilityPrivate && visibility != VisibilityShared && visibility != VisibilityPublic {
+		return nil, ErrInvalidResource
+	}
+	if price == 0 {
+		currency = CurrencyQuota
+	}
+	if currency != CurrencyQuota && currency != CurrencySpore {
+		return nil, ErrInvalidResource
+	}
+	normalizedTags, err := normalizeResourceTags(tags)
+	if err != nil {
+		return nil, err
+	}
+	var resource Resource
+	if err := tx.First(&resource, resourceID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrResourceNotFound
+		}
+		return nil, err
+	}
+	if resource.AuthorID != authorID {
+		return nil, ErrResourceForbidden
+	}
+	updates := map[string]any{
+		"title":      strings.TrimSpace(title),
+		"summary":    summary,
+		"tags":       normalizedTags,
+		"visibility": visibility,
+		"price":      price,
+		"currency":   currency,
+	}
+	if err := tx.Model(&resource).Updates(updates).Error; err != nil {
+		return nil, err
+	}
+	if visibility == VisibilityPublic && resource.Visibility != VisibilityPublic {
+		if resource.CurrentVersionID != 0 {
+			if err := tx.Model(&ResourceVersion{}).Where("id = ?", resource.CurrentVersionID).Update("status", VersionStatusReviewing).Error; err != nil {
+				return nil, err
+			}
+		}
+		if err := tx.Model(&resource).Update("status", ResourceStatusDraft).Error; err != nil {
+			return nil, err
+		}
+	}
+	var updated Resource
+	if err := tx.First(&updated, resourceID).Error; err != nil {
+		return nil, err
+	}
+	return &updated, nil
+}
+
+// AcquiredResource pairs a resource the viewer holds a grant for with the way
+// it was acquired (claim, purchase, or share).
+type AcquiredResource struct {
+	Resource
+	Source string `json:"source"`
+}
+
+// ListUserAcquiredResources lists resources the user gained through claim,
+// purchase, or share; authored resources are excluded because they already
+// appear in the author list.
+func ListUserAcquiredResources(tx *gorm.DB, userID, offset, limit int) ([]AcquiredResource, int64, error) {
+	heldGrants := tx.Model(&ResourceGrant{}).Select("resource_id").Where("user_id = ? AND revoked_at IS NULL AND source <> ?", userID, SourceAuthor)
+	query := tx.Model(&Resource{}).Where("id IN (?)", heldGrants)
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	items := make([]Resource, 0)
+	if err := query.Order("updated_at desc, id desc").Offset(offset).Limit(limit).Find(&items).Error; err != nil {
+		return nil, 0, err
+	}
+	result := make([]AcquiredResource, 0, len(items))
+	if len(items) == 0 {
+		return result, total, nil
+	}
+	ids := make([]int64, 0, len(items))
+	for _, item := range items {
+		ids = append(ids, item.ID)
+	}
+	var grantRows []ResourceGrant
+	if err := tx.Where("user_id = ? AND revoked_at IS NULL AND source <> ? AND resource_id IN ?", userID, SourceAuthor, ids).Order("id asc").Find(&grantRows).Error; err != nil {
+		return nil, 0, err
+	}
+	sourceByResource := make(map[int64]string, len(grantRows))
+	for _, grant := range grantRows {
+		if _, exists := sourceByResource[grant.ResourceID]; !exists {
+			sourceByResource[grant.ResourceID] = grant.Source
+		}
+	}
+	for _, item := range items {
+		result = append(result, AcquiredResource{Resource: item, Source: sourceByResource[item.ID]})
+	}
+	return result, total, nil
+}
+
+// ListResourceVersionsForAuthor exposes the author's own version history with
+// review status and rejection reasons; content payloads stay out of the list.
+func ListResourceVersionsForAuthor(tx *gorm.DB, resourceID int64, authorID, offset, limit int) ([]ResourceVersion, int64, error) {
+	var resource Resource
+	if err := tx.First(&resource, resourceID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, 0, ErrResourceNotFound
+		}
+		return nil, 0, err
+	}
+	if int64(resource.AuthorID) != int64(authorID) {
+		return nil, 0, ErrResourceForbidden
+	}
+	query := tx.Model(&ResourceVersion{}).Where("resource_id = ?", resourceID)
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+	items := make([]ResourceVersion, 0)
+	if err := query.
+		Select("id, resource_id, version, format, content_hash, status, review_reason, created_at, updated_at").
+		Order("version desc").Offset(offset).Limit(limit).Find(&items).Error; err != nil {
+		return nil, 0, err
+	}
+	return items, total, nil
+}
+
+// SetRevenueAgreementEnabled toggles an agreement's availability. Disabled
+// agreements disappear from the author list and cannot be accepted, while
+// historical acceptances and order snapshots stay untouched.
+func SetRevenueAgreementEnabled(tx *gorm.DB, agreementID int64, enabled bool) (*RevenueAgreement, error) {
+	var agreement RevenueAgreement
+	if err := tx.First(&agreement, agreementID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrResourceNotFound
+		}
+		return nil, err
+	}
+	if err := tx.Model(&agreement).Update("enabled", enabled).Error; err != nil {
+		return nil, err
+	}
+	agreement.Enabled = enabled
+	return &agreement, nil
+}
+
+// ListResourceShares returns the author's share rows for a resource, including
+// revoked ones, so the owner can audit who had access and when.
+func ListResourceShares(tx *gorm.DB, resourceID int64, authorID int) ([]ResourceShare, error) {
+	var resource Resource
+	if err := tx.First(&resource, resourceID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ErrResourceNotFound
+		}
+		return nil, err
+	}
+	if resource.AuthorID != authorID {
+		return nil, ErrResourceForbidden
+	}
+	items := make([]ResourceShare, 0)
+	if err := tx.Where("resource_id = ?", resourceID).Order("created_at desc, id desc").Find(&items).Error; err != nil {
+		return nil, err
+	}
+	return items, nil
 }
