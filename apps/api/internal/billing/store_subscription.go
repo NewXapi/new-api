@@ -239,6 +239,42 @@ func (p *SubscriptionPlan) RequiresSpore() bool {
 	return false
 }
 
+// planGrantsValuableEntitlement reports whether the plan hands out anything of
+// value on fulfillment: a quota pool or a group upgrade.
+func planGrantsValuableEntitlement(plan *SubscriptionPlan) bool {
+	return plan.TotalAmount > 0 || strings.TrimSpace(plan.UpgradeGroup) != ""
+}
+
+// planSelfServeIsFree reports whether a user can take the plan through the
+// wallet endpoint without paying balance or spore on at least one payment path.
+// None is the legacy "balance purchase disabled" value: claiming is free when
+// the plan carries no price (a paid None plan is rejected at purchase instead).
+func planSelfServeIsFree(plan *SubscriptionPlan) bool {
+	switch NormalizePayMode(plan.PayMode, plan.AllowBalancePay) {
+	case SubscriptionPayModeNone, SubscriptionPayModeBoth:
+		return plan.PriceAmount <= 0 && plan.SporeAmount <= 0
+	case SubscriptionPayModeBalance:
+		return plan.PriceAmount <= 0
+	case SubscriptionPayModeSpore:
+		return plan.SporeAmount <= 0
+	case SubscriptionPayModeEither:
+		return plan.PriceAmount <= 0 || plan.SporeAmount <= 0
+	}
+	return false
+}
+
+// validateFreePlanPurchaseLimit enforces the free-claim invariant: a plan that
+// grants quota or upgrade-group entitlement for free through the wallet path
+// must carry a finite per-user purchase cap. Without MaxPurchasePerUser every
+// account can claim (and stack) unlimited full-value entitlements, which is a
+// silent grant switch rather than a pricing decision.
+func validateFreePlanPurchaseLimit(plan *SubscriptionPlan) error {
+	if plan.MaxPurchasePerUser > 0 || !planGrantsValuableEntitlement(plan) || !planSelfServeIsFree(plan) {
+		return nil
+	}
+	return errors.New("免费赠送额度或升级权益的套餐必须设置每用户购买上限")
+}
+
 // Subscription order (payment -> webhook -> create UserSubscription)
 type SubscriptionOrder struct {
 	Id     int     `json:"id"`
@@ -449,6 +485,36 @@ func getUserGroupByIdTx(tx *gorm.DB, userId int) (string, error) {
 	return group, nil
 }
 
+// resolveSubscriptionGroupBaselineTx unwinds the user group the subscription
+// system granted: from `group` it follows the earliest recorded purchase that
+// moved the user into the group, repeating until no subscription claims to have
+// granted it. Overlapping purchases snapshot prev_user_group only on the row
+// that actually elevated the user (duplicate buys store the empty string), so
+// snapshot cannot be trusted after several overlapping grants. A group no
+// subscription grants is the user's own baseline — typically an admin
+// assignment — and is returned unchanged.
+func resolveSubscriptionGroupBaselineTx(tx *gorm.DB, userId int, group string) (string, error) {
+	visited := make(map[string]struct{}, 8)
+	for group != "" {
+		if _, seen := visited[group]; seen {
+			return group, nil
+		}
+		visited[group] = struct{}{}
+		var grant UserSubscription
+		res := tx.Where("user_id = ? AND upgrade_group = ? AND prev_user_group <> ''", userId, group).
+			Order("id asc").Limit(1).Find(&grant)
+		if res.Error != nil {
+			return "", res.Error
+		}
+		prev := strings.TrimSpace(grant.PrevUserGroup)
+		if res.RowsAffected == 0 || prev == "" || prev == group {
+			return group, nil
+		}
+		group = prev
+	}
+	return group, nil
+}
+
 func downgradeUserGroupForSubscriptionTx(tx *gorm.DB, sub *UserSubscription, now int64) (string, error) {
 	if tx == nil || sub == nil {
 		return "", errors.New("invalid downgrade args")
@@ -473,15 +539,17 @@ func downgradeUserGroupForSubscriptionTx(tx *gorm.DB, sub *UserSubscription, now
 	if activeQuery.Error == nil && activeQuery.RowsAffected > 0 {
 		return "", nil
 	}
-	// Determine the downgrade target: an explicit downgrade group takes precedence,
-	// otherwise revert to the group held before purchase (legacy behavior).
+	// Determine the downgrade target: an explicit downgrade group takes
+	// precedence; otherwise unwind the group the subscription system granted.
+	// The per-row prev snapshot misses earlier overlapping grants (duplicates
+	// store ''), so walk the grant history instead of trusting this row only.
 	target := downgradeGroup
 	if target == "" {
-		// Legacy behavior: only revert when the subscription actually elevated the user.
-		if currentGroup != upgradeGroup {
-			return "", nil
+		baseline, err := resolveSubscriptionGroupBaselineTx(tx, sub.UserId, currentGroup)
+		if err != nil {
+			return "", err
 		}
-		target = strings.TrimSpace(sub.PrevUserGroup)
+		target = baseline
 	}
 	if target == "" || target == currentGroup {
 		return "", nil
@@ -624,6 +692,9 @@ func PurchaseSubscriptionWithWallet(userId int, planId int, payWith string) erro
 		needSpore := false
 		switch mode {
 		case SubscriptionPayModeNone:
+			if plan.PriceAmount > 0 || plan.SporeAmount > 0 {
+				return errors.New("该套餐未开启余额或菌种购买")
+			}
 		case SubscriptionPayModeBalance:
 			needBalance = true
 		case SubscriptionPayModeSpore:
@@ -654,6 +725,9 @@ func PurchaseSubscriptionWithWallet(userId int, planId int, payWith string) erro
 		requiredSpore := int64(0)
 		if needSpore {
 			requiredSpore = plan.SporeAmount
+		}
+		if err := validateFreePlanPurchaseLimit(plan); err != nil {
+			return err
 		}
 
 		user, err := identity.LockUserRow(tx, userId)
@@ -966,20 +1040,18 @@ func ExpireDueSubscriptions(limit int) (int, error) {
 			if err != nil {
 				return err
 			}
-			// An explicit downgrade group takes precedence; otherwise revert to the
-			// group held before purchase (legacy behavior, only when the subscription
-			// actually elevated the user).
+			// An explicit downgrade group takes precedence; otherwise unwind the
+			// group the subscription system granted. Overlapping purchases only
+			// snapshot prev_user_group on the elevating row, so walk the whole
+			// grant history from the user's current group instead of reading the
+			// latest expired row's snapshot. A group no subscription grants is a
+			// manual admin assignment and stays untouched.
 			target := strings.TrimSpace(lastExpired.DowngradeGroup)
 			if target == "" {
-				upgradeGroup := strings.TrimSpace(lastExpired.UpgradeGroup)
-				prevGroup := strings.TrimSpace(lastExpired.PrevUserGroup)
-				if upgradeGroup == "" || prevGroup == "" {
-					return nil
+				target, err = resolveSubscriptionGroupBaselineTx(tx, userId, currentGroup)
+				if err != nil {
+					return err
 				}
-				if currentGroup != upgradeGroup {
-					return nil
-				}
-				target = prevGroup
 			}
 			if target == "" || target == currentGroup {
 				return nil
@@ -1183,7 +1255,7 @@ func RefundSubscriptionPreConsume(requestId string) error {
 			record.Status = "refunded"
 			return tx.Save(&record).Error
 		}
-		if err := PostConsumeUserSubscriptionDelta(record.UserSubscriptionId, -record.PreConsumed); err != nil {
+		if err := postConsumeUserSubscriptionDeltaTx(tx, record.UserSubscriptionId, -record.PreConsumed); err != nil {
 			return err
 		}
 		record.Status = "refunded"
@@ -1251,13 +1323,57 @@ type SubscriptionPlanInfo struct {
 
 // Update subscription used amount by delta (positive consume more, negative refund).
 func PostConsumeUserSubscriptionDelta(userSubscriptionId int, delta int64) error {
+	if delta == 0 {
+		return nil
+	}
+	return dbx.DB.Transaction(func(tx *gorm.DB) error {
+		return postConsumeUserSubscriptionDeltaTx(tx, userSubscriptionId, delta)
+	})
+}
+
+// postConsumeUserSubscriptionDeltaTx applies the usage delta while locking the
+// subscription row on tx. Callers that already hold a transaction — the refund
+// path locks the pre-consume record in the same unit of work — must use this
+// instead of the exported wrapper: a second, independent transaction per commit
+// is not atomic with the record status update, and on multi-connection SQLite
+// the nested write blocks behind the outer transaction's locks, leaving failed
+// requests permanently unrefunded.
+func postConsumeUserSubscriptionDeltaTx(tx *gorm.DB, userSubscriptionId int, delta int64) error {
 	if userSubscriptionId <= 0 {
 		return errors.New("invalid userSubscriptionId")
 	}
 	if delta == 0 {
 		return nil
 	}
-	return dbx.DB.Transaction(func(tx *gorm.DB) error {
+	var sub UserSubscription
+	if err := dbx.LockForUpdate(tx).
+		Where("id = ?", userSubscriptionId).
+		First(&sub).Error; err != nil {
+		return err
+	}
+	newUsed := sub.AmountUsed + delta
+	if newUsed < 0 {
+		newUsed = 0
+	}
+	if sub.AmountTotal > 0 && newUsed > sub.AmountTotal {
+		return fmt.Errorf("subscription used exceeds total, used=%d total=%d", newUsed, sub.AmountTotal)
+	}
+	sub.AmountUsed = newUsed
+	return tx.Save(&sub).Error
+}
+
+// PostConsumeUserSubscriptionDeltaCapped 消费订阅剩余额度,返回装不下的
+// 溢出部分(delta<=0 或未超限时为 0)。与严格版不同:交付完成后的结算
+// 必须入账订阅还能覆盖的部分,由调用方处置余额,而不是整笔补扣作废。
+func PostConsumeUserSubscriptionDeltaCapped(userSubscriptionId int, delta int64) (int64, error) {
+	if userSubscriptionId <= 0 {
+		return 0, errors.New("invalid userSubscriptionId")
+	}
+	if delta <= 0 {
+		return 0, errors.New("delta must be positive")
+	}
+	var overflow int64
+	err := dbx.DB.Transaction(func(tx *gorm.DB) error {
 		var sub UserSubscription
 		if err := dbx.LockForUpdate(tx).
 			Where("id = ?", userSubscriptionId).
@@ -1265,15 +1381,20 @@ func PostConsumeUserSubscriptionDelta(userSubscriptionId int, delta int64) error
 			return err
 		}
 		newUsed := sub.AmountUsed + delta
-		if newUsed < 0 {
-			newUsed = 0
-		}
 		if sub.AmountTotal > 0 && newUsed > sub.AmountTotal {
-			return fmt.Errorf("subscription used exceeds total, used=%d total=%d", newUsed, sub.AmountTotal)
+			overflow = newUsed - sub.AmountTotal
+			newUsed = sub.AmountTotal
 		}
 		sub.AmountUsed = newUsed
-		return tx.Save(&sub).Error
+		if err := tx.Save(&sub).Error; err != nil {
+			return err
+		}
+		return nil
 	})
+	if err != nil {
+		return 0, err
+	}
+	return overflow, nil
 }
 func GetSubscriptionPlanInfoByUserSubscriptionId(userSubscriptionId int) (*SubscriptionPlanInfo, error) {
 	if userSubscriptionId <= 0 {
