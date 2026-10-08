@@ -168,7 +168,6 @@ export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
   scale: 'default',
   contentLayout: 'full',
   blur: false,
-  cardBlur: false,
   // Fallback mirror of the light entry of SURFACE_DEFAULTS; the provider
   // re-resolves these per color scheme at runtime.
   ...SURFACE_DEFAULTS.light,
