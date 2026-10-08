@@ -23,13 +23,14 @@ func TestPurchaseSubscriptionWithWallet_Scenarios(t *testing.T) {
 
 	// Free plan (price 0): purchase succeeds, quota untouched.
 	planFree := &billing.SubscriptionPlan{
-		Title:           "Free Plan",
-		Enabled:         true,
-		AllowBalancePay: common.GetPointer(true),
-		PriceAmount:     0,
-		TotalAmount:     100000,
-		DurationUnit:    "month",
-		DurationValue:   1,
+		Title:              "Free Plan",
+		Enabled:            true,
+		AllowBalancePay:    common.GetPointer(true),
+		PriceAmount:        0,
+		TotalAmount:        100000,
+		DurationUnit:       "month",
+		DurationValue:      1,
+		MaxPurchasePerUser: 1,
 	}
 	require.NoError(t, dbx.DB.Create(planFree).Error)
 	require.NoError(t, billing.PurchaseSubscriptionWithWallet(user.Id, planFree.Id))
@@ -37,6 +38,10 @@ func TestPurchaseSubscriptionWithWallet_Scenarios(t *testing.T) {
 	refreshed, err := identity.GetUserById(user.Id, false)
 	require.NoError(t, err)
 	assert.Equal(t, 1000000, refreshed.Quota)
+
+	// The free claim is capped at MaxPurchasePerUser: a repeat claim is rejected.
+	err = billing.PurchaseSubscriptionWithWallet(user.Id, planFree.Id)
+	assert.ErrorContains(t, err, "购买上限")
 
 	// Balance plan costs $1 = 500000 quota.
 	planBalance := &billing.SubscriptionPlan{
