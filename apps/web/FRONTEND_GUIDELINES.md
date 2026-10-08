@@ -22,7 +22,7 @@
 - 页面背景使用 `bg-background`，主要容器使用 `bg-card`/`bg-popover`/`bg-muted` 等语义令牌；禁止以透明度复制一套独立表面语义。
 - 标题、面包屑、主要动作、筛选工具栏和内容区遵循 `SectionPageLayout` 的既有槽位；toolbar 不嵌套表单交互，筛选/重置/视图动作保留现有契约。
 - 空、加载、错误状态优先复用现有 `Empty`、`Skeleton`、`Spinner`、`Alert` 等组件；状态文字必须可读且可被辅助技术识别。
-- Card 与登录卡片使用 `theme.css` 的 82% 表面令牌；页面使用派生 tonal 背景，表格正文及 Portal 浮层保留不透明语义表面保证可读。模糊只 gate backdrop-filter，默认关闭，与透明度独立；全站与登录页只允许使用同一个 customization provider 状态，不得另建 localStorage/cookie/state。
+- Card 与登录卡片使用 `theme.css` 的表面令牌（默认值按明暗主题区分：亮色 50% 玻璃并开启卡片模糊、暗色 80% 近实底并关闭卡片模糊）；页面使用派生 tonal 背景，表格正文及 Portal 浮层保留不透明语义表面保证可读。卡片毛玻璃只 gate backdrop-filter，与面板透明度和背景图模糊半径各自独立；全站与登录页只允许使用同一个 customization provider 状态，不得另建 localStorage/cookie/state。
 
 ## 4. 主题、i18n 与无障碍
 

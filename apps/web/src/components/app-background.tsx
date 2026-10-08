@@ -53,8 +53,9 @@ export function AppBackground() {
     >
       <div ref={imageHostRef} className='absolute inset-0' />
       <div
-        className='absolute inset-0 z-[1]'
-        style={{ backgroundColor: 'var(--background-scrim)' }}
+        data-slot='app-background-scrim'
+        className='absolute inset-0'
+        style={{ backgroundColor: 'var(--app-background-scrim)' }}
       />
     </div>
   )

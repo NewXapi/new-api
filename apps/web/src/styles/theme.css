@@ -27,7 +27,10 @@ body,
 }
 
 @theme inline {
-  --font-sans: 'MiSans', 'Public Sans Variable', 'Public Sans', sans-serif;
+  --font-sans:
+    'Public Sans Variable', 'Public Sans', 'MiSans', 'Noto Sans SC Variable',
+    'Noto Sans SC', 'Noto Sans CJK SC', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'WenQuanYi Micro Hei', sans-serif;
   /* Editorial serif token — the body face used by the `serif` font axis
    * and by presets that opt in (currently Anthropic). Lora carries only
    * Latin glyphs, so the stack walks through CJK serifs (Noto / Source Han
@@ -122,9 +125,35 @@ body,
 :root {
   --radius: 1rem;
   --app-header-height: 3rem;
-  --surface-opacity: 82%;
-  --surface-blur: 18px;
-  /* Overlay scrim used by modal surfaces; keep the 82% surface opacity separate. */
+  /* Background-aware cards stay adjustable, but need a readable color base
+   * over vivid images. Light runs true glass (50%) with card blur on; dark
+   * uses near-solid panels (80%) on top of the heavy dark veil. The
+   * provider mirrors these per-scheme defaults in JS (SURFACE_DEFAULTS). */
+  --surface-opacity: 50%;
+  /* Background-image-only blur radius. The theme-management background-blur
+   * slider drives this token (the provider writes an inline override on
+   * <html> when it differs from the default); it must never drive card
+   * glass. Card surfaces blur through the separate --card-blur-filter
+   * token below instead. */
+  --surface-blur: 2px;
+  /* Card glass has a fixed blur, independent of the image radius slider. */
+  --card-blur-filter: blur(18px) saturate(150%);
+  /* Text shadow carried by the top navigation so its labels and icons stay
+   * legible over the background photo. Light draws a subtle white outline
+   * around the (deepened) dark glyphs — the glyphs always stay darker than
+   * the stroke, so the text never blurs into a dark photo region; dark
+   * keeps the heavier dark glow that lifts light glyphs off the photo. */
+  --nav-text-shadow:
+    0 0 2px rgb(255 255 255 / 0.85),
+    0 0 6px rgb(255 255 255 / 0.4);
+  --nav-icon-shadow: drop-shadow(0 0 2px rgb(255 255 255 / 0.75));
+  /* Veil drawn over the random background image. In light scheme it is a
+   * light veil: bright photos stay visible and near-black night photos get
+   * lifted so the light UI never rests on a black field. The background
+   * scrim slider (0-100) supplies the alpha (provider writes an inline
+   * override with the matching color base). */
+  --app-background-scrim: oklch(0.93 0.006 260 / 30%);
+  /* Overlay scrim used by modal surfaces; keep the surface opacity separate. */
   --background-scrim: oklch(0 0 0 / 28%);
   /* Static build-channel fallback consumed when JS hasn't booted yet. */
   --app-rev: '2k6e8r7p';
@@ -144,7 +173,7 @@ body,
   --secondary: color-mix(in oklch, var(--primary) 12%, var(--background));
   --secondary-foreground: var(--primary);
   --muted: oklch(0.962 0 0);
-  --muted-foreground: oklch(0.624 0 0);
+  --muted-foreground: oklch(0.42 0 0);
   --accent: color-mix(in oklch, var(--primary) 12%, var(--background));
   --accent-foreground: oklch(0.321 0 0);
   --destructive: oklch(0.641 0.218 28.9);
@@ -225,6 +254,12 @@ body,
 }
 
 .dark {
+  /* Light-glyph nav over the dark photo needs the heavier grounding. */
+  --nav-text-shadow:
+    0 1px 2px rgb(0 0 0 / 0.45),
+    0 0 5px rgb(0 0 0 / 0.2);
+  --nav-icon-shadow: drop-shadow(0 1px 1px rgb(0 0 0 / 0.35));
+
   /* Varlet-style dark scheme: #121212 canvas with tonal containers. */
   --background: oklch(0.182 0 0);
   --foreground: oklch(0.86 0 0);
@@ -302,6 +337,12 @@ body,
     0 2px 3px 0 rgb(0 0 0 / 0.65), 0 6px 10px 4px rgb(0 0 0 / 0.4);
   --elevation-5:
     0 4px 4px 0 rgb(0 0 0 / 0.7), 0 8px 12px 6px rgb(0 0 0 / 0.45);
+  /* Dark-scheme surface defaults: near-solid panels (80%) over the heavy
+   * gray underlay — the photo still edges through but content rests on a
+   * dark ground. Keep in sync with SURFACE_DEFAULTS.dark in
+   * lib/theme-customization.ts. */
+  --surface-opacity: 80%;
+  --app-background-scrim: oklch(0.15 0.01 260 / 80%);
   --background-scrim: oklch(0 0 0 / 45%);
   --scrim: var(--background-scrim);
   --inverse-surface: oklch(0.907 0 0);

@@ -16,8 +16,8 @@ export const test = base.extend<AuthFixtures>({
 
     // Overridable so the suite can run against a throwaway instance whose root
     // account differs from the shared dev database's.
-    await userField.fill(process.env.E2E_ADMIN_USERNAME || 'nailaoadmin');
-    await passField.fill(process.env.E2E_ADMIN_PASSWORD || 'NailaoAdmin123!');
+    await userField.fill(process.env.E2E_ADMIN_USERNAME || 'testadmin');
+    await passField.fill(process.env.E2E_ADMIN_PASSWORD || 'TestVerify123!');
     await submitBtn.click();
 
     // Wait for redirect to dashboard

@@ -25,12 +25,23 @@ import {
   useState,
 } from 'react'
 
+import { useTheme } from '@/context/theme-provider'
 import { getCookie, removeCookie, setCookie } from '@/lib/cookies'
 import {
+  BACKGROUND_SCRIM_COLOR_BASES,
+  BACKGROUND_SCRIM_LIMITS,
   CONTENT_LAYOUT_VALUES,
   type ContentLayout,
   DEFAULT_THEME_CUSTOMIZATION,
+  LEGACY_SURFACE_COOKIE_KEYS,
   resolveThemeFont,
+  SURFACE_AXIS_LIST,
+  SURFACE_BLUR_LIMITS,
+  SURFACE_COOKIE_KEYS,
+  SURFACE_OPACITY_LIMITS,
+  surfaceDefaultsFor,
+  type SurfaceNumberAxis,
+  type SurfaceScheme,
   THEME_COOKIE_KEYS,
   THEME_FONT_VALUES,
   THEME_PRESET_VALUES,
@@ -54,7 +65,9 @@ function readCookie<T extends string>(
   return value && allowed.has(value as T) ? (value as T) : fallback
 }
 
-function readBooleanCookie(name: string, fallback: boolean) {
+function readBooleanCookie(name: string, fallback: boolean): boolean
+function readBooleanCookie(name: string, fallback: null): boolean | null
+function readBooleanCookie(name: string, fallback: boolean | null) {
   const value = getCookie(name)
   if (value === 'true') return true
   if (value === 'false') return false
@@ -72,6 +85,92 @@ function applyAttribute(name: string, value: string | null) {
   }
 }
 
+function readNumberCookie(
+  name: string,
+  min: number,
+  max: number
+): number | null {
+  const raw = getCookie(name)
+  if (raw === undefined) return null
+  const parsed = Number(raw)
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) return null
+  return Math.round(parsed)
+}
+
+// Continuous axes override theme variables inline on <html> so they beat the
+// stylesheet defaults without adding one CSS rule per value.
+function applyCssVariable(name: string, value: string | null) {
+  if (typeof document === 'undefined') return
+  const root = document.documentElement
+  if (value === null) {
+    root.style.removeProperty(name)
+  } else {
+    root.style.setProperty(name, value)
+  }
+}
+
+// The four Blur-section axes live in per-color-scheme cookie slots so the
+// drawer's day/night tab edits each scheme independently. The scheme-agnostic
+// pre-tab cookies stay as a read fallback until the first per-scheme write
+// drops them.
+function surfaceLimitsFor(axis: SurfaceNumberAxis) {
+  switch (axis) {
+    case 'surfaceOpacity':
+      return SURFACE_OPACITY_LIMITS
+    case 'surfaceBlur':
+      return SURFACE_BLUR_LIMITS
+    case 'backgroundScrim':
+      return BACKGROUND_SCRIM_LIMITS
+  }
+}
+
+function readSurfaceCookie(
+  axis: SurfaceNumberAxis,
+  scheme: SurfaceScheme
+): number | null {
+  const { min, max } = surfaceLimitsFor(axis)
+  const value = readNumberCookie(SURFACE_COOKIE_KEYS[axis][scheme], min, max)
+  return value ?? readNumberCookie(LEGACY_SURFACE_COOKIE_KEYS[axis], min, max)
+}
+
+function writeSurfaceCookie(
+  axis: SurfaceNumberAxis,
+  scheme: SurfaceScheme,
+  value: number | null
+) {
+  removeCookie(LEGACY_SURFACE_COOKIE_KEYS[axis])
+  if (value === null) {
+    removeCookie(SURFACE_COOKIE_KEYS[axis][scheme])
+  } else {
+    setCookie(
+      SURFACE_COOKIE_KEYS[axis][scheme],
+      String(value),
+      COOKIE_MAX_AGE
+    )
+  }
+}
+
+function readSurfaceCardBlurCookie(scheme: SurfaceScheme): boolean | null {
+  const explicit = readBooleanCookie(
+    SURFACE_COOKIE_KEYS.cardBlur[scheme],
+    null
+  )
+  if (explicit !== null) return explicit
+  const legacy = readBooleanCookie(LEGACY_SURFACE_COOKIE_KEYS.cardBlur, null)
+  // Card blur was split from the page-wide blur cookie long ago; keep the
+  // same fallback chain for very old single-slot preferences.
+  return legacy ?? readBooleanCookie(THEME_COOKIE_KEYS.blur, null)
+}
+
+function writeSurfaceCardBlurCookie(scheme: SurfaceScheme, value: boolean) {
+  removeCookie(LEGACY_SURFACE_COOKIE_KEYS.cardBlur)
+  setCookie(
+    SURFACE_COOKIE_KEYS.cardBlur[scheme],
+    String(value),
+    COOKIE_MAX_AGE
+  )
+}
+
 type ThemeCustomizationContextType = {
   defaults: ThemeCustomization
   customization: ThemeCustomization
@@ -84,6 +183,15 @@ type ThemeCustomizationContextType = {
   setBlur: (blur: boolean) => void
   cardBlur: boolean
   setCardBlur: (blur: boolean) => void
+  surfaceOpacity: number
+  setSurfaceOpacity: (opacity: number) => void
+  surfaceBlur: number
+  setSurfaceBlur: (blur: number) => void
+  backgroundScrim: number
+  setBackgroundScrim: (scrim: number) => void
+  // Color scheme whose storage slots the surface values above read from and
+  // write to (the drawer's day/night tab switches it).
+  surfaceScheme: SurfaceScheme
   resetCustomization: () => void
 }
 
@@ -103,6 +211,13 @@ const FALLBACK_CONTEXT: ThemeCustomizationContextType = {
   setBlur: () => {},
   cardBlur: false,
   setCardBlur: () => {},
+  surfaceOpacity: DEFAULT_THEME_CUSTOMIZATION.surfaceOpacity,
+  setSurfaceOpacity: () => {},
+  surfaceBlur: DEFAULT_THEME_CUSTOMIZATION.surfaceBlur,
+  setSurfaceBlur: () => {},
+  backgroundScrim: DEFAULT_THEME_CUSTOMIZATION.backgroundScrim,
+  setBackgroundScrim: () => {},
+  surfaceScheme: 'dark',
   resetCustomization: () => {},
 }
 
@@ -150,15 +265,41 @@ export function ThemeCustomizationProvider(props: {
   const [blur, _setBlur] = useState(() =>
     readBooleanCookie(THEME_COOKIE_KEYS.blur, DEFAULT_THEME_CUSTOMIZATION.blur)
   )
-  const [cardBlur, _setCardBlur] = useState(() =>
-    readBooleanCookie(
-      THEME_COOKIE_KEYS.cardBlur,
-      readBooleanCookie(
-        THEME_COOKIE_KEYS.blur,
-        DEFAULT_THEME_CUSTOMIZATION.cardBlur
-      )
-    )
+
+  // The four Blur-section axes are stored per color scheme so the drawer's
+  // day/night tab edits each scheme independently; a value equal to the
+  // scheme's CSS default is dropped from storage and follows theme.css.
+  const { resolvedTheme } = useTheme()
+  const surfaceScheme: SurfaceScheme =
+    resolvedTheme === 'light' ? 'light' : 'dark'
+  const surfaceDefaults = surfaceDefaultsFor(resolvedTheme)
+  const [explicitCardBlur, _setCardBlur] = useState<boolean | null>(() =>
+    readSurfaceCardBlurCookie(surfaceScheme)
   )
+  const [explicitSurfaceOpacity, _setSurfaceOpacity] = useState<
+    number | null
+  >(() => readSurfaceCookie('surfaceOpacity', surfaceScheme))
+  const [explicitSurfaceBlur, _setSurfaceBlur] = useState<number | null>(
+    () => readSurfaceCookie('surfaceBlur', surfaceScheme)
+  )
+  const [explicitBackgroundScrim, _setBackgroundScrim] = useState<
+    number | null
+  >(() => readSurfaceCookie('backgroundScrim', surfaceScheme))
+  const cardBlur = explicitCardBlur ?? surfaceDefaults.cardBlur
+  const surfaceOpacity =
+    explicitSurfaceOpacity ?? surfaceDefaults.surfaceOpacity
+  const surfaceBlur = explicitSurfaceBlur ?? surfaceDefaults.surfaceBlur
+  const backgroundScrim =
+    explicitBackgroundScrim ?? surfaceDefaults.backgroundScrim
+  // Re-read storage when the color scheme flips so sliders, inline CSS
+  // variables and cookie slots always track the active tab's scheme.
+  useEffect(() => {
+    _setCardBlur(readSurfaceCardBlurCookie(surfaceScheme))
+    _setSurfaceOpacity(readSurfaceCookie('surfaceOpacity', surfaceScheme))
+    _setSurfaceBlur(readSurfaceCookie('surfaceBlur', surfaceScheme))
+    _setBackgroundScrim(readSurfaceCookie('backgroundScrim', surfaceScheme))
+  }, [surfaceScheme])
+
   // Mirror state to the <body> via data-* attributes so theme-presets.css can
   // override CSS variables at the right cascade layer.
   useEffect(() => {
@@ -203,6 +344,36 @@ export function ThemeCustomizationProvider(props: {
   useEffect(() => {
     applyAttribute('data-theme-card-blur', cardBlur ? 'true' : null)
   }, [cardBlur])
+
+  useEffect(() => {
+    applyCssVariable(
+      '--surface-opacity',
+      explicitSurfaceOpacity === null ||
+        explicitSurfaceOpacity === surfaceDefaults.surfaceOpacity
+        ? null
+        : `${explicitSurfaceOpacity}%`
+    )
+  }, [explicitSurfaceOpacity, surfaceDefaults])
+
+  useEffect(() => {
+    applyCssVariable(
+      '--surface-blur',
+      explicitSurfaceBlur === null ||
+        explicitSurfaceBlur === surfaceDefaults.surfaceBlur
+        ? null
+        : `${explicitSurfaceBlur}px`
+    )
+  }, [explicitSurfaceBlur, surfaceDefaults])
+
+  useEffect(() => {
+    applyCssVariable(
+      '--app-background-scrim',
+      explicitBackgroundScrim === null ||
+        explicitBackgroundScrim === surfaceDefaults.backgroundScrim
+        ? null
+        : `${BACKGROUND_SCRIM_COLOR_BASES[surfaceScheme]} / ${explicitBackgroundScrim}%)`
+    )
+  }, [explicitBackgroundScrim, surfaceDefaults, surfaceScheme])
 
   const setPreset = useCallback((value: ThemePreset) => {
     _setPreset(value)
@@ -258,12 +429,82 @@ export function ThemeCustomizationProvider(props: {
     }
   }, [])
 
-  // Persist false as well so an explicit choice overrides the legacy cookie.
-  const setCardBlur = useCallback((value: boolean) => {
-    _setCardBlur(value)
-    setCookie(THEME_COOKIE_KEYS.cardBlur, String(value), COOKIE_MAX_AGE)
-  }, [])
+  const setCardBlur = useCallback(
+    (value: boolean) => {
+      _setCardBlur(value)
+      const atDefault = value === surfaceDefaults.cardBlur
+      if (atDefault) {
+        removeCookie(LEGACY_SURFACE_COOKIE_KEYS.cardBlur)
+        removeCookie(SURFACE_COOKIE_KEYS.cardBlur[surfaceScheme])
+      } else {
+        writeSurfaceCardBlurCookie(surfaceScheme, value)
+      }
+    },
+    [surfaceScheme]
+  )
 
+  const setSurfaceOpacity = useCallback(
+    (value: number) => {
+      if (!Number.isFinite(value)) return
+      const clamped = Math.round(
+        Math.min(
+          SURFACE_OPACITY_LIMITS.max,
+          Math.max(SURFACE_OPACITY_LIMITS.min, value)
+        )
+      )
+      const atDefault = clamped === surfaceDefaults.surfaceOpacity
+      _setSurfaceOpacity(atDefault ? null : clamped)
+      writeSurfaceCookie(
+        'surfaceOpacity',
+        surfaceScheme,
+        atDefault ? null : clamped
+      )
+    },
+    [surfaceScheme, surfaceDefaults]
+  )
+
+  const setSurfaceBlur = useCallback(
+    (value: number) => {
+      if (!Number.isFinite(value)) return
+      const clamped = Math.round(
+        Math.min(
+          SURFACE_BLUR_LIMITS.max,
+          Math.max(SURFACE_BLUR_LIMITS.min, value)
+        )
+      )
+      const atDefault = clamped === surfaceDefaults.surfaceBlur
+      _setSurfaceBlur(atDefault ? null : clamped)
+      writeSurfaceCookie(
+        'surfaceBlur',
+        surfaceScheme,
+        atDefault ? null : clamped
+      )
+    },
+    [surfaceScheme, surfaceDefaults]
+  )
+
+  const setBackgroundScrim = useCallback(
+    (value: number) => {
+      if (!Number.isFinite(value)) return
+      const clamped = Math.round(
+        Math.min(
+          BACKGROUND_SCRIM_LIMITS.max,
+          Math.max(BACKGROUND_SCRIM_LIMITS.min, value)
+        )
+      )
+      const atDefault = clamped === surfaceDefaults.backgroundScrim
+      _setBackgroundScrim(atDefault ? null : clamped)
+      writeSurfaceCookie(
+        'backgroundScrim',
+        surfaceScheme,
+        atDefault ? null : clamped
+      )
+    },
+    [surfaceScheme, surfaceDefaults]
+  )
+
+  // Clears both color schemes' surface slots (plus the pre-tab legacy
+  // cookies) so each scheme falls back to its CSS preset.
   const resetCustomization = useCallback(() => {
     setPreset(DEFAULT_THEME_CUSTOMIZATION.preset)
     setFont(DEFAULT_THEME_CUSTOMIZATION.font)
@@ -271,21 +512,31 @@ export function ThemeCustomizationProvider(props: {
     setScale(DEFAULT_THEME_CUSTOMIZATION.scale)
     setContentLayout(DEFAULT_THEME_CUSTOMIZATION.contentLayout)
     setBlur(DEFAULT_THEME_CUSTOMIZATION.blur)
-    setCardBlur(DEFAULT_THEME_CUSTOMIZATION.cardBlur)
-    removeCookie(THEME_COOKIE_KEYS.cardBlur)
-  }, [
-    setPreset,
-    setFont,
-    setRadius,
-    setScale,
-    setContentLayout,
-    setBlur,
-    setCardBlur,
-  ])
+    for (const axis of SURFACE_AXIS_LIST) {
+      removeCookie(SURFACE_COOKIE_KEYS[axis].light)
+      removeCookie(SURFACE_COOKIE_KEYS[axis].dark)
+      removeCookie(LEGACY_SURFACE_COOKIE_KEYS[axis])
+    }
+    _setCardBlur(null)
+    _setSurfaceOpacity(null)
+    _setSurfaceBlur(null)
+    _setBackgroundScrim(null)
+  }, [setPreset, setFont, setRadius, setScale, setContentLayout, setBlur])
+
+  const defaults = useMemo<ThemeCustomization>(
+    () => ({
+      ...DEFAULT_THEME_CUSTOMIZATION,
+      cardBlur: surfaceDefaults.cardBlur,
+      surfaceOpacity: surfaceDefaults.surfaceOpacity,
+      surfaceBlur: surfaceDefaults.surfaceBlur,
+      backgroundScrim: surfaceDefaults.backgroundScrim,
+    }),
+    [surfaceDefaults]
+  )
 
   const value = useMemo<ThemeCustomizationContextType>(
     () => ({
-      defaults: DEFAULT_THEME_CUSTOMIZATION,
+      defaults,
       customization: {
         preset,
         font,
@@ -294,11 +545,21 @@ export function ThemeCustomizationProvider(props: {
         contentLayout,
         blur,
         cardBlur,
+        surfaceOpacity,
+        surfaceBlur,
+        backgroundScrim,
       },
       blur,
       setBlur,
       cardBlur,
       setCardBlur,
+      surfaceOpacity,
+      setSurfaceOpacity,
+      surfaceBlur,
+      setSurfaceBlur,
+      backgroundScrim,
+      setBackgroundScrim,
+      surfaceScheme,
       setPreset,
       setFont,
       setRadius,
@@ -314,14 +575,22 @@ export function ThemeCustomizationProvider(props: {
       contentLayout,
       blur,
       cardBlur,
+      surfaceOpacity,
+      surfaceBlur,
+      backgroundScrim,
+      surfaceScheme,
       setPreset,
       setBlur,
       setCardBlur,
+      setSurfaceOpacity,
+      setSurfaceBlur,
+      setBackgroundScrim,
       setFont,
       setRadius,
       setScale,
       setContentLayout,
       resetCustomization,
+      defaults,
     ]
   )
 

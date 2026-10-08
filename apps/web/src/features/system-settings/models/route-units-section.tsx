@@ -292,7 +292,7 @@ export function RouteUnitsSection({}: RouteUnitsSectionProps) {
 
   return (
     <SettingsSection title={t('Route Units')}>
-      <div className='space-y-6 rounded-xl bg-card-surface p-4 backdrop-blur-[var(--surface-blur)]'>
+      <div className='space-y-6 rounded-xl bg-card-surface p-4 backdrop-blur-card'>
         {/* Alias selector: pick a public model alias, then inspect and tune the
             scheduling models competing inside it. */}
         <div className='flex flex-wrap items-end gap-3'>

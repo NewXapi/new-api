@@ -278,7 +278,7 @@ export function SubscriptionPlansCard({
         icon={<Crown className='h-4 w-4' />}
         iconTone='warning'
         disableHoverEffect
-        className='bg-card-surface backdrop-blur-[var(--surface-blur)]'
+        className='bg-card-surface backdrop-blur-card'
         contentClassName='space-y-4 sm:space-y-5'
       >
         {/* My subscriptions & billing preference */}

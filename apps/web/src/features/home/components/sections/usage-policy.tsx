@@ -77,7 +77,7 @@ export function UsagePolicy() {
           </div>
 
           {/* Prohibited — code generation. Stated as a rule. */}
-          <div className='border-destructive/30 bg-card/75 dark:bg-card/65 flex flex-col gap-4 rounded-xl border p-6 shadow-sm backdrop-blur-sm'>
+          <div className='border-destructive/30 bg-card/75 dark:bg-card/65 backdrop-blur-card flex flex-col gap-4 rounded-xl border p-6 shadow-sm'>
             <div className='flex items-center gap-3'>
               <span className='border-destructive/25 bg-destructive/10 text-destructive inline-flex size-10 items-center justify-center rounded-lg border'>
                 <Ban className='size-5' />
@@ -89,7 +89,7 @@ export function UsagePolicy() {
             <p className='text-muted-foreground/80 text-sm leading-relaxed'>
               {t('home.policy.forbidden.body')}
             </p>
-            <div className='border-destructive/25 bg-card/80 dark:bg-card/70 flex items-start gap-2.5 rounded-lg border p-3 shadow-xs backdrop-blur-sm'>
+            <div className='border-destructive/25 bg-card/80 dark:bg-card/70 backdrop-blur-card flex items-start gap-2.5 rounded-lg border p-3 shadow-xs'>
               <Code2 className='text-destructive mt-0.5 size-4 shrink-0' />
               <p className='text-[13px] leading-relaxed'>
                 {t('home.policy.forbidden.rule')}

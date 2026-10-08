@@ -26,6 +26,8 @@ For commercial licensing, please contact support@quantumnous.com
  * that activates it. Loaded globally so font-switching is instantaneous
  * with no FOUT once the variable is fetched. */
 @import '@fontsource-variable/lora';
+/* Local CJK fallback with full weight coverage when MiSans is unavailable. */
+@import '@fontsource-variable/noto-sans-sc';
 
 @import './theme.css';
 @import './theme-presets.css';
@@ -39,15 +41,100 @@ body[data-app-background='true'] {
 body[data-app-background='true'] [data-slot='app-main'],
 body[data-app-background='true'] [data-slot='public-layout'],
 body[data-app-background='true'] [data-slot='auth-layout'],
-body[data-app-background='true'] [data-slot='sidebar-inset'],
 body[data-app-background='true'] [data-slot='sidebar-wrapper'] {
   background-color: transparent;
 }
 
-body[data-app-background='true'] [data-slot='app-header'],
+/* The authenticated content inset is the large Console page panel: give it
+ * the same translucent card surface as its card children so the panel edge
+ * reads over the photo, while the nested app-main inside it stays fully
+ * transparent. */
+body[data-app-background='true'] [data-slot='sidebar-inset'] {
+  background-color: var(--card-surface);
+}
+
+/* The public section-page bands keep an 82% tint: they sit directly over
+ * the bare photo, so the title needs its own ground. Inside the Console
+ * inset the translucent panel surface already backs them — an extra tint
+ * there reads as a dark band above the cards, so header/footer go fully
+ * transparent there. The Console top nav likewise drops its dark
+ * full-width underlay so the image stays visible at the top, like the
+ * public nav; borders and layout are unchanged. */
 body[data-app-background='true'] [data-slot='section-page-header'],
 body[data-app-background='true'] [data-slot='section-page-footer'] {
   background-color: color-mix(in oklch, var(--background) 82%, transparent);
+}
+
+body[data-app-background='true'] [data-slot='sidebar-inset'] [data-slot='section-page-header'],
+body[data-app-background='true'] [data-slot='sidebar-inset'] [data-slot='section-page-footer'] {
+  background-color: transparent;
+  backdrop-filter: none;
+}
+
+/* The frameless photo nav is a dark-scheme look: light glyphs over the
+ * photo read as intentional glass. In light scheme random photos can be
+ * near-black, which turns the transparent bar into a black band clashing
+ * with the light panels, so light keeps its translucent surface instead. */
+html.dark body[data-app-background='true'] [data-slot='app-header'] {
+  background-color: transparent;
+  backdrop-filter: none;
+}
+
+/* Same rule for the public hero nav. Light scheme gives the top band a
+ * soft ground under its dark links (random photos can be arbitrarily dark
+ * behind them). The paint sits on the fixed full-width header via :has(),
+ * not the inner nav: returning to the top re-widens the nav through a
+ * transition, and painting the narrower inner element left the wrapper's
+ * side gutters bare over the raw photo. The fade matches the nav's own
+ * 700ms width transition so the band melts away as the pill forms. */
+body[data-app-background='true']
+  [data-slot='public-header']:has(nav[data-scrolled='false']) {
+  background-color: color-mix(in oklch, var(--background) 70%, transparent);
+  backdrop-filter: blur(14px);
+}
+
+body[data-app-background='true'] [data-slot='public-header'] {
+  transition:
+    background-color 700ms cubic-bezier(0.16, 1, 0.3, 1),
+    backdrop-filter 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html.dark
+  body[data-app-background='true']
+  [data-slot='public-header']:has(nav[data-scrolled='false']) {
+  background-color: transparent;
+  backdrop-filter: none;
+}
+
+/* Nav labels stay legible over the photo. Both schemes paint a shadow:
+ * dark lifts light glyphs off the scrimmed photo, light keeps a tight
+ * stroke under its dark glyphs so they survive passing over darker photo
+ * regions. Scoped to the top navigation elements only: it is inherited by
+ * their links, but page content, dialogs and portaled overlays never pick
+ * it up. The theme-appropriate tone lives in --nav-text-shadow (see
+ * theme.css). */
+body[data-app-background='true'] [data-slot='app-header'],
+body[data-app-background='true'] [data-slot='public-header'] {
+  text-shadow: var(--nav-text-shadow);
+}
+
+/* Icons are replaced SVGs whose glyphs ignore text-shadow; give the header
+ * SVGs a matching drop-shadow so their edges stay grounded on the photo
+ * (the token tracks the color scheme). Logos keep their own artwork
+ * shadows; the shadow stays below the point where it reads as a glow. */
+body[data-app-background='true'] [data-slot='app-header'] svg,
+body[data-app-background='true'] [data-slot='public-header'] svg {
+  filter: var(--nav-icon-shadow);
+}
+
+/* The console top nav renders inactive links with the muted utility color;
+ * over the random photo in light scheme that reads washed out. Deepen them
+ * toward the full foreground (hover still wins via its own rule). */
+html:not(.dark)
+  body[data-app-background='true']
+  [data-slot='app-header']
+  a.text-muted-foreground {
+  color: color-mix(in oklch, var(--foreground) 88%, transparent);
 }
 
 /* Keep the console sidebar readable over the optional app background without
@@ -304,16 +391,42 @@ body[data-app-background='true'] [data-slot='app-background'] [data-app-backgrou
   background-color: var(--card-surface);
 }
 
-/* Card and background blur are independent preferences. Keep portals,
- * inputs, tables, editors, and overlays out of the card surface selector. */
+/* Card glass and background blur are independent preferences:
+ *   --surface-blur      → only the background image's `filter` (radius slider).
+ *   --card-blur-filter  → fixed card glass filter owned by the card-blur
+ *                         toggle (see theme.css).
+ * The state var --card-blur-state resolves to the glass filter when the
+ * toggle is on and to `none` when it is off, so every card-glass surface
+ * (.auth-card, [data-card-surface], [data-slot='card'], .backdrop-blur-card)
+ * follows one single cascade path — no later rule can shadow the ON state.
+ * Keep portals, inputs, tables, editors, and overlays out of the selector. */
+body[data-theme-card-blur='true'] {
+  --card-blur-state: var(--card-blur-filter);
+}
+
+body:not([data-theme-card-blur='true']) {
+  --card-blur-state: none;
+}
+
 body[data-theme-card-blur='true'] .auth-card,
 body[data-theme-card-blur='true'] [data-card-surface='true'],
 body[data-theme-card-blur='true'] [data-slot='card'] {
   background-color: var(--card-surface);
-  backdrop-filter: blur(var(--surface-blur)) saturate(150%);
-  -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(150%);
+  backdrop-filter: var(--card-blur-state);
 }
 
+/* Shared class for card-like glass surfaces in feature components. It
+ * replaces the old `backdrop-blur-[var(--surface-blur)]` utilities, which
+ * tied card glass to the background image slider and never followed the
+ * card-blur toggle. */
+.backdrop-blur-card {
+  backdrop-filter: var(--card-blur-state);
+}
+
+/* Solid surface fallback used when no background image is active. No
+ * backdrop-filter here: nav, sidebar and page bands must not blur the
+ * background — card glass is owned exclusively by the card-blur toggle
+ * above. */
 [data-slot='app-main'],
 [data-slot='public-layout'],
 [data-slot='section-page-header'],
@@ -321,15 +434,6 @@ body[data-theme-card-blur='true'] [data-slot='card'] {
 [data-slot='app-header'],
 [data-slot='sidebar-inner'] {
   background-color: var(--header-surface);
-  backdrop-filter: blur(var(--surface-blur)) saturate(150%);
-  -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(150%);
-}
-
-body:not([data-theme-card-blur='true']) .auth-card,
-body:not([data-theme-card-blur='true']) [data-card-surface='true'],
-body:not([data-theme-card-blur='true']) [data-slot='card'] {
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
 }
 
 /* TextShimmer: background-position sweep from right to left */

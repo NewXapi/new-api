@@ -94,6 +94,8 @@ export function applyDynamicRoles(scope: HTMLElement, roles: DynamicRoles): void
 
 type BackgroundResource = {
   promise: Promise<HTMLImageElement>
+  cachedImagePromise: Promise<HTMLImageElement> | undefined
+  cachedUrl: string | undefined
   controller: AbortController
   subscribers: number
   settled: boolean
@@ -101,6 +103,68 @@ type BackgroundResource = {
 
 // Root effect replay shares the pending request; successful loads survive navigation.
 let backgroundResource: BackgroundResource | undefined
+
+// The image API returns a fresh random URL per call, so the browser HTTP cache
+// never reuses a previous background. Persist the last successful image as a
+// data URL: the next load paints it instantly and the network fetch degrades
+// to a background refresh that may fail without blanking the page.
+const CACHED_BACKGROUND_KEY = 'app-background-image'
+// The upstream serves pre-scaled ~300KB images; base64 is ~0.4MB, so the cap
+// leaves the shared ~5MB origin localStorage quota effectively untouched.
+const CACHED_BACKGROUND_MAX_LENGTH = 3_500_000
+
+type CachedBackground = {
+  url: string
+  dataUrl: string
+}
+
+function readCachedBackground(): CachedBackground | undefined {
+  try {
+    const raw = window.localStorage.getItem(CACHED_BACKGROUND_KEY)
+    if (!raw) return undefined
+    const parsed: unknown = JSON.parse(raw)
+    if (
+      typeof parsed === 'object' &&
+      parsed !== null &&
+      typeof (parsed as CachedBackground).url === 'string' &&
+      typeof (parsed as CachedBackground).dataUrl === 'string' &&
+      (parsed as CachedBackground).dataUrl.startsWith('data:image/')
+    ) {
+      return parsed as CachedBackground
+    }
+  } catch {
+    // Corrupt entry or unavailable storage: fall back to network-only loads.
+  }
+  return undefined
+}
+
+function writeCachedBackground(entry: CachedBackground): void {
+  if (entry.dataUrl.length > CACHED_BACKGROUND_MAX_LENGTH) return
+  try {
+    window.localStorage.setItem(CACHED_BACKGROUND_KEY, JSON.stringify(entry))
+  } catch {
+    // Quota exceeded or storage disabled: the in-memory path still works.
+  }
+}
+
+function persistFreshImage(url: string, signal: AbortSignal): void {
+  void fetch(url, { credentials: 'omit', referrerPolicy: 'no-referrer', signal })
+    .then((response) => {
+      if (!response.ok) throw new Error('Background image unavailable')
+      return response.blob()
+    })
+    .then(
+      (blob) =>
+        new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(String(reader.result))
+          reader.onerror = () => reject(new Error('Failed to persist background image'))
+          reader.readAsDataURL(blob)
+        })
+    )
+    .then((dataUrl) => writeCachedBackground({ url, dataUrl }))
+    .catch(() => {})
+}
 
 function parseBackgroundUrl(text: string): string {
   for (const line of text.split(/\r?\n/)) {
@@ -164,8 +228,11 @@ function loadBackgroundImage(
 
 function createBackgroundResource(): BackgroundResource {
   const controller = new AbortController()
+  const cached = readCachedBackground()
   const resource: BackgroundResource = {
     controller,
+    cachedUrl: cached?.url,
+    cachedImagePromise: cached ? loadBackgroundImage(cached.dataUrl, controller.signal) : undefined,
     subscribers: 0,
     settled: false,
     promise: (async () => {
@@ -184,7 +251,9 @@ function createBackgroundResource(): BackgroundResource {
         if (!response.ok) throw new Error('Background query unavailable')
         const url = parseBackgroundUrl(await response.text())
         window.clearTimeout(timeout)
-        return await loadBackgroundImage(url, controller.signal)
+        const image = await loadBackgroundImage(url, controller.signal)
+        persistFreshImage(url, controller.signal)
+        return image
       } catch (error) {
         window.clearTimeout(timeout)
         if (controller.signal.aborted) throw new Error('Background load cancelled')
@@ -207,9 +276,11 @@ function createBackgroundResource(): BackgroundResource {
 }
 
 /**
- * Subscribe to one page-lifetime background load. Cleanup prevents stale callbacks
- * and cancels pending work after the last subscriber leaves. Optional material
- * color extraction stays available without changing the shared display request.
+ * Subscribe to one page-lifetime background load. A locally persisted image is
+ * delivered immediately (instant paint), then the fresh network image swaps it
+ * in only when the URL changed. Cleanup prevents stale callbacks and cancels
+ * pending work after the last subscriber leaves. Optional material color
+ * extraction stays available without changing the shared display request.
  */
 export function loadRandomBackground(
   scope: HTMLElement,
@@ -220,10 +291,13 @@ export function loadRandomBackground(
   resource.subscribers += 1
   let cancelled = false
   let appliedRoles: DynamicRoles | undefined
+  // Dedupe deliveries so the same image never replays the fade-in.
+  let deliveredUrl: string | undefined
 
-  void resource.promise.then((image) => {
-    if (cancelled) return
-    onUrl(image.currentSrc || image.src, image)
+  const deliver = (url: string, image: HTMLImageElement) => {
+    if (cancelled || deliveredUrl === url) return
+    deliveredUrl = url
+    onUrl(url, image)
     if (!dynamicColor) return
     try {
       const canvas = document.createElement('canvas')
@@ -239,7 +313,19 @@ export function loadRandomBackground(
     } catch {
       // Unreadable pixels do not discard the background or static theme.
     }
-  }, () => {})
+  }
+
+  if (resource.cachedImagePromise) {
+    void resource.cachedImagePromise.then(
+      (image) => deliver(resource.cachedUrl ?? image.src, image),
+      () => {}
+    )
+  }
+
+  void resource.promise.then(
+    (image) => deliver(image.currentSrc || image.src, image),
+    () => {}
+  )
 
   return () => {
     if (cancelled) return

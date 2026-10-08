@@ -164,9 +164,9 @@ export function Pricing() {
   return (
     <PublicLayout showMainContainer={false}>
       <Main className='mx-auto w-full max-w-[1600px] gap-6 overflow-visible px-4 pt-20 pb-10 sm:px-6 sm:pt-24 lg:px-8'>
-          <header className='grid items-end gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(320px,560px)]'>
-            <div className='min-w-0'>
-            <h1 className='text-3xl leading-tight font-semibold tracking-tight sm:text-4xl'>
+          <header className='flex flex-col gap-5'>
+            <div className='min-w-0 pt-4 text-center'>
+            <h1 className='text-4xl leading-tight font-bold tracking-tight sm:text-5xl'>
               {t('Model Square')}
             </h1>
             <p className='text-muted-foreground mt-3 text-sm'>
@@ -174,7 +174,7 @@ export function Pricing() {
                 count: models?.length || 0,
               })}
             </p>
-            <p className='text-muted-foreground mt-2 max-w-2xl text-sm leading-relaxed'>
+            <p className='text-muted-foreground mx-auto mt-2 max-w-2xl text-sm leading-relaxed'>
               {t(
                 'Discover curated AI models, compare pricing and capabilities, and choose the right model for every scenario.'
               )}
@@ -187,7 +187,7 @@ export function Pricing() {
               placeholder={t(
                 'Search model name, provider, endpoint, or tag...'
               )}
-              className='w-full'
+              className='mx-auto w-full max-w-2xl'
             />
           </header>
 

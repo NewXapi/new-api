@@ -67,7 +67,7 @@ export function InsightSummaryCards({
   return (
     <div className='grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6'>
       {cards.map((card) => (
-        <Card key={card.label} className='bg-card-surface backdrop-blur-[var(--surface-blur)]'>
+        <Card key={card.label} className='bg-card-surface backdrop-blur-card'>
           <CardContent className='p-4'>
             <p className='text-muted-foreground text-xs'>{card.label}</p>
             <p className='mt-1 text-2xl font-semibold tabular-nums'>
@@ -77,7 +77,7 @@ export function InsightSummaryCards({
         </Card>
       ))}
       {summary.risky_users > 0 && (
-        <Card className='bg-card-surface border-destructive/40 col-span-2 md:col-span-3 lg:col-span-6 backdrop-blur-[var(--surface-blur)]'>
+        <Card className='bg-card-surface border-destructive/40 col-span-2 md:col-span-3 lg:col-span-6 backdrop-blur-card'>
           <CardContent className='flex items-center justify-between p-4'>
             <div>
               <p className='text-muted-foreground text-xs'>

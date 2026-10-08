@@ -80,7 +80,7 @@ export function AffiliateRewardsCard({
     return (
       <Card
         data-card-hover='false'
-        className='bg-card-surface py-0 backdrop-blur-[var(--surface-blur)]'
+        className='bg-card-surface py-0 backdrop-blur-card'
       >
         <CardContent className='grid gap-4 p-3 sm:p-4 lg:grid-cols-[minmax(220px,1fr)_minmax(220px,0.72fr)_minmax(320px,1.15fr)] lg:items-center'>
           <div>
@@ -109,7 +109,7 @@ export function AffiliateRewardsCard({
   return (
     <Card
       data-card-hover='false'
-      className='bg-card-surface py-0 backdrop-blur-[var(--surface-blur)]'
+      className='bg-card-surface py-0 backdrop-blur-card'
     >
       <CardContent className='grid gap-3 p-3 sm:gap-4 sm:p-4 lg:grid-cols-[minmax(200px,1fr)_minmax(180px,0.65fr)_minmax(280px,1fr)] lg:items-center'>
         <div className='flex min-w-0 items-center gap-2.5'>

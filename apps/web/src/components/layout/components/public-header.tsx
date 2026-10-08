@@ -20,6 +20,7 @@ import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { ConfigDrawer } from '@/components/config-drawer'
 import { Dialog } from '@/components/dialog'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { NotificationPopover } from '@/components/notification-popover'
@@ -49,6 +50,7 @@ export interface PublicHeaderProps {
   mobileLinks?: TopNavLink[]
   navContent?: React.ReactNode
   showThemeSwitch?: boolean
+  showConfigDrawer?: boolean
   showLanguageSwitcher?: boolean
   logo?: React.ReactNode
   siteName?: string
@@ -65,6 +67,7 @@ export function PublicHeader(props: PublicHeaderProps) {
   const {
     navLinks = defaultTopNavLinks,
     showThemeSwitch = true,
+    showConfigDrawer = true,
     showLanguageSwitcher = true,
     logo: customLogo,
     siteName: customSiteName,
@@ -175,7 +178,7 @@ export function PublicHeader(props: PublicHeaderProps) {
 
   return (
     <>
-      <header className='pointer-events-none fixed inset-x-0 top-0 z-50'>
+      <header data-slot='public-header' className='pointer-events-none fixed inset-x-0 top-0 z-50'>
         <div
           className={cn(
             'pointer-events-auto mx-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
@@ -183,6 +186,7 @@ export function PublicHeader(props: PublicHeaderProps) {
           )}
         >
           <nav
+            data-scrolled={scrolled}
             className={cn(
               'flex items-center justify-between transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]',
               scrolled
@@ -229,7 +233,7 @@ export function PublicHeader(props: PublicHeaderProps) {
                       tabIndex={link.disabled ? -1 : undefined}
                       onClick={(event) => handleNavLinkClick(event, link)}
                       className={cn(
-                        'text-muted-foreground hover:text-foreground rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-200',
+                        'text-foreground/90 hover:text-foreground rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-200',
                         link.disabled && 'pointer-events-none opacity-50'
                       )}
                     >
@@ -247,7 +251,7 @@ export function PublicHeader(props: PublicHeaderProps) {
                       'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-200',
                       isActive
                         ? 'text-foreground'
-                        : 'text-muted-foreground hover:text-foreground',
+                        : 'text-foreground/90 hover:text-foreground',
                       link.disabled && 'pointer-events-none opacity-50'
                     )}
                   >
@@ -258,12 +262,14 @@ export function PublicHeader(props: PublicHeaderProps) {
 
               {(showLanguageSwitcher ||
                 showThemeSwitch ||
+                showConfigDrawer ||
                 showNotifications) && (
                 <div className='bg-border/40 mx-2 h-4 w-px' />
               )}
 
               {showLanguageSwitcher && <LanguageSwitcher />}
               {showThemeSwitch && <ThemeSwitch />}
+              {showConfigDrawer && <ConfigDrawer />}
               {showNotifications && (
                 <NotificationPopover
                   open={notifications.popoverOpen}

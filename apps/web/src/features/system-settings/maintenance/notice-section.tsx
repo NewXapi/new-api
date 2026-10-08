@@ -77,7 +77,7 @@ export function NoticeSection({ defaultValue }: NoticeSectionProps) {
       <Form {...form}>
         <SettingsForm
           onSubmit={form.handleSubmit(onSubmit)}
-          className='rounded-xl bg-card-surface p-4 backdrop-blur-[var(--surface-blur)]'
+          className='rounded-xl bg-card-surface p-4 backdrop-blur-card'
         >
           <SettingsPageFormActions
             onSave={form.handleSubmit(onSubmit)}

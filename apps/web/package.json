@@ -27,6 +27,7 @@
     "@codemirror/state": "^6.7.6",
     "@codemirror/view": "^6.43.13",
     "@fontsource-variable/lora": "^5.3.0",
+    "@fontsource-variable/noto-sans-sc": "^5.3.0",
     "@fontsource-variable/public-sans": "^5.3.0",
     "@hookform/resolvers": "^5.9.1",
     "@hugeicons/core-free-icons": "^4.3.5",

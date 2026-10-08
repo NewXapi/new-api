@@ -124,6 +124,41 @@ export type ThemeCustomization = {
   contentLayout: ContentLayout
   blur: boolean
   cardBlur: boolean
+  // Glass surface axes, applied as inline CSS variables on <html>.
+  surfaceOpacity: number
+  surfaceBlur: number
+  // Gray underlay over the background image (alpha % of a fixed dark gray);
+  // written to <html> as the --app-background-scrim variable.
+  backgroundScrim: number
+}
+
+/**
+ * Default surface axes per color scheme: light runs translucent glass with
+ * card blur on and a light veil so vivid photos still read; dark rests the
+ * UI on near-solid (80%) panels over a heavy dark veil, no card blur. Must
+ * match the `:root` / `.dark` defaults of --surface-opacity, --surface-blur,
+ * --app-background-scrim and the card-blur toggle in theme.css /
+ * theme-presets.css.
+ */
+export const SURFACE_DEFAULTS = {
+  light: {
+    cardBlur: true,
+    surfaceOpacity: 50,
+    surfaceBlur: 2,
+    backgroundScrim: 30,
+  },
+  dark: {
+    cardBlur: false,
+    surfaceOpacity: 80,
+    surfaceBlur: 2,
+    backgroundScrim: 80,
+  },
+} as const
+
+export type SurfaceScheme = keyof typeof SURFACE_DEFAULTS
+
+export function surfaceDefaultsFor(theme: string) {
+  return SURFACE_DEFAULTS[theme === 'light' ? 'light' : 'dark']
 }
 
 export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
@@ -134,7 +169,66 @@ export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
   contentLayout: 'full',
   blur: false,
   cardBlur: false,
+  // Fallback mirror of the light entry of SURFACE_DEFAULTS; the provider
+  // re-resolves these per color scheme at runtime.
+  ...SURFACE_DEFAULTS.light,
 }
+
+export const SURFACE_OPACITY_LIMITS = { min: 10, max: 100 } as const
+export const SURFACE_BLUR_LIMITS = { min: 0, max: 40 } as const
+export const BACKGROUND_SCRIM_LIMITS = { min: 0, max: 100 } as const
+/** Per-scheme scrim veil: light brightens dark random photos so the light
+ * UI never sits on a black field; dark deepens the photo for light glyphs.
+ * The provider supplies the chosen alpha and closing parenthesis when the
+ * user overrides the theme.css default. */
+export const BACKGROUND_SCRIM_COLOR_BASES = {
+  light: 'oklch(0.93 0.006 260',
+  dark: 'oklch(0.15 0.01 260',
+} as const satisfies Record<SurfaceScheme, string>
+
+/**
+ * Per-color-scheme storage slots for the four Blur-section axes. The theme
+ * drawer shows a day/night tab so each scheme's surface can be tuned
+ * independently; a value equal to the scheme's default is not persisted and
+ * instead follows theme.css (SURFACE_DEFAULTS / :root/.dark), including the
+ * per-scheme `cardBlur` default (light on, dark off).
+ */
+export const SURFACE_COOKIE_KEYS = {
+  cardBlur: { light: 'theme_card_blur_light', dark: 'theme_card_blur_dark' },
+  surfaceOpacity: {
+    light: 'theme_surface_opacity_light',
+    dark: 'theme_surface_opacity_dark',
+  },
+  surfaceBlur: {
+    light: 'theme_surface_blur_light',
+    dark: 'theme_surface_blur_dark',
+  },
+  backgroundScrim: {
+    light: 'theme_bg_scrim_light',
+    dark: 'theme_bg_scrim_dark',
+  },
+} as const satisfies Record<
+  'cardBlur' | 'surfaceOpacity' | 'surfaceBlur' | 'backgroundScrim',
+  Record<SurfaceScheme, string>
+>
+
+export const SURFACE_AXIS_LIST = [
+  'cardBlur',
+  'surfaceOpacity',
+  'surfaceBlur',
+  'backgroundScrim',
+] as const
+export type SurfaceAxis = (typeof SURFACE_AXIS_LIST)[number]
+export type SurfaceNumberAxis = Exclude<SurfaceAxis, 'cardBlur'>
+
+/** Scheme-agnostic cookies from the pre-tab UI; read once as a fallback and
+ * dropped whenever the matching per-scheme slot is written. */
+export const LEGACY_SURFACE_COOKIE_KEYS = {
+  cardBlur: 'theme_card_blur',
+  surfaceOpacity: 'theme_surface_opacity',
+  surfaceBlur: 'theme_surface_blur',
+  backgroundScrim: 'theme_bg_scrim',
+} as const satisfies Record<SurfaceAxis, string>
 
 export const THEME_PRESET_VALUES = new Set(
   THEME_PRESETS.map((p) => p.value)
@@ -174,7 +268,7 @@ export const THEME_COOKIE_KEYS = {
   scale: 'theme_scale',
   contentLayout: 'theme_content_layout',
   blur: 'theme_blur',
-  cardBlur: 'theme_card_blur',
+  // Surface axes are per-scheme; see SURFACE_COOKIE_KEYS.
 } as const
 
 /**

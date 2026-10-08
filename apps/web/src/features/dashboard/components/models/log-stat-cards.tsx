@@ -186,7 +186,7 @@ export function LogStatCards(props: LogStatCardsProps) {
             <Card
               key={it.title}
               className={cn(
-                'bg-card-surface min-w-0 gap-0 py-0 backdrop-blur-[var(--surface-blur)]',
+                'bg-card-surface min-w-0 gap-0 py-0 backdrop-blur-card',
                 idx === items.length - 1 &&
                   items.length % 2 !== 0 &&
                   'col-span-2 sm:col-span-1'

@@ -38,7 +38,9 @@ import {
   sideDrawerHeaderClassName,
 } from '@/components/drawer-layout'
 import { Button } from '@/components/ui/button'
+import { Slider } from '@/components/ui/slider'
 import { Switch } from '@/components/ui/switch'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Sheet,
   SheetContent,
@@ -58,7 +60,10 @@ import { useThemeCustomization } from '@/context/theme-customization-provider'
 import { useTheme } from '@/context/theme-provider'
 import { useThemeMode } from '@/hooks/use-theme-mode'
 import {
+  BACKGROUND_SCRIM_LIMITS,
   type ContentLayout,
+  SURFACE_BLUR_LIMITS,
+  SURFACE_OPACITY_LIMITS,
   THEME_PRESETS,
   type ThemeFont,
   type ThemePreset,
@@ -164,6 +169,7 @@ function SectionTitle(props: {
   onReset?: () => void
   className?: string
 }) {
+  const { t } = useTranslation()
   return (
     <div
       className={cn(
@@ -178,7 +184,7 @@ function SectionTitle(props: {
           variant='secondary'
           className='size-4'
           onClick={props.onReset}
-          aria-label='Reset'
+          aria-label={t('Reset')}
         >
           <RotateCcw className='size-3' aria-hidden='true' />
         </Button>
@@ -732,8 +738,21 @@ function ContentLayoutPreview(props: { centered: boolean }) {
 
 function BlurConfig() {
   const { t } = useTranslation()
-  const { defaults, customization, setCardBlur } = useThemeCustomization()
-  const hasBlurChanges = customization.cardBlur !== defaults.cardBlur
+  const { setMode } = useThemeMode()
+  const {
+    defaults,
+    customization,
+    setCardBlur,
+    setSurfaceOpacity,
+    setSurfaceBlur,
+    setBackgroundScrim,
+    surfaceScheme,
+  } = useThemeCustomization()
+  const hasBlurChanges =
+    customization.cardBlur !== defaults.cardBlur ||
+    customization.surfaceOpacity !== defaults.surfaceOpacity ||
+    customization.surfaceBlur !== defaults.surfaceBlur ||
+    customization.backgroundScrim !== defaults.backgroundScrim
 
   return (
     <div>
@@ -742,8 +761,24 @@ function BlurConfig() {
         showReset={hasBlurChanges}
         onReset={() => {
           setCardBlur(defaults.cardBlur)
+          setSurfaceOpacity(defaults.surfaceOpacity)
+          setSurfaceBlur(defaults.surfaceBlur)
+          setBackgroundScrim(defaults.backgroundScrim)
         }}
       />
+      {/* Day/night tab: flips the live theme and scopes every control below
+       * to that color scheme's stored values (see the provider's per-scheme
+       * cookie slots). */}
+      <Tabs
+        value={surfaceScheme}
+        onValueChange={(value) => setMode(value as 'light' | 'dark')}
+        className='mb-2'
+      >
+        <TabsList className='w-full' aria-label={t('Select theme preference')}>
+          <TabsTrigger value='light'>{t('Light')}</TabsTrigger>
+          <TabsTrigger value='dark'>{t('Dark')}</TabsTrigger>
+        </TabsList>
+      </Tabs>
       <div className='space-y-2'>
         <label className='flex items-center justify-between gap-3 rounded-lg border p-3 text-sm'>
           <span>{t('Enable card blur')}</span>
@@ -753,6 +788,59 @@ function BlurConfig() {
             aria-label={t('Enable card blur')}
           />
         </label>
+        <div className='rounded-lg border p-3 text-sm'>
+          <div className='flex items-center justify-between gap-3'>
+            <span>{t('Surface opacity')}</span>
+            <span className='text-muted-foreground text-xs tabular-nums'>
+              {customization.surfaceOpacity}%
+            </span>
+          </div>
+          <Slider
+            className='mt-2'
+            min={SURFACE_OPACITY_LIMITS.min}
+            max={SURFACE_OPACITY_LIMITS.max}
+            step={1}
+            value={[customization.surfaceOpacity]}
+            onValueChange={(next) => setSurfaceOpacity(Array.isArray(next) ? next[0] : next)}
+            aria-label={t('Surface opacity')}
+          />
+        </div>
+        <div className='rounded-lg border p-3 text-sm'>
+          <div className='flex items-center justify-between gap-3'>
+            <span>{t('Blur radius')}</span>
+            <span className='text-muted-foreground text-xs tabular-nums'>
+              {customization.surfaceBlur}px
+            </span>
+          </div>
+          <Slider
+            className='mt-2'
+            min={SURFACE_BLUR_LIMITS.min}
+            max={SURFACE_BLUR_LIMITS.max}
+            step={1}
+            value={[customization.surfaceBlur]}
+            onValueChange={(next) => setSurfaceBlur(Array.isArray(next) ? next[0] : next)}
+            aria-label={t('Blur radius')}
+          />
+        </div>
+        <div className='rounded-lg border p-3 text-sm'>
+          <div className='flex items-center justify-between gap-3'>
+            <span>{t('Background scrim')}</span>
+            <span className='text-muted-foreground text-xs tabular-nums'>
+              {customization.backgroundScrim}%
+            </span>
+          </div>
+          <Slider
+            className='mt-2'
+            min={BACKGROUND_SCRIM_LIMITS.min}
+            max={BACKGROUND_SCRIM_LIMITS.max}
+            step={1}
+            value={[customization.backgroundScrim]}
+            onValueChange={(next) =>
+              setBackgroundScrim(Array.isArray(next) ? next[0] : next)
+            }
+            aria-label={t('Background scrim')}
+          />
+        </div>
       </div>
     </div>
   )

@@ -204,7 +204,7 @@ export function HeaderNavigationSection({
       <Form {...form}>
         <SettingsForm
           onSubmit={form.handleSubmit(onSubmit)}
-          className='rounded-xl bg-card-surface p-4 backdrop-blur-[var(--surface-blur)]'
+          className='rounded-xl bg-card-surface p-4 backdrop-blur-card'
         >
           <SettingsPageFormActions
             onSave={form.handleSubmit(onSubmit)}
@@ -242,7 +242,7 @@ export function HeaderNavigationSection({
             {accessModules.map((module) => (
               <SettingsControlGroup
                 key={module.enabledKey}
-                className='bg-card-surface backdrop-blur-[var(--surface-blur)]'
+                className='bg-card-surface backdrop-blur-card'
               >
                 <FormField
                   control={form.control}
