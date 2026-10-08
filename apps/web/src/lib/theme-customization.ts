@@ -135,7 +135,7 @@ export type ThemeCustomization = {
 /**
  * Default surface axes per color scheme: light runs translucent glass with
  * card blur on and a light veil so vivid photos still read; dark rests the
- * UI on near-solid (80%) panels over a heavy dark veil, no card blur. Must
+ * UI on near-solid (80%) panels over a heavy dark veil (76%), no card blur. Must
  * match the `:root` / `.dark` defaults of --surface-opacity, --surface-blur,
  * --app-background-scrim and the card-blur toggle in theme.css /
  * theme-presets.css.
@@ -151,7 +151,7 @@ export const SURFACE_DEFAULTS = {
     cardBlur: false,
     surfaceOpacity: 80,
     surfaceBlur: 2,
-    backgroundScrim: 80,
+    backgroundScrim: 76,
   },
 } as const
 

@@ -37,7 +37,17 @@ export function AuthenticatedLayout(props: AuthenticatedLayoutProps) {
   return (
     <LayoutProvider>
       <SearchProvider>
-        <SidebarProvider defaultOpen={defaultOpen} className='relative z-10 flex-col'>
+        <SidebarProvider
+          defaultOpen={defaultOpen}
+          className='relative z-10 flex-col'
+          style={
+            {
+              // Dual sidebar: icon rail (4rem) + secondary panel (~13.5rem)
+              '--sidebar-width': '17.5rem',
+              '--sidebar-width-icon': '4rem',
+            } as React.CSSProperties
+          }
+        >
           <SkipToMain />
           <AppHeader />
           <div className='flex min-h-0 w-full flex-1'>

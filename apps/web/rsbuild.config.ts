@@ -64,6 +64,16 @@ export default defineConfig(({ envMode }) => {
     },
     html: {
       template: './index.html',
+      // Dev-only annotation SDK (local visual-feedback tooling; see
+      // ainotation-entry.ts). Production builds must never reference it.
+      tags: isProd
+        ? []
+        : [
+            {
+              tag: 'script',
+              attrs: { src: '/ainotation/ainotation.iife.js', defer: true },
+            },
+          ],
     },
     server: {
       host: '0.0.0.0',

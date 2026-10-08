@@ -16,128 +16,74 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useEffect, useMemo, useState } from 'react'
-import { useTranslation } from 'react-i18next'
 import { useLocation } from '@tanstack/react-router'
+import { useEffect, useMemo, useState } from 'react'
 
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-  SidebarRail,
-  useSidebar,
-} from '@/components/ui/sidebar'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Sidebar, SidebarRail, useSidebar } from '@/components/ui/sidebar'
 import { useLayout } from '@/context/layout-provider'
 import { useSidebarView } from '@/hooks/use-sidebar-view'
-import { MOTION_TRANSITION, MOTION_VARIANTS } from '@/lib/motion'
-import { ROLE } from '@/lib/roles'
-import { cn } from '@/lib/utils'
-import { useAuthStore } from '@/stores/auth-store'
 
 import { checkIsActive } from '../lib/url-utils'
-import { NavGroup } from './nav-group'
-
-export type SidebarTabMode = 'user' | 'admin'
+import { IconRail } from './icon-rail'
+import { SecondaryPanel } from './secondary-panel'
 
 /**
- * Application sidebar.
+ * Application sidebar — dual-column "icon rail + secondary panel" shell.
  *
- * Renders the root navigation. When the logged-in user is
- * Admin/SuperAdmin/Root, a top Tab switcher toggles between the User
- * workspace (Chat, General, Personal) and the Admin workspace
- * (Channels, Models, Users, Redemption, Subscriptions, Proxy,
- * System Info, System Settings theme collapsibles).
+ * The rail lists the root navigation groups (Chat, General, Personal,
+ * and Admin for admins) as icon buttons; the secondary panel shows the
+ * active section's items. The active section follows the current route
+ * and can be previewed by clicking a rail icon. Collapsing the sidebar
+ * (Ctrl+B / header trigger) keeps the rail and hides the panel.
  */
 export function AppSidebar() {
-  const { t } = useTranslation()
   const { collapsible, variant } = useLayout()
   const { state, isMobile } = useSidebar()
   const pathname = useLocation({ select: (location) => location.pathname })
-  const { key, navGroups } = useSidebarView()
-  const shouldReduce = useReducedMotion()
+  const { navGroups } = useSidebarView()
 
-  const userRole = useAuthStore((s) => s.auth.user?.role)
-  const isAdmin = (userRole ?? ROLE.GUEST) >= ROLE.ADMIN
+  // Manual section picks survive until the route lands in a section;
+  // navigating (rail or panel link) hands control back to the route.
+  const [sectionOverride, setSectionOverride] = useState<string | null>(null)
 
-  const [activeTab, setActiveTab] = useState<SidebarTabMode>('user')
+  const routeSectionId = useMemo(
+    () =>
+      navGroups.find((group) =>
+        group.items.some((item) => checkIsActive(pathname, item))
+      )?.id ?? null,
+    [navGroups, pathname]
+  )
 
-  // Check if current location or view is inside admin workspace
-  const isAdminActive = useMemo(() => {
-    const adminGroup = navGroups.find((g) => g.id === 'admin')
-    if (!adminGroup) return false
-    return adminGroup.items.some((item) => checkIsActive(pathname, item))
-  }, [navGroups, pathname])
-
-  // Keep the selected workspace aligned with the current route.
   useEffect(() => {
-    setActiveTab(isAdminActive ? 'admin' : 'user')
-  }, [isAdminActive])
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSectionOverride(null)
+  }, [routeSectionId, pathname])
 
-  // Filter groups depending on active tab when admin tabs are enabled
-  const displayedNavGroups = useMemo(() => {
-    if (!isAdmin) {
-      return navGroups
-    }
-    if (activeTab === 'admin') {
-      return navGroups.filter((g) => g.id === 'admin')
-    }
-    return navGroups.filter((g) => g.id !== 'admin')
-  }, [isAdmin, activeTab, navGroups])
+  const visibleGroups = useMemo(
+    () => navGroups.filter((group) => group.items.length > 0),
+    [navGroups]
+  )
 
-  const showTabs = isAdmin
+  const activeGroupId = sectionOverride ?? routeSectionId ?? visibleGroups[0]?.id
+  const activeGroup =
+    visibleGroups.find((group) => group.id === activeGroupId) ??
+    visibleGroups[0] ??
+    null
 
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
-      {showTabs && (
-        <SidebarHeader
-          className={cn(
-            'p-2 pb-1 transition-opacity duration-200',
-            state === 'collapsed' && !isMobile && 'hidden'
-          )}
-        >
-          <Tabs
-            value={activeTab}
-            onValueChange={(val) => setActiveTab(val as SidebarTabMode)}
-            className='w-full'
-          >
-            <TabsList className='grid w-full grid-cols-2 bg-muted/60 p-1'>
-              <TabsTrigger
-                value='user'
-                className='text-xs font-medium data-active:bg-background data-active:shadow-sm'
-              >
-                {t('User')}
-              </TabsTrigger>
-              <TabsTrigger
-                value='admin'
-                className='text-xs font-medium data-active:bg-background data-active:shadow-sm'
-              >
-                {t('Admin')}
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </SidebarHeader>
-      )}
+      <div className='flex min-h-0 w-full flex-1'>
+        <IconRail
+          groups={visibleGroups}
+          activeGroupId={activeGroup?.id ?? null}
+          onSelect={setSectionOverride}
+        />
 
-      <SidebarContent className='py-2'>
-        <AnimatePresence mode='wait' initial={false}>
-          <motion.div
-            key={`${key}-${activeTab}`}
-            initial={
-              shouldReduce ? false : MOTION_VARIANTS.sidebarSlide.initial
-            }
-            animate={MOTION_VARIANTS.sidebarSlide.animate}
-            exit={shouldReduce ? undefined : MOTION_VARIANTS.sidebarSlide.exit}
-            transition={MOTION_TRANSITION.fast}
-            className='flex flex-col'
-          >
-            {displayedNavGroups.map((props) => (
-              <NavGroup key={props.id || props.title} {...props} />
-            ))}
-          </motion.div>
-        </AnimatePresence>
-      </SidebarContent>
+        <SecondaryPanel
+          group={activeGroup}
+          hidden={state === 'collapsed' && !isMobile}
+        />
+      </div>
 
       <SidebarRail />
     </Sidebar>

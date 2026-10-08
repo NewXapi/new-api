@@ -18,7 +18,8 @@
     "copyright:check": "node scripts/add-copyright.mjs --check",
     "copyright": "node scripts/add-copyright.mjs",
     "i18n:sync": "node scripts/sync-i18n.mjs",
-    "knip": "knip"
+    "knip": "knip",
+    "aino": "bun build ainotation-entry.ts --format=iife --minify --target=browser --outfile=public/ainotation/ainotation.iife.js"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -81,6 +82,7 @@
     "zustand": "^5.0.15"
   },
   "devDependencies": {
+    "@ainotation/sdk": "^1.0.0-beta.3",
     "@playwright/test": "^1.63.0",
     "@rsbuild/core": "^2.1.4",
     "@rsbuild/plugin-react": "^2.1.0",

@@ -17,33 +17,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { Link, useLocation } from '@tanstack/react-router'
-import { ChevronRight } from 'lucide-react'
-import { type ReactNode, useState, useEffect } from 'react'
+import { type ReactNode } from 'react'
 
 import { Badge } from '@/components/ui/badge'
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
   useSidebar,
 } from '@/components/ui/sidebar'
 
@@ -57,55 +39,80 @@ import {
 import { ChatPresetsItem } from './chat-presets-item'
 
 /**
- * Sidebar navigation group component
- * Renders a group of navigation items, supporting regular links and collapsible submenus
+ * Sidebar navigation group component.
+ *
+ * Flat layout: plain links render as a single menu block, and collapsible
+ * sections are expanded in place — an uppercase group label followed by all
+ * of its links, never an accordion.
  */
 export function NavGroup({ title, items }: NavGroupProps) {
-  const { state, isMobile } = useSidebar()
   const href = useLocation({ select: (location) => location.href })
+
+  type Block =
+    | { kind: 'links'; key: string; items: NavLink[] }
+    | { kind: 'presets'; key: string; item: NavChatPresets }
+    | { kind: 'section'; key: string; item: NavCollapsible }
+
+  const blocks: Block[] = []
+  for (const item of items) {
+    const key = `${item.title}-${item.url || item.type}`
+    if (item.type === 'chat-presets') {
+      blocks.push({ kind: 'presets', key, item: item as NavChatPresets })
+    } else if (item.items) {
+      blocks.push({ kind: 'section', key, item: item as NavCollapsible })
+    } else {
+      const last = blocks[blocks.length - 1]
+      const link = item as NavLink
+      if (last?.kind === 'links') last.items.push(link)
+      else blocks.push({ kind: 'links', key, items: [link] })
+    }
+  }
 
   return (
     <SidebarGroup className='px-2 py-1'>
-      <SidebarGroupLabel className='text-muted-foreground/70 px-2 text-[11px] font-medium tracking-wider uppercase'>
-        {title}
-      </SidebarGroupLabel>
-      <SidebarMenu>
-        {items.map((item) => {
-          const key = `${item.title}-${item.url || item.type}`
-
-          // Special handling: dynamic chat presets list
-          if (item.type === 'chat-presets') {
-            return <ChatPresetsItem key={key} item={item as NavChatPresets} />
-          }
-
-          // If no sub-items, render regular link
-          if (!item.items) {
-            return (
-              <SidebarMenuLink key={key} item={item as NavLink} href={href} />
-            )
-          }
-
-          // In collapsed state on non-mobile, render dropdown menu
-          if (state === 'collapsed' && !isMobile) {
-            return (
-              <SidebarMenuCollapsedDropdown
-                key={key}
-                item={item as NavCollapsible}
-                href={href}
-              />
-            )
-          }
-
-          // Render collapsible menu
+      {title ? (
+        <SidebarGroupLabel className='text-muted-foreground/70 px-2 text-[11px] font-medium tracking-wider uppercase'>
+          {title}
+        </SidebarGroupLabel>
+      ) : null}
+      {blocks.map((block) => {
+        if (block.kind === 'links') {
           return (
-            <SidebarMenuCollapsible
-              key={key}
-              item={item as NavCollapsible}
-              href={href}
-            />
+            <SidebarMenu key={block.key}>
+              {block.items.map((item) => (
+                <SidebarMenuLink
+                  key={`${item.title}-${item.url}`}
+                  item={item}
+                  href={href}
+                />
+              ))}
+            </SidebarMenu>
           )
-        })}
-      </SidebarMenu>
+        }
+        if (block.kind === 'presets') {
+          return (
+            <SidebarMenu key={block.key}>
+              <ChatPresetsItem item={block.item} />
+            </SidebarMenu>
+          )
+        }
+        return (
+          <div key={block.key} className='contents'>
+            <SidebarGroupLabel className='text-muted-foreground/70 px-2 pt-3 text-[11px] font-medium tracking-wider uppercase'>
+              {block.item.title}
+            </SidebarGroupLabel>
+            <SidebarMenu>
+              {block.item.items.map((sub) => (
+                <SidebarMenuLink
+                  key={`${sub.title}-${sub.url}`}
+                  item={sub as NavLink}
+                  href={href}
+                />
+              ))}
+            </SidebarMenu>
+          </div>
+        )
+      })}
     </SidebarGroup>
   )
 }
@@ -133,125 +140,6 @@ function SidebarMenuLink({ item, href }: { item: NavLink; href: string }) {
         <span className='min-w-0 flex-1 truncate'>{item.title}</span>
         {item.badge && <NavBadge>{item.badge}</NavBadge>}
       </SidebarMenuButton>
-    </SidebarMenuItem>
-  )
-}
-
-/**
- * Sidebar collapsible menu item
- */
-function SidebarMenuCollapsible({
-  item,
-  href,
-}: {
-  item: NavCollapsible
-  href: string
-}) {
-  const { setOpenMobile } = useSidebar()
-  // 检查当前路径是否匹配子菜单项
-  const isSubItemActive = checkIsActive(href, item)
-  // 使用受控状态，初始值基于当前路径是否匹配
-  const [isOpen, setIsOpen] = useState(() => isSubItemActive)
-
-  // 当路径变化时，如果匹配子菜单项，自动展开父级菜单
-  useEffect(() => {
-    if (isSubItemActive) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setIsOpen(true)
-    }
-  }, [isSubItemActive])
-
-  return (
-    <Collapsible
-      open={isOpen}
-      onOpenChange={setIsOpen}
-      className='group/collapsible'
-      render={<SidebarMenuItem />}
-    >
-      <CollapsibleTrigger
-        className='group/collapsible-trigger'
-        render={<SidebarMenuButton tooltip={item.title} />}
-      >
-        {item.icon && <item.icon className='shrink-0' />}
-        <span className='min-w-0 flex-1 truncate'>{item.title}</span>
-        {item.badge && <NavBadge>{item.badge}</NavBadge>}
-        <ChevronRight className='ms-auto size-4 shrink-0 transition-transform duration-200 group-data-[panel-open]/collapsible-trigger:rotate-90' />
-      </CollapsibleTrigger>
-      <CollapsibleContent className='CollapsibleContent'>
-        <SidebarMenuSub>
-          {item.items.map((subItem) => (
-            <SidebarMenuSubItem key={subItem.title}>
-              <SidebarMenuSubButton
-                isActive={checkIsActive(href, subItem)}
-                render={
-                  <Link to={subItem.url} onClick={() => setOpenMobile(false)} />
-                }
-              >
-                {subItem.icon && <subItem.icon className='shrink-0' />}
-                <span className='min-w-0 flex-1 truncate'>{subItem.title}</span>
-                {subItem.badge && <NavBadge>{subItem.badge}</NavBadge>}
-              </SidebarMenuSubButton>
-            </SidebarMenuSubItem>
-          ))}
-        </SidebarMenuSub>
-      </CollapsibleContent>
-    </Collapsible>
-  )
-}
-
-/**
- * Sidebar dropdown menu item when collapsed
- */
-function SidebarMenuCollapsedDropdown({
-  item,
-  href,
-}: {
-  item: NavCollapsible
-  href: string
-}) {
-  return (
-    <SidebarMenuItem>
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          className='group/dropdown-trigger'
-          render={
-            <SidebarMenuButton
-              tooltip={item.title}
-              isActive={checkIsActive(href, item)}
-            />
-          }
-        >
-          {item.icon && <item.icon className='shrink-0' />}
-          <span className='min-w-0 flex-1 truncate'>{item.title}</span>
-          {item.badge && <NavBadge>{item.badge}</NavBadge>}
-          <ChevronRight className='ms-auto size-4 shrink-0 transition-transform duration-200 group-data-[popup-open]/dropdown-trigger:rotate-90' />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side='right' align='start' sideOffset={4}>
-          <DropdownMenuGroup>
-            <DropdownMenuLabel>
-              {item.title} {item.badge ? `(${item.badge})` : ''}
-            </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {item.items.map((sub) => (
-              <DropdownMenuItem
-                key={`${sub.title}-${sub.url}`}
-                render={
-                  <Link
-                    to={sub.url}
-                    className={`${checkIsActive(href, sub) ? 'bg-secondary' : ''}`}
-                  />
-                }
-              >
-                {sub.icon && <sub.icon />}
-                <span className='max-w-52 text-wrap'>{sub.title}</span>
-                {sub.badge && (
-                  <span className='ms-auto text-xs'>{sub.badge}</span>
-                )}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuGroup>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </SidebarMenuItem>
   )
 }

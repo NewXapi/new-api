@@ -24,7 +24,10 @@ import { ROLE } from '@/lib/roles'
 import { useAuthStore } from '@/stores/auth-store'
 
 import { useSidebarConfig } from './use-sidebar-config'
-import { getVisibleAdminNavigation } from '@/components/layout/config/admin-navigation.config'
+import {
+  getVisibleAdminNavigation,
+  resolveAdminNavigationUrl,
+} from '@/components/layout/config/admin-navigation.config'
 
 import { useSidebarData } from './use-sidebar-data'
 
@@ -58,9 +61,14 @@ export function useSidebarView(): ResolvedSidebarView {
           useAuthStore.getState().auth.user,
           hasPermission
         )
-        const visibleUrls = new Set(visible.map((item) => item.to))
-        const items = group.items.filter((item) =>
-          typeof item.url === 'string' && visibleUrls.has(item.url)
+        const visibleUrls: Record<string, true> = {}
+        for (const item of visible) {
+          visibleUrls[resolveAdminNavigationUrl(item)] = true
+        }
+        const items = group.items.filter(
+          (item) =>
+            ('items' in item && item.items) ||
+            (typeof item.url === 'string' && visibleUrls[item.url] === true)
         )
         return items.length === group.items.length ? group : { ...group, items }
       })
