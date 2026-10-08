@@ -69,10 +69,14 @@ export type NavItem = NavCollapsible | NavLink | NavChatPresets
 
 /**
  * Navigation group type - a group of navigation items in sidebar
+ *
+ * `icon` is the section icon shown on the dual-sidebar icon rail; groups
+ * without one are skipped by the rail.
  */
 export type NavGroup = {
   id?: string
   title: string
+  icon?: React.ElementType
   items: NavItem[]
 }
 

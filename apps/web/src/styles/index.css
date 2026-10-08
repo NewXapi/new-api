@@ -141,9 +141,19 @@ html:not(.dark)
  * changing its layout behavior or the surfaces used by the header and pages.
  * The mobile sheet is rendered through a portal, so target its slot from body
  * rather than relying on the sidebar wrapper ancestry. */
-body[data-app-background='true'] [data-slot='sidebar-inner'],
-body[data-app-background='true'] [data-slot='sidebar'][data-mobile='true'] {
+body[data-app-background='true'] [data-slot='sidebar-inner'] {
   background-color: var(--card-surface);
+}
+
+/* The mobile sheet floats over the dimmed page instead of the wallpaper, so
+ * a translucent surface lets page content bleed through unreadable. Sit it
+ * on a solid ground; dark scheme deepens toward black per the veil look. */
+body[data-app-background='true'] [data-slot='sidebar'][data-mobile='true'] {
+  background-color: var(--card);
+}
+
+.dark body[data-app-background='true'] [data-slot='sidebar'][data-mobile='true'] {
+  background-color: color-mix(in oklch, var(--card) 65%, black);
 }
 
 body[data-app-background='true'] [data-slot='app-background'] [data-app-background-image] {

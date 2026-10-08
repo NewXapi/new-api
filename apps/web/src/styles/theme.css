@@ -342,7 +342,7 @@ body,
    * dark ground. Keep in sync with SURFACE_DEFAULTS.dark in
    * lib/theme-customization.ts. */
   --surface-opacity: 80%;
-  --app-background-scrim: oklch(0.15 0.01 260 / 80%);
+  --app-background-scrim: oklch(0.15 0.01 260 / 76%);
   --background-scrim: oklch(0 0 0 / 45%);
   --scrim: var(--background-scrim);
   --inverse-surface: oklch(0.907 0 0);

@@ -53,7 +53,6 @@ export function ProfileDropdown() {
   const prefersReducedMotion = useReducedMotion()
   const isAdminWorkspace = useLocation({ select: (location) => location.pathname.startsWith('/admin') })
   const { displayName, roleLabel } = useUserDisplay(user)
-  const isAdmin = (user?.role ?? ROLE.GUEST) >= ROLE.ADMIN
   const isSuperAdmin = user?.role === ROLE.SUPER_ADMIN
   const isWalletVisible = useIsSidebarModuleVisible('/wallet')
   const walletBalance = useWalletBalance()
@@ -144,13 +143,6 @@ export function ProfileDropdown() {
             <DropdownMenuItem onClick={() => navigate({ to: '/pricing' })}>
               <Store className='size-4' />
               {t('Model Square')}
-            </DropdownMenuItem>
-          )}
-
-          {isAdmin && !isAdminWorkspace && (
-            <DropdownMenuItem onClick={() => navigate({ to: '/admin' })}>
-              <ArrowUpRight className='size-4' />
-              {t('Admin')}
             </DropdownMenuItem>
           )}
 

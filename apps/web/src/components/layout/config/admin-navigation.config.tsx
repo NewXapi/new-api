@@ -77,6 +77,18 @@ export const ADMIN_NAVIGATION: readonly AdminNavigationItem[] = [
   },
 ] as const
 
+/**
+ * Resolve an admin nav entry to a concrete URL, substituting path params
+ * (for example `/admin/models/$section` + `{section:'metadata'}`).
+ */
+export function resolveAdminNavigationUrl(item: AdminNavigationItem): string {
+  if (!item.params) return item.to
+  return Object.entries(item.params).reduce(
+    (url, [key, value]) => url.replace(`$${key}`, value),
+    item.to
+  )
+}
+
 export function isAdminNavigationItemVisible(
   item: AdminNavigationItem,
   user: AuthUser | null | undefined,
