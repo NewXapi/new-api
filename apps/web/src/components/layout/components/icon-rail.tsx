@@ -65,6 +65,7 @@ export function IconRail({
           const icon = group.icon
           if (!icon || !group.id) return null
           const Icon = icon
+          const groupId = group.id
           const active = group.id === activeGroupId
           return (
             <TooltipProvider key={group.id} delay={0}>
@@ -79,7 +80,7 @@ export function IconRail({
                       aria-label={group.title}
                       aria-current={active ? 'page' : undefined}
                       onClick={() => {
-                        onSelect(group.id)
+                        onSelect(groupId)
                         if (collapsed) setOpen(true)
                       }}
                       className={cn(
