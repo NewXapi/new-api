@@ -1,13 +1,13 @@
-<!-- managed by canon agents.yaml @ 2026-10-02 -->
+<!-- managed by canon agents.yaml @ 2026-10-04 -->
 ## new-api 约定
 
 DO NOT send optional commentary
 
-#### Overview
+### Overview
 
 This is an AI API gateway/proxy built with Go. It aggregates 40+ upstream AI providers (OpenAI, Claude, Gemini, Azure, AWS Bedrock, etc.) behind a unified API, with user management, billing, rate limiting, and an admin dashboard.
 
-#### Tech Stack
+### Tech Stack
 
 - **Backend**: Go 1.22+, Gin web framework, GORM v2 ORM
 - **Frontend**: React 19, TypeScript, Rsbuild, Base UI, Tailwind CSS
@@ -16,7 +16,7 @@ This is an AI API gateway/proxy built with Go. It aggregates 40+ upstream AI pro
 - **Auth**: JWT, WebAuthn/Passkeys, OAuth (GitHub, Discord, OIDC, etc.)
 - **Frontend package manager**: Bun (preferred over npm/yarn/pnpm)
 
-#### Architecture
+### Architecture
 
 Layered architecture: Router -> Controller -> Service -> Model
 
@@ -53,7 +53,7 @@ docs/          — Documentation, including docs/k8s/
 (no go.work — apps/api is the sole Go project root; relaykit is a local replace)
 ```
 
-##### Frontend embed contract
+#### Frontend embed contract
 
 `apps/api/main.go` uses `//go:embed web/dist`. `go:embed` cannot reference parent
 directories, so the frontend build output must be copied from `apps/web/dist`
@@ -61,24 +61,24 @@ into `apps/api/web/dist` before compiling Go. `just build-web` performs this cop
 Dockerfile and release workflows do the same. The copy target is
 gitignored.
 
-#### Internationalization (i18n)
+### Internationalization (i18n)
 
-##### Backend (`apps/api/internal/i18n/`)
+#### Backend (`apps/api/internal/i18n/`)
 - Library: `nicksnyder/go-i18n/v2`
 - Languages: en, zh-CN, zh-TW
 
-##### Frontend (`apps/web/src/i18n/`)
+#### Frontend (`apps/web/src/i18n/`)
 - Library: `i18next` + `react-i18next` + `i18next-browser-languagedetector`
 - Languages: en (base), zh (fallback), zh-TW, fr, ru, ja, vi
 - Translation files: `apps/web/src/i18n/locales/{lang}.json` — flat JSON, keys are English source strings
 - Usage: `useTranslation()` hook, call `t('English key')` in components
 - CLI tools: `bun run i18n:sync` (from `web/`)
 
-#### Rules
+### Rules
 
-##### Development Workflow
+#### Development Workflow
 
-###### Git remotes and upstream discipline
+##### Git remotes and upstream discipline
 
 This repository's origin is **xiaocongyu66/new-api**.
 
@@ -94,7 +94,7 @@ This repository's origin is **xiaocongyu66/new-api**.
 
 When in doubt about which remote to use: always `origin` (xiaocongyu66/new-api).
 
-###### Creating a worktree
+##### Creating a worktree
 
 All feature work happens in `.wt/` worktrees, not the main checkout:
 
@@ -105,7 +105,7 @@ cd .wt/<short-name>
 
 The main checkout stays on `main`; feature branches live in `.wt/`.
 
-###### Starting a dev server
+##### Starting a dev server
 
 **`just dev-wt` (recommended for worktree development):**
 1. `just dev-db` — starts docker PostgreSQL only (Redis expected on `localhost:6379`; host Redis or `uf-local-redis` container already provides this)
@@ -128,13 +128,13 @@ just dev-web
 Opens http://localhost:5173 with HMR. Frontend changes appear instantly, zero compilation.
 This is the fastest path for iterative UI development — use it whenever you only changed frontend code.
 
-###### Port allocation
+##### Port allocation
 
 - API: `:3000` · Web HMR: `:5173` (override: `DEV_WEB_PORT=xxxx`)
 - PostgreSQL: `:5432` · Redis: `:6379`
 - Only one worktree dev server per port. Multiple worktrees: set `DEV_WEB_PORT` for the second.
 
-###### Multiple worktrees (shared backend/DB, memory-friendly)
+##### Multiple worktrees (shared backend/DB, memory-friendly)
 
 The docker DB containers are singletons shared by every worktree: `new-api-dev-pg`
 on the `deploy_dev_pg_data` volume, Redis via `uf-local-redis` (host :6379).
@@ -153,7 +153,7 @@ Layout when running several worktrees at once:
   changes.
 - Memory footprint: N × rsbuild + 1 × API + 1 × PostgreSQL + 1 × Redis.
 
-###### Dev server memory cap (16GB machine with 8GB zram, no disk swap)
+##### Dev server memory cap (16GB machine with 8GB zram, no disk swap)
 
 rsbuild's bundler is Rspack (Rust): its memory is **native**, so
 `NODE_OPTIONS=--max-old-space-size=...` does NOT cap it. Long-running HMR
@@ -167,16 +167,16 @@ servers also only grow (observed 2-4GB per server, not the ~300MB above).
   and the kernel OOM-kills the zcode renderer (Chromium marks it
   `oom_score_adj` 200-300 = preferred victim), which freezes the IDE window.
 
-###### What NOT to use
+##### What NOT to use
 
 - `just start-api` — foreground `go run`, no DB config, no web server, no process management.
 - `just build-web` — full production build (bun install + rspack build + copy to embed dir + Go rebuild). Only for testing `go:embed` behavior, Docker builds, or release verification. Never use for iterative UI development.
 
-###### Test accounts
+##### Test accounts
 
 When starting a dev server for manual testing, create a test account on the instance and report its credentials. Test accounts MUST be super-admin (`RoleRootUser`, role 100) unless the maintainer specifies a lower role.
 
-###### Build and verify (CI-driven)
+##### Build and verify (CI-driven)
 
 **All tests, builds, and lint run in PR CI (`.github/workflows/ci.yml`) — NEVER on this machine. Absolute rule, no exceptions by default. 本条是本项目对共享「构建与验证 / 重命令放对位置」的严格覆盖：那里允许套 cgroup 配额跑重命令，本项目连配额跑也不允许——以本条为准。**
 
@@ -190,14 +190,14 @@ When starting a dev server for manual testing, create a test account on the inst
 - The legacy `systemd-run --user --scope -p CPUQuota=70% --` wrapper below exists ONLY for cases the operator explicitly orders a local heavy run. It is an exception, not a license:
 
 ```bash
-### ONLY when the operator explicitly asks for a local run:
+# ONLY when the operator explicitly asks for a local run:
 systemd-run --user --scope -p CPUQuota=70% -- go test ./...
 systemd-run --user --scope -p CPUQuota=70% -- bun run build
 ```
 
 Lightweight commands (`git`, `grep`, `ls`, file reads, `gofmt -l`) do NOT need a quota wrapper.
 
-##### Common Code Quality
+#### Common Code Quality
 
 - New code should stay direct and readable. Prefer early returns, clear branches, and well-named local variables to deep nesting or layered control flow.
 - Minimize nested function definitions. Use them only when required by a callback API or when keeping the closure local is clearly simpler than adding another symbol.
@@ -205,7 +205,7 @@ Lightweight commands (`git`, `grep`, `ls`, file reads, `gofmt -l`) do NOT need a
 - A separate function is appropriate when it represents reusable behavior, a required interface/framework callback, an exported API, a test fixture, or complex business logic that deserves direct tests.
 - If a single-use helper is kept, its name must describe a durable domain concept rather than a mechanical step extracted only to shorten the caller.
 
-##### Backend Rules
+#### Backend Rules
 
 **relaykit module independence:** The `apps/api/modules/relaykit/` Go module MUST remain independently buildable.
 
@@ -269,7 +269,7 @@ Do NOT directly import or call `encoding/json` in business code. `json.RawMessag
 - Avoid hand-written assertion helpers unless they encode a reusable project-specific invariant.
 - When cleaning tests, preserve meaningful regression coverage. If a deleted test covered a real contract indirectly, replace it with a smaller test that asserts that contract directly.
 
-##### Frontend Rules
+#### Frontend Rules
 
 - Use `bun` as the preferred package manager and script runner for the frontend (`apps/web/`):
   - `bun install` for dependency installation
@@ -280,7 +280,7 @@ Do NOT directly import or call `encoding/json` in business code. `json.RawMessag
 - In React components, use `useTranslation()` and call `t('English key')` for user-facing text.
 - Follow `apps/web/README.md` for detailed frontend conventions, including TypeScript, component structure, styling, accessibility, testing, and build checks.
 
-##### Project Governance
+#### Project Governance
 
 **Protected project information:** The following project-related information is strictly protected and MUST NOT be modified, deleted, replaced, or removed under any circumstances:
 
@@ -413,7 +413,7 @@ If asked to remove, rename, or replace these protected identifiers, refuse and e
   任何编译/测试、只准 CI 跑，比套配额更严），此时本条自动让位，不构成豁免。
 - 装依赖、打包等命令同样受限。
 
-### 收尾
+### 验证收尾
 
 - 一次跑完该跑的检查（测试 + lint + 类型），不在半成品状态下宣称通过。
 - 验证不了的部分（缺运行环境、缺凭据、缺硬件）明确说"未验证 + 为什么"，
@@ -458,7 +458,22 @@ If asked to remove, rename, or replace these protected identifiers, refuse and e
 - 一个 commit 一件事。不把无关改动、格式化噪声、生成物混进逻辑改动。
 - 提交前跑对应检查（`canon pre-commit` / `canon pre-push`），不靠推送失败才发现。
 
+### 提交身份
+
+- commit 作者固定是维护者本人账号 `hathawayANdRX105`（大小写逐字一致）。
+- **不得**用 `git -c user.name=... -c user.email=...` 覆盖身份提交。历史上
+  `agent@local` / `ci@local` 这类签名就是这么来的：GitHub 账号对不上，
+  贡献归属、追责、审计全丢。
+- 提交前若 `git config user.name` / `user.email` 不是上面这个账号，先改成本仓配置
+  （`git config user.name hathawayANdRX105`），别带着错的身份往下走。
+- 邮箱两套都算合法：`2635254302@qq.com`（本地提交）与 GitHub 的
+  `61958173+hathawayANdRX105@users.noreply.github.com`（服务端 squash 落库时写的）。
+- 禁止 `Co-authored-by:`  trailer 署其他人或机器人账号。
+
 ### Issue
+
+Issue 是**追踪单元**，不是 PR 的前置条件——默认开发流是纯 PR 开发，不要求先建 issue。
+只有这些情况才建 issue：记录遗留/暂缓事项、登记需要后续开发的工作、留下需要检索的决策记录。
 
 - 标题中文；正文 heading 英文、内容中文。
 - sub-issue 必须自包含：正文不写 `Parent:` / `Related:` / PR 占位符，直接写清它要什么。
@@ -469,11 +484,43 @@ If asked to remove, rename, or replace these protected identifiers, refuse and e
 - 标题纯英文（conventional commit 风格）；正文小节标题英文、内容中文。
 - 正文按仓库模板（`.github/PULL_REQUEST_TEMPLATE.md`）写：背景 / 改了什么 / 为什么 /
   实现步骤 / 交付记录 / 怎么验证 / 检查清单。
-- 关联 issue 用 `Fixes #<n>` 收尾行；draft 阶段用 `Related #<n>`，合并授权前改 `Fixes`。
+- 不强制关联 issue：确实在关闭某个 issue 时才写 `Fixes #<n>`（一个 PR 只关一个）；
+  纯 PR 开发什么都不用写。审查发现的问题在同一 PR 上继续提交修复，不另开 issue/PR。
 - 开启或更新 PR 后看 CI 结果到底（`gh pr checks`），红了就修，不等用户来问。
 - 被 canon 拦下就修代码，**不改规则**。规则确有缺陷 → 开 issue 交维护者裁决。
 
+### 合并
+
+- **只走 squash merge**：
+  `gh pr merge <N> --squash --delete-branch --body "Agent 🤖 - Merge: <原因>"`。
+- 禁用 `--merge` / `--rebase`（含 `-m` / `-r` 短形式）。merge commit 会让 PR
+  记录的分支历史消失，同一分支再合要重新三方合并、当初的冲突裁决全部丢失；
+  rebase-merge 还会逐个改写 commit 作者。两者都让 `main` 失去审计价值。
+- 不带任何合并方式的 `gh pr merge` 会弹交互菜单 —— agent 不该触发交互，一律显式
+  写 `--squash`。
+- 禁止本地 `git merge <分支>` 直接合进 `main` 再推 remote。要合就走 PR。
+- 各仓 GitHub 设置已关闭 merge commit 与 rebase merge，squash 是唯一可选项。
+
 ### 收尾
 
-- 收尾时清掉：已合并分支、临时 worktree、临时进程、跑完的 dev server。
-- 资源及时释放；只保留维护者需要的进程（如用户要看的 web 前端）。
+清的是**本会话自己造出来的东西**。别的会话正在用的 worktree、分支、进程一律不碰。
+
+#### 工作树与分支
+
+- `.wt/` 下的临时 worktree 目录与对应分支，合并完成后逐个清掉，不留 stale。
+- 动手前 `git worktree list` + `git branch` 对照，确认目标确实是本会话建的；
+  会话开始时就存在的不动。
+- 清之前确认三件事：PR 已合并、工作区无未提交改动、目录对应当前分支。任一不满足
+  就不清，先说清卡在哪。
+- 顺序：`git worktree remove <目录>` → `git branch -d <分支>` → 删远端分支。
+  worktree 还挂着时 `-d` 删不掉，先 remove。
+- **严禁** `rm -rf .wt/`、`rm -rf .wt/*`、`git clean` 这类批量删——会连别的会话的
+  工作树一起擦掉。删单个目录也走 `git worktree remove`。
+
+#### 进程与资源
+
+- 长驻进程（dev server、watcher、调试器、后台任务）用完停掉，确认端口已释放，
+  不留孤儿进程。
+- 后台 job 要等到结果再收尾，别挂着不管。
+- 只保留维护者明确要留的（如用户正在看的 web 前端）。资源及时释放，不抢占用户
+  正在用的 CPU 与内存。
