@@ -422,20 +422,20 @@ func Relay(c contract.Context, relayFormat types.RelayFormat) {
 				failover.MarkTried(routeKey)
 			}
 		}
-		if common.RetryTimes > 0 && wouldRetryWithOneBudget(c, newAPIError) {
-			// The unit machine consumes the same attempt: the channel-level
-			// outcome ledger above keeps its own independent classification
-			// for the fallback family.
-			// The upstream throttle hint: the parsed Retry-After in ms, -1 =
-			// no hint (the state machine's "no hint" marker).
-			retryAfterMs := int64(-1)
-			if newAPIError.RetryAfterMs > 0 {
-				retryAfterMs = newAPIError.RetryAfterMs
-			}
-			healthErr := catalog.ReportOutcome(routeKey, catalog.ClassifyUnitOutcome(newAPIError, channel.Id), 0, retryAfterMs, time.Now())
-			if healthErr != nil {
-				logger.LogError(c.Context(), fmt.Sprintf("record unit outcome failed: %s", healthErr.Error()))
-			}
+		// The unit machine consumes every attempt, terminal or switchable —
+		// mono's retry loop reports the health result before deciding whether
+		// the loop continues, so a terminal failure still cools its unit.
+		// The channel-level outcome ledger below keeps its own independent
+		// classification for the fallback family.
+		// The upstream throttle hint: the parsed Retry-After in ms, -1 =
+		// no hint (the state machine's "no hint" marker).
+		retryAfterMs := int64(-1)
+		if newAPIError.RetryAfterMs > 0 {
+			retryAfterMs = newAPIError.RetryAfterMs
+		}
+		healthErr := catalog.ReportOutcome(routeKey, catalog.ClassifyUnitOutcome(newAPIError, channel.Id), 0, retryAfterMs, time.Now())
+		if healthErr != nil {
+			logger.LogError(c.Context(), fmt.Sprintf("record unit outcome failed: %s", healthErr.Error()))
 		}
 		processChannelError(c, *types.NewChannelError(channel.Id, channel.Type, channel.Name, channel.ChannelInfo.IsMultiKey, common.GetCtxKeyString(c, constant.ContextKeyChannelKey), channel.GetAutoBan()), newAPIError)
 
