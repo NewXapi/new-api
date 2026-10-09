@@ -110,9 +110,9 @@ func main() {
 				}
 			}()
 			catalog.InitChannelCache()
-			// Restores the persisted per-model route isolation. Without it a
-			// quarantined route silently rejoins rotation on every restart.
-			catalog.InitChannelModelHealthCache()
+			// Restores the persisted per-unit health state. Without it a cooling
+			// or terminal-disabled unit silently rejoins rotation on restart.
+			catalog.InitUnitHealthCache()
 		}()
 
 		go catalog.SyncChannelCache(common.SyncFrequency)
